@@ -1,7 +1,7 @@
 #
 # Makefile for xrogue
 #
-DISTNAME=xrogue8.0.3
+DISTNAME=xrogue8.0.4
 PROGRAM=xrogue
 
 O=o
