@@ -507,9 +507,13 @@ command()
                                       item = spec_item(WEAPON, BASWORD, 20, 20);
                                 else
                                       item = spec_item(WEAPON,TWOSWORD, 20, 20);
-                                    add_pack(item, TRUE);
-                                    cur_weapon = OBJPTR(item);
-                                    (OBJPTR(item))->o_flags |= (ISKNOW|ISPROT);
+                                    if (add_pack(item, TRUE))
+                                    {
+                                        cur_weapon = OBJPTR(item);
+                                        (OBJPTR(item))->o_flags |= (ISKNOW|ISPROT);
+                                    }
+                                    else
+                                        o_discard(item);
                                 /*
                                  * And his suit of armor
                                  */
@@ -523,8 +527,10 @@ command()
                                     obj = OBJPTR(item);
                                     obj->o_flags |= (ISKNOW | ISPROT);
                                     obj->o_weight = armors[j].a_wght;
-                                    cur_armor = obj;
-                                    add_pack(item, TRUE);
+                                    if (add_pack(item, TRUE))
+                                        cur_armor = obj;
+                                    else
+                                        o_discard(item);
                                 }
                                 purse += 20000;
                             }
