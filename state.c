@@ -52,6 +52,22 @@
 #define RSXR_COORDLIST    0XABCD0016
 #define RSXR_ROOMS        0XABCD0017
 
+#if defined(_WIN32)
+#include <Windows.h>
+#include <Lmcons.h>
+#include <process.h>
+#include <shlobj.h>
+#include <Shlwapi.h>
+#undef VOID
+#undef MOUSE_MOVED
+#elif defined(__DJGPP__)
+#include <process.h>
+#else
+#include <pwd.h>
+#include <sys/utsname.h>
+#include <unistd.h>
+#endif
+
 #include <curses.h>
 #include <string.h>
 #include <stdlib.h>
@@ -60,7 +76,13 @@
 #include <stdarg.h>
 #include <unistd.h>
 #include <assert.h>
+#include <fcntl.h>
+#include <limits.h>
+#include <time.h>
+#include <signal.h>
 #include "rogue.h"
+#include "mach_dep.h"
+
 
 #define READSTAT ((format_error == 0) && (read_error == 0))
 #define WRITESTAT (write_error == 0)
@@ -141,6 +163,26 @@ rs_read(int inf, void *ptr, int size)
 int big_endian = 0;
 
 int
+rs_write_uint(FILE *savef, unsigned int c)
+{
+    char bytes[4];
+    char *buf = (char *) &c;
+
+    if (big_endian)
+    {
+        bytes[3] = buf[0];
+        bytes[2] = buf[1];
+        bytes[1] = buf[2];
+        bytes[0] = buf[3];
+        buf = bytes;
+    }
+    
+    rs_write(savef, buf, 4);
+
+    return(WRITESTAT);
+}
+
+int
 rs_write_int(FILE *savef, int c)
 {
     char bytes[4];
@@ -217,6 +259,29 @@ rs_write_boolean(FILE *savef, bool c)
 
 int
 rs_read_int(int inf, int *i)
+{
+    char bytes[4];
+    int  input;
+    char *buf = (char *)&input;
+    
+    rs_read(inf, &input, 4);
+
+    if (big_endian)
+    {
+        bytes[3] = buf[0];
+        bytes[2] = buf[1];
+        bytes[1] = buf[2];
+        bytes[0] = buf[3];
+        buf = bytes;
+    }
+    
+    *i = *((int *) buf);
+
+    return(READSTAT);
+}
+
+int
+rs_read_uint(int inf, unsigned int *i)
 {
     char bytes[4];
     int  input;
@@ -571,7 +636,7 @@ rs_write_string(FILE *savef, char *s)
 {
     int len = 0;
 
-    len = (s == NULL) ? 0 : strlen(s) + 1;
+    len = (s == NULL) ? 0 : (int) strlen(s) + 1;
 
     rs_write_int(savef, len);
     rs_write(savef, s, len);
@@ -842,7 +907,7 @@ rs_write_strings(FILE *savef, char *s[], int count)
 
     for(n = 0; n < count; n++)
     {
-        len = (s[n] == NULL) ? 0L : strlen(s[n]) + 1;
+        len = (s[n] == NULL) ? 0L : (int) strlen(s[n]) + 1;
         rs_write_int(savef, len);
         rs_write(savef, s[n], len);
         DBG(("%s",s[n]));
@@ -902,7 +967,7 @@ rs_read_new_strings(int inf, char **s, int count)
         if (value != count)
         {
             printf("Incorrect number of strings in block. %d > %d.",
-                value,count);abort();
+                value,count);
             printf("Sorry, invalid save game format");
             format_error = TRUE;
         }
@@ -1186,7 +1251,7 @@ rs_read_daemons(int inf, struct delayed_action *d_list, int count)
                     if (d_list[i].d_func == doctor)
                     {
                         rs_read_int(inf, &dummy);
-                        d_list[i].d_arg = (void *)&player;
+                        d_list[i].d_arg = &player;
                     }
                     else if (d_list[i].d_func == eat_gold)
                     {
@@ -1197,7 +1262,7 @@ rs_read_daemons(int inf, struct delayed_action *d_list, int count)
                     }
                     else if (d_list[i].d_func == changeclass)
                     {
-                        rs_read_long(inf, (long *)&d_list[i].d_arg);
+                        rs_read_long(inf, (long *) &d_list[i].d_arg);
                     }
                     else if (d_list[i].d_func == cloak_charge)
                     {
@@ -1207,7 +1272,7 @@ rs_read_daemons(int inf, struct delayed_action *d_list, int count)
 							d_list[i].d_type = 0;
                     }
                     else
-                        rs_read_long(inf, (long *)&d_list[i].d_arg);
+                        rs_read_long(inf, (long *) &d_list[i].d_arg);
 
                     rs_read_int(inf, &d_list[i].d_time);
                 }
@@ -1236,8 +1301,11 @@ rs_write_rooms(FILE *savef, struct room r[], int count)
         rs_write_coord_list(savef, r[n].r_exit);
 
         l = r[n].r_fires;
-        rs_write_int(savef, list_size(l));
+        i = list_size(l);
 
+        rs_write_int(savef, i);
+
+        if (i >0)
         while (l != NULL)
         {
             i = find_list_ptr(mlist,l->l_data);
@@ -1312,7 +1380,6 @@ rs_read_rooms(int inf, struct room *r, int count)
 int
 rs_write_object(FILE *savef, struct object *o)
 {
-    save_debug = FALSE;
     rs_write_int(savef, RSXR_OBJECT);
     rs_write_int(savef, o->o_type);
     rs_write_coord(savef, &o->o_pos);
@@ -1328,7 +1395,6 @@ rs_write_object(FILE *savef, struct object *o)
     rs_write_int(savef, o->o_group);
     rs_write_int(savef, o->o_weight);
     rs_write(savef, o->o_mark, MARKLEN);
-    save_debug = TRUE;
 
     DBG(("Object\n"));
     DBG(("    SaveID  : %X\n",RSXR_OBJECT));
@@ -1349,7 +1415,6 @@ rs_write_object(FILE *savef, struct object *o)
     if (o->contents == NULL)
     {
         DBG(("    Contents: None\n"));
-        save_debug = FALSE;
     }
     else
     {
@@ -1361,7 +1426,6 @@ rs_write_object(FILE *savef, struct object *o)
     if (o->contents != NULL)
         DBG(("    END_CONTENTS\n"));
     
-    save_debug = TRUE;
     return(WRITESTAT);
 }
 
@@ -2045,9 +2109,7 @@ rs_read_object_list(int inf, struct linked_list **list)
 }
 
 int
-find_thing_coord(monlist, c)
-struct linked_list *monlist;
-coord *c;
+find_thing_coord(struct linked_list *monlist, coord *c)
 {
     struct linked_list *mitem;
     struct thing *tp;
@@ -2065,9 +2127,7 @@ coord *c;
 }
 
 int
-find_object_coord(objlist, c)
-struct linked_list *objlist;
-coord *c;
+find_object_coord(struct linked_list *objlist, coord *c)
 {
     struct linked_list *oitem;
     struct object *obj;
@@ -2090,7 +2150,6 @@ rs_write_thing(FILE *savef, struct thing *t)
     int i = -1;
 
     DBG(("Thing\n"));
-    save_debug = FALSE;
     rs_write_int(savef, RSXR_THING);
     rs_write_boolean(savef,t->t_wasshot);
     rs_write_char(savef, t->t_type);
@@ -2151,7 +2210,6 @@ rs_write_thing(FILE *savef, struct thing *t)
     rs_write_coord(savef, &t->t_oldpos);
     rs_write_coord(savef, &t->t_newpos);
     rs_write_ulongs(savef, t->t_flags, 16);
-    save_debug = TRUE;
 
     DBG(("Thing\n"));
     DBG(("    SaveID  : %X\n",RSXR_THING));
@@ -2185,8 +2243,6 @@ rs_write_thing(FILE *savef, struct thing *t)
     DBG(("    NewPos  : %d %d\n",t->t_newpos.x,t->t_newpos.y));
     DBG(("    Flags   : "));
     { int i; for(i=0;i<16;i++) {DBG(("%d ",t->t_flags[i]));} DBG(("\n")); }
-    save_debug = TRUE;
-
 
     rs_write_object_list(savef, t->t_pack);
     i = -1;
@@ -2352,8 +2408,7 @@ rs_write_monster_list(FILE *savef, struct linked_list *l)
 }
 
 void
-rs_fix_monster_list(list)
-struct linked_list *list;
+rs_fix_monster_list(struct linked_list *list)
 {
     struct linked_list *item;
 
@@ -2453,7 +2508,7 @@ rs_read_magic_items(int inf, struct magic_item *mi, int count)
             {
                 for(n = 0; n < value; n++)
                 {
-                    rs_read_string(inf,mi[n].mi_name,sizeof(mi[n].mi_name));
+                    rs_read(inf,mi[n].mi_name,sizeof(mi[n].mi_name));
                     rs_read_int(inf,&mi[n].mi_prob);
                     rs_read_int(inf,&mi[n].mi_worth);
                     rs_read_int(inf,&mi[n].mi_curse);
@@ -2871,3 +2926,456 @@ rs_print_game_state(FILE *outf)
     rs_print_thing(outf, &player, "    ", 0, 0);
 }
 
+/****
+ Machine Dependent Functions
+
+ md_getuid()
+ md_memused()
+ md_getusername()
+ md_gethostname()
+ md_gethomedir()
+ md_getroguedir()
+ md_getshell()
+ md_shellescape()
+ md_getpass()
+ md_crypt()
+ md_htons()
+ md_nstoh()
+ md_unlink()
+ md_isdir()
+ md_ntohl()
+ md_htonl()
+
+****/
+
+int
+md_rand(register int range)
+{
+#ifdef _WIN32
+    return(range <= 0 ? 0 : rand() % range);
+#else
+    return(range <= 0 ? 0 : random() % range);
+#endif
+}
+
+void
+md_srand(register int seed)
+{
+#ifdef _WIN32
+    srand(seed);
+#else
+    srandom(seed);
+#endif
+}
+
+void 
+md_flushinp()
+{
+    /* ioctl(0,TIOCFLUSH) */
+    /* ioctl(_tty_ch,TCFLSH,0) */
+    flushinp();
+}
+
+int
+md_getuid()
+{
+#ifdef _WIN32
+    return(42);
+#else
+    return(getuid());
+#endif
+}
+
+long
+md_memused()
+{
+#ifdef _WIN32
+    MEMORYSTATUS stat;
+
+    GlobalMemoryStatus(&stat);
+
+    return((long)stat.dwTotalPageFile);
+#else
+    return( (long)sbrk(0) );
+#endif
+}
+
+char *
+md_getusername()
+{
+    static char login[80];
+    char *l = NULL;
+#ifdef _WIN32
+    LPSTR mybuffer;
+    DWORD size = UNLEN + 1;
+    TCHAR buffer[UNLEN + 1];
+
+    mybuffer = buffer;
+    GetUserName(mybuffer,&size);
+    l = mybuffer;
+#endif
+#if !defined(_WIN32) && !defined(DJGPP)
+    struct passwd *pw;
+
+    pw = getpwuid(getuid());
+
+    l = pw->pw_name;
+#endif
+
+    if ((l == NULL) || (*l == '\0'))
+        if ( (l = getenv("USERNAME")) == NULL )
+            if ( (l = getenv("LOGNAME")) == NULL )
+                if ( (l = getenv("USER")) == NULL )
+                    l = "nobody";
+
+    strncpy(login,l,80);
+    login[79] = 0;
+
+    return(login);
+}
+
+char *
+md_gethomedir()
+{
+    static char homedir[PATH_MAX];
+    char *h = NULL;
+    size_t len;
+#if defined(_WIN32)
+    TCHAR szPath[MAX_PATH];
+#endif
+#if defined(_WIN32) || defined(DJGPP)
+	char slash = '\\'; 
+#else
+    char slash = '/';
+    struct passwd *pw;
+    pw = getpwuid(getuid());
+
+    h = pw->pw_dir;
+
+    if (strcmp(h,"/") == 0)
+        h = NULL;
+#endif
+    homedir[0] = 0;
+	
+#ifdef _WIN32	
+	if(SUCCEEDED(SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, 0, szPath))) 
+		h = szPath;
+#endif
+
+	if ( (h == NULL) || (*h == '\0') )
+        if ( (h = getenv("HOME")) == NULL ) 
+            if ( (h = getenv("HOMEDRIVE")) == NULL) 
+                h = "";
+            else
+            {
+                strncpy(homedir,h,PATH_MAX-1);
+                homedir[PATH_MAX-1] = 0;
+      
+                if ( (h = getenv("HOMEPATH")) == NULL)
+                    h = "";
+            }
+
+
+    len = strlen(homedir);
+    strncat(homedir,h,PATH_MAX-len-1);
+    len = strlen(homedir);
+
+    if ((len > 0) && (homedir[len-1] != slash)) {
+        homedir[len] = slash;
+        homedir[len+1] = 0;
+    }
+
+    return(homedir);
+}
+
+int
+directory_exists(char *dirname)
+{
+    struct stat sb;
+
+    if (stat(dirname, &sb) == 0) /* path exists */
+        return (sb.st_mode & S_IFDIR);
+
+    return(0);
+}
+
+char *
+md_getroguedir()
+{
+    static char path[1024];
+    char *end,*home;
+
+    if ( (home = getenv("ROGUEHOME")) != NULL)
+    {
+        if (*home)
+        {
+            strncpy(path, home, PATH_MAX - 20);
+
+            end = &path[strlen(path)-1];
+
+
+            while( (end >= path) && ((*end == '/') || (*end == '\\')))
+                *end-- = '\0';
+
+            if (directory_exists(path))
+                return(path);
+        }
+    }
+
+    if (directory_exists("/var/games/roguelike"))
+        return("/var/games/roguelike");
+    if (directory_exists("/var/lib/roguelike"))
+        return("/var/lib/roguelike");
+    if (directory_exists("/var/roguelike"))
+        return("/var/roguelike");
+    if (directory_exists("/usr/games/lib"))
+        return("/usr/games/lib");
+    if (directory_exists("/games/roguelik"))
+        return("/games/roguelik");
+
+    return("");
+}
+
+char *
+md_getshell()
+{
+    static char shell[PATH_MAX];
+    char *s = NULL;
+#ifdef _WIN32
+    char *def = "C:\\WINDOWS\\SYSTEM32\\CMD.EXE";
+#elif defined(__DJGPP__)
+    char *def = "C:\\COMMAND.COM";
+#else
+    char *def = "/bin/sh";
+    struct passwd *pw;
+    pw = getpwuid(getuid());
+    s = pw->pw_shell;
+#endif
+    if ((s == NULL) || (*s == '\0'))
+        if ( (s = getenv("COMSPEC")) == NULL) 
+            if ( (s = getenv("SHELL")) == NULL) 
+                if ( (s = getenv("SystemRoot")) == NULL)
+                    s = def;
+
+    strncpy(shell,s,PATH_MAX);
+    shell[PATH_MAX-1] = 0;
+
+    return(shell);
+}
+
+char *
+md_gethostname()
+{
+    static char nodename[80];
+    char *n = NULL;
+#if !defined(_WIN32) && !defined(__DJGPP__)
+    struct utsname ourname;
+
+    if (uname(&ourname) == 0)
+        n = ourname.nodename;
+#endif
+    if ((n == NULL) || (*n == '\0'))
+        if ( (n = getenv("COMPUTERNAME")) == NULL)
+            if ( (n = getenv("HOSTNAME")) == NULL)
+                n = "localhost";
+
+    strncpy(nodename, n, 80);
+    nodename[79] = 0;
+
+    return(nodename);
+}
+
+int
+md_shellescape()
+{
+#if (!defined(_WIN32) && !defined(__DJGPP__))
+    int ret_status;
+	int pid;
+#endif
+    char *sh;
+
+	sh = md_getshell();
+
+#if defined(_WIN32) 
+    return(_spawnl(_P_WAIT,sh,"shell",NULL,0));
+#elif defined(__DJGPP__)
+    return ( spawnl(P_WAIT,sh,"shell",NULL,0) );
+#else
+    while((pid = fork()) < 0)
+        sleep(1);
+
+    if (pid == 0) /* Shell Process */
+    {
+        /*
+         * Set back to original user, just in case
+         */
+        setuid(getuid());
+        setgid(getgid());
+        execl(sh == NULL ? "/bin/sh" : sh, "shell", "-i", 0);
+        perror("No shelly");
+        _exit(-1);
+    }
+    else /* Application */
+    {
+        while (wait(&ret_status) != pid)
+            continue;
+    }
+
+    return(ret_status);
+#endif
+}
+
+int
+md_erasechar()
+{
+/*
+    return(_tty.sg_erase);
+    return(_tty.c_cc[VERASE]);
+*/
+    return(erasechar());
+}
+
+int
+md_killchar()
+{
+/*
+    return(_tty.sg_kill);
+    return(_tty.c_cc[VKILL]);
+*/
+    return(killchar());
+}
+
+long
+md_ntohl(long netlong)
+{
+    return( ntohl(netlong) );
+}
+
+long
+md_htonl(long netlong)
+{
+    return(htonl(netlong));
+}
+
+void
+md_init()
+{
+#ifdef __INTERIX
+    char *term;
+
+    term = getenv("TERM");
+
+    if (term == NULL)
+        setenv("TERM","interix");
+#endif
+#if defined(__DJGPP__) || defined(_WIN32)
+    _fmode = _O_BINARY;
+#endif
+
+#if defined(__CYGWIN__) || defined(__MSYS__)
+    ESCDELAY = 250;
+#endif
+
+}
+
+char *
+md_getpass(char *prompt)
+{
+#ifdef _WIN32
+    static char password_buffer[9];
+    char *p = password_buffer;
+    int c, count = 0;
+    int max_length = 9;
+
+    fflush(stdout);
+    /* If we can't prompt, abort */
+    if (fputs(prompt, stderr) < 0)
+    {
+        *p = '\0';
+        return NULL;
+    }
+
+    for(;;)
+    {
+        /* Get a character with no echo */
+        c = getch();
+
+        /* Exit on interrupt (^c or ^break) */
+        if (c == '\003' || c == 0x100)
+            exit(1);
+
+        /* Terminate on end of line or file (^j, ^m, ^d, ^z) */
+        if (c == '\r' || c == '\n' || c == '\004' || c == '\032')
+            break;
+
+        /* Back up on backspace */
+        if (c == '\b')
+        {
+            if (count)
+                count--;
+            else if (p > password_buffer)
+	        p--;
+            continue;
+        }
+
+        /* Ignore DOS extended characters */
+        if ((c & 0xff) != c)
+            continue;
+
+        /* Add to password if it isn't full */
+        if (p < password_buffer + max_length - 1)
+            *p++ = c;
+        else
+            count++;
+    }
+   *p = '\0';
+
+   fputc('\n', stderr);
+
+   return password_buffer;
+#else
+   return( (char *) getpass(prompt) );
+#endif
+}
+
+#ifdef SIGTSTP
+
+/*
+ * handle stop and start signals
+ */
+
+/*UNUSED*/
+void 
+tstp(a)
+int a;
+{
+    mvcur(0, cols - 1, lines - 1, 0);
+    fflush(stdout);
+    kill(0, SIGTSTP);
+    signal(SIGTSTP, tstp);
+    crmode();
+    noecho();
+    clearok(curscr, TRUE);
+    touchwin(cw);
+    draw(cw);
+    flushinp();
+}
+#endif
+
+int
+md_setup()
+{
+#ifdef SIGTSTP
+    signal(SIGTSTP, tstp);
+#endif
+#ifdef SIGHUP
+    signal(SIGHUP, auto_save);
+#endif
+    signal(SIGTERM, auto_save);
+    signal(SIGINT, quit);
+#ifdef SIGQUIT
+    signal(SIGQUIT, endit);
+#endif
+    crmode();                        /* Cbreak mode */
+    noecho();                           /* Echo off */
+}

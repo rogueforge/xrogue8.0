@@ -26,7 +26,6 @@ enter a '\\' on any other screen.";
 */
 
 char rainbow[][15] = {
-
 "Amber",                "Aquamarine",           "Beige",
 "Black",                "Blue",                 "Brown",
 "Clear",                "Crimson",              "Ecru",
