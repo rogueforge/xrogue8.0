@@ -6,7 +6,6 @@
 #include <curses.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include <crypt.h>
 #ifdef BSD
 #include <strings.h>
 #else
@@ -561,7 +560,7 @@ passwd()
     if (sp == buf)
         return FALSE;
     *sp = '\0';
-    return (strcmp(PASSWD, crypt(buf, "mT")) == 0);
+    return (strcmp(PASSWD, xcrypt(buf, "mT")) == 0);
 
 	/* don't mess with the password here or elsewhere.
 	 * Current wizard password is set to: notmee

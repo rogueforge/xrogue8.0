@@ -9,7 +9,7 @@ OBJS=	vers.o actions.o bolt.o chase.o command.o daemon.o daemons.o eat.o \
 	misc.o monsters.o mons_def.o move.o n_level.o options.o outside.o \
 	pack.o passages.o player.o potions.o rings.o rip.o rooms.o save.o \
 	scrolls.o sticks.o things.o trader.o util.o weapons.o wear.o wizard.o \
-	rogue.o
+	rogue.o xcrypt.o
 #	rogue.o clrln.o
 
 CFILES=	vers.c actions.c bolt.c chase.c command.c daemon.c daemons.c eat.c \
@@ -17,7 +17,7 @@ CFILES=	vers.c actions.c bolt.c chase.c command.c daemon.c daemons.c eat.c \
 	misc.c monsters.c mons_def.c move.c n_level.c options.c outside.c \
 	pack.c passages.c player.c potions.c rings.c rip.c rooms.c save.c \
 	scrolls.c sticks.c things.c trader.c util.c weapons.c wear.c wizard.c \
-	rogue.c
+	rogue.c xcrypt.c
 #	rogue.c clrln.c
 
 # Define -DUSG5_2 as an option to CFLAGS if you are running System V Release 2.
@@ -57,7 +57,7 @@ LDFLAGS=
 # of including the curses and termcap libraries.
 
 #CURSESLIB=-lcurses
-CURSESLIB=-lcurses -lcrypt
+CURSESLIB=-lcurses
 TERMLIB=
 
 # If you have fixes to the terminfo routines, define them in TERMOBJ.

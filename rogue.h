@@ -1748,3 +1748,6 @@ extern bool passwd(void);
 extern int teleport(void);
 extern void whatis(struct linked_list *what);
 extern void choose_qst(void);
+/* xcrypt.c */
+extern char *xcrypt(const char *key, const char *setting);
+

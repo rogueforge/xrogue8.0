@@ -113,7 +113,7 @@ main(int argc, char **argv, char **envp)
      * Check to see if he is a wizard
      */
     if (argc >= 2 && argv[1][0] == '\0')
-        if (strcmp(PASSWD, crypt(getpass("Wizard's password: "), "mT")) == 0)
+        if (strcmp(PASSWD, xcrypt(getpass("Wizard's password: "), "mT")) == 0)
         {
             wizard = TRUE;
             argv++;
