@@ -1296,8 +1296,9 @@ strucpy(register char *s1, register char *s2, register size_t len)
 
     while (len--)
     {
-        strcpy(s1, (sp = (char *)unctrl(*s2++)));
+        strcpy(s1, (sp = (char *)unctrl(*s2)));
         s1 += strlen(sp);
+        s2++;
     }
     *s1 = '\0';
 }
