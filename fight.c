@@ -518,8 +518,10 @@ roll_em(struct thing *att_er, struct thing *def_er, struct object *weap, bool hu
         else if (att == &pstats) {      /* Player attacks monster */
             def_arm = def->s_arm - dext_prot(def->s_dext);
             if (player.t_ctype == C_MONK) /* no strength bonus for monk */
+            {
                 if (weap == NULL) 
                     hplus += att->s_lvl/5; /* monks hplus varies with level */
+            }
             else
                 hplus += str_plus(str_compute())+dext_plus(dex_compute());
         }
