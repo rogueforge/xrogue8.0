@@ -81,7 +81,7 @@ static char *rip[] = {
 "                 |                   |",
 "                 |     killed by     |",
 "                 |                   |",
-"                 |       19          |",
+"                 |                   |",
 "                 |                   |",
 "                *|      *  *  *      |*",
 "       _________)|//\\\\///\\///\\//\\//\\/|(_________",
@@ -133,7 +133,7 @@ death(register short monst)
     mvaddstr(15, 28-(((int)strlen(buf)+1)/2), buf);
     killer = killname(monst);
     mvaddstr(17, 28-(((int)strlen(killer)+1)/2), killer);
-    mvaddstr(18, 27, (sprintf(prbuf, "%2d", lt->tm_year), prbuf));
+    mvaddstr(18, 25, (sprintf(prbuf, "%4d", 1900+lt->tm_year), prbuf));
     move(lines-1, 0);
     refresh();
     score(pstats.s_exp, KILLED, monst);
