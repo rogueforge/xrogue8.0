@@ -305,6 +305,7 @@ new_level(LEVTYPE ltype)
             }
 
             detach(tlist, item);
+            turn_off(*tp,ISELSEWHERE);
             attach(mlist, item);
         }
     }

@@ -373,7 +373,7 @@ m_breathe (register struct thing *tp)
         breath = "fear gas";
     }
 
-    /* Now breathe -- sets "monst_dead" if it kills someone */
+    /* Now breathe */
     shoot_bolt(tp, tp->t_pos, tp->t_newpos, FALSE, 
                     tp->t_index, breath, damage);
 
@@ -819,6 +819,12 @@ m_use_it (register struct thing *tp, bool flee, register struct room *rer, regis
 
 }
 
+void
+reap()
+{
+    _t_free_list(&rlist);
+}
+
 /*
  * runners:
  *      Make all the awake monsters try to do something.
@@ -828,7 +834,7 @@ m_use_it (register struct thing *tp, bool flee, register struct room *rer, regis
 int 
 runners (int segments)
 {
-    register struct linked_list *item, *nitem;
+    register struct linked_list *item;
     register struct thing *tp;
     register int min_time = 20;     /* Minimum time until a monster can act */
 
@@ -842,10 +848,25 @@ runners (int segments)
      *       one immediately. If it wasn't we have to get next one at very
      *       end in case he killed the next one.
      */
-
-    for (item = mlist; item != NULL; item = nitem) {
-        nitem = next(item); /* Get next item now since monster may disappear */
+    for (item = mlist; item != NULL; item = item->l_next) {
         tp = THINGPTR(item);
+        turn_on(*tp, NEEDSTOACT);
+    }
+
+    while(1)
+    {
+        for (item = mlist; item != NULL; item = item->l_next)
+        {
+            tp = THINGPTR(item);
+
+            if (on(*tp, NEEDSTOACT))
+                break;
+        }
+
+        if (item == NULL)
+            break;
+
+        turn_off(*tp, NEEDSTOACT);
 
         /* If we are not awake, just skip us */
         if (off(*tp, ISRUN) && off(*tp, ISHELD)) continue;
@@ -879,20 +900,19 @@ runners (int segments)
         }
 
         /* Heal the creature if it's not in the middle of some action */
-        if (tp->t_action == A_NIL) doctor(tp);
 
-        monst_dead = NULL; /* Indicate that this monster is alive */
+        if (tp->t_action == A_NIL)
+           doctor(tp);
 
-        while (monst_dead != item &&
+        while (off(*tp, ISELSEWHERE) && off(*tp, ISDEAD) &&
                tp->t_no_move <= 0 && off(*tp, ISHELD) && on(*tp, ISRUN)) {
             /* Let's act (or choose an action if t_action = A_NIL) */
             m_act(tp);
         }
 
-        if (monst_dead != item) {
+        if ( off(*tp,ISELSEWHERE) && off(*tp,ISDEAD) ) {
             if (tp->t_no_move < min_time) min_time = tp->t_no_move;
             if (tp->t_quiet < 0) tp->t_quiet = 0;
-            nitem = next(item); /* get next monster since this is valid */
         }
     }
     return(min_time);

@@ -1167,7 +1167,9 @@ killed(register struct linked_list *item, bool pr, bool points, bool treasure)
             o_discard(pitem);
         pitem = nexti;
     }
-    t_discard(item);
+
+    turn_on(*tp,ISDEAD);
+    attach(rlist,item);
 }
 
 /*

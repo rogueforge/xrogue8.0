@@ -480,7 +480,7 @@ sell(register struct thing *tp)
 
     /*
      * Get a linked_list pointer to the seller.  We need this in case
-     * he disappears so we can set monst_dead.
+     * he disappears so we can set him ISDEAD.
      */
     seller = find_mons(tp->t_pos.y, tp->t_pos.x);
 
@@ -490,7 +490,6 @@ sell(register struct thing *tp)
 
         /* Get rid of the monster */
         killed(seller, FALSE, FALSE, FALSE);
-        monst_dead = seller;
         return;
     }
 
@@ -510,7 +509,6 @@ sell(register struct thing *tp)
 
         /* Get rid of the monster */
         killed(seller, FALSE, FALSE, FALSE);
-        monst_dead = seller;
         return;
     }
 
@@ -525,7 +523,6 @@ sell(register struct thing *tp)
     /* Get rid of the monster */
     if (item != NULL) detach(tp->t_pack, item); /* Take it out of the pack */
     killed(seller, FALSE, FALSE, FALSE);
-    monst_dead = seller;
 
     if (item == NULL) return;
 

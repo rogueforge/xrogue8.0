@@ -876,7 +876,7 @@ take_with()
     tp = THINGPTR(item);
         if (on(*tp, ISCHARMED)) {
             monsters[tp->t_index].m_normal = TRUE;
-            monst_dead = item;
+            turn_on(*tp, ISELSEWHERE);
             detach(mlist, item);
             attach(tlist, item);         /* remember him next level */
             check_residue(tp);

@@ -35,6 +35,7 @@ struct object  *cur_misc[NUM_MM];       /* which MM's are in use */
 int cur_relic[MAXRELIC];                /* Currently used relics */
 struct linked_list *lvl_obj = NULL; 
 struct linked_list *mlist = NULL;
+struct linked_list *rlist = NULL;       /* list of dead monsters to be reaped */
 struct linked_list *tlist = NULL;       /* list of monsters fallen down traps */
 struct linked_list *monst_dead = NULL;  /* monster killed by monster    */
 struct object *cur_weapon = NULL;

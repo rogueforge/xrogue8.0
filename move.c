@@ -93,7 +93,6 @@ be_trapped(register struct thing *th, register coord *tc)
                  */
                 if (off(*th,ISUNIQUE) && (th->t_stats.s_hpt-=roll(1,10)) <= 0){
                     killed(mitem, FALSE, FALSE, FALSE);
-                    monst_dead = mitem;
                 }
                 else {  /* Just move monster to next level */
                     check_residue(th);
@@ -108,7 +107,7 @@ be_trapped(register struct thing *th, register coord *tc)
                             turn_off(*th, HASSUMMONED); 
                             turn_on(*th, CANSUMMON);
                     }
-                    monst_dead = mitem;
+                    turn_on(*th,ISELSEWHERE);
                     detach(mlist, mitem);
                     attach(tlist, mitem);       /* remember him next level */
 
@@ -151,7 +150,6 @@ be_trapped(register struct thing *th, register coord *tc)
                  */
                 if (off(*th,ISUNIQUE) && (th->t_stats.s_hpt-=roll(1,10)) <= 0){
                     killed(mitem, FALSE, FALSE, FALSE);
-                    monst_dead = mitem;
                 }
                 else {  /* Just move monster to next level */
                     check_residue(th);
@@ -166,7 +164,8 @@ be_trapped(register struct thing *th, register coord *tc)
                             turn_off(*th, HASSUMMONED); 
                             turn_on(*th, CANSUMMON);
                     }
-                    monst_dead = mitem;
+
+                    turn_on(*th,ISELSEWHERE);
                     detach(mlist, mitem);
                     attach(tlist, mitem);       /* remember him next level */
 
@@ -242,7 +241,6 @@ be_trapped(register struct thing *th, register coord *tc)
                         if (can_see) 
                             msg("The arrow killed %s.", prname(mname, FALSE));
                         killed(mitem, FALSE, FALSE, TRUE);
-                        monst_dead = mitem;
                     }
                 }
             }
@@ -363,7 +361,6 @@ be_trapped(register struct thing *th, register coord *tc)
                         if (can_see) 
                             msg("The dart killed %s.", prname(mname, FALSE));
                         killed(mitem, FALSE, FALSE, TRUE);
-                        monst_dead = mitem;
                     }
                     if (!save(VS_POISON, th, 0)) {
                         th->t_stats.s_hpt /= 2 + level;
@@ -371,7 +368,6 @@ be_trapped(register struct thing *th, register coord *tc)
                             if (can_see) 
                                 msg("The dart killed %s.", prname(mname,FALSE));
                             killed(mitem, FALSE, FALSE, TRUE);
-                            monst_dead = mitem;
                         }
                     }
                 }
@@ -430,7 +426,6 @@ be_trapped(register struct thing *th, register coord *tc)
                         else msg("%s disappeared!", prname(mname, TRUE));
                     }
                     killed(mitem, FALSE, FALSE, TRUE);
-                    monst_dead = mitem;
                 }
             }
         }
@@ -449,7 +444,6 @@ be_trapped(register struct thing *th, register coord *tc)
         }
         else {
             if (can_see) msg("%s fell into a maze trap!", prname(mname, TRUE));
-            monst_dead = mitem;
             if (on(*th, ISUNIQUE)) {
                     check_residue(th);
 
@@ -463,6 +457,7 @@ be_trapped(register struct thing *th, register coord *tc)
                             turn_off(*th, HASSUMMONED); 
                             turn_on(*th, CANSUMMON);
                     }
+                    turn_on(*th,ISELSEWHERE);
                     detach(mlist, mitem);
                     attach(tlist, mitem);       /* remember him next level */
 

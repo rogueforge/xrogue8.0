@@ -633,6 +633,7 @@ command()
 #endif
 
         if (++segment > 10) segment = 1;
+        reap(); /* bury all the dead monsters */
     }
 }
 

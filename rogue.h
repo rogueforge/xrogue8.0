@@ -644,6 +644,10 @@ extern char toupper();
 #define ISCHARMED       0x50100000UL      /* is the monster charmed? */
 #define ISFRIENDLY      0x50100000UL      /* monster friendly for any reason? */
 
+#define NEEDSTOACT      0x60000001      /* monster ready to act this turn n */
+#define ISDEAD          0x60000002      /* monster is dead                  */
+#define ISELSEWHERE     0x60000004      /* monster has been whisked away    */
+
 /* Masks for choosing the right flag */
 
 #define FLAGMASK     0xf0000000UL
@@ -1218,6 +1222,7 @@ extern struct room rooms[];             /* One for each room -- A level */
 extern struct room *oldrp;              /* Roomin(&oldpos) */
 extern struct linked_list *mlist;       /* List of monsters on the level */
 extern struct linked_list *tlist;       /* list of monsters fallen down traps */
+extern struct linked_list *rlist;       /* list of monsters that have died    */
 extern struct death_type deaths[];      /* all the ways to die */
 extern struct thing player;             /* The rogue */
 extern struct monster monsters[NUMMONST+1];       /* The initial monster states */
@@ -1375,6 +1380,7 @@ extern int fusecnt;
 /* actions.c */
 extern void dsrpt_monster(register struct thing *tp, bool always, bool see_him);
 extern void dsrpt_player(void);
+extern void reap(void);
 extern void m_act(register struct thing *tp);
 extern void m_breathe(register struct thing *tp);
 extern void m_select(register struct thing *th, register bool flee);

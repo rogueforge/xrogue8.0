@@ -661,7 +661,7 @@ effect(register struct thing *att, register struct thing *def, struct object *we
                 if (on(*att, ISUNIQUE))
                     monsters[att->t_index].m_normal = TRUE;
                 item = find_mons(att->t_pos.y, att->t_pos.x);
-                monst_dead = item;
+
                 killed(item, FALSE, FALSE, FALSE); /* Remove the attacker */
 
                 if (obj->o_count > 1 && obj->o_group == 0) {
