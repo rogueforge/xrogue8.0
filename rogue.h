@@ -1115,6 +1115,7 @@ struct thing {
     struct linked_list *t_using;        /* What the thing is using */
     struct stats t_stats;               /* Physical description */
     struct stats maxstats;              /* maximum(or initial) stats */
+    int    t_reserved;                  /* reserved for save/restore code */
 };
 
 /*
@@ -1219,7 +1220,7 @@ extern struct linked_list *mlist;       /* List of monsters on the level */
 extern struct linked_list *tlist;       /* list of monsters fallen down traps */
 extern struct death_type deaths[];      /* all the ways to die */
 extern struct thing player;             /* The rogue */
-extern struct monster monsters[];       /* The initial monster states */
+extern struct monster monsters[NUMMONST+1];       /* The initial monster states */
 extern struct linked_list *lvl_obj;     /* List of objects on this level */
 extern struct linked_list *monst_dead;  /* Indicates monster that got killed */
 extern struct object *cur_weapon;       /* Which weapon he is weilding */
@@ -1771,7 +1772,7 @@ extern int rs_read_object_list(int inf, struct linked_list **list);
 extern int find_thing_coord(struct linked_list *monlist, coord *c);
 extern int find_object_coord(struct linked_list *objlist, coord *c);
 extern int rs_write_thing(FILE *savef, struct thing *t);
-extern int rs_fix_thing(struct thing *t);
+extern void rs_fix_thing(struct thing *t);
 extern int rs_read_thing(int inf, struct thing *t);
 extern int find_list_ptr(struct linked_list *l, void *ptr);
 extern int list_size(struct linked_list *l);

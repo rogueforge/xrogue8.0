@@ -1,7 +1,7 @@
 /*
     state.c - Portable Rogue Save State Code
     
-    Copyright (C) 1999 Nicholas J. Kisseberth
+    Copyright (C) 1999, 2000 Nicholas J. Kisseberth
    
     Redistribution and use in source and binary forms, with or without
     modification, are permitted provided that the following conditions
@@ -58,6 +58,8 @@
 #include <sys/stat.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <unistd.h>
+#include <assert.h>
 #include "rogue.h"
 
 #define READSTAT ((format_error == 0) && (read_error == 0))
@@ -67,8 +69,7 @@ int read_error   = FALSE;
 int write_error  = FALSE;
 int format_error = FALSE;
 
-
-int save_debug = TRUE;
+int save_debug = FALSE;
 #define DBG(x)   {if (save_debug) rsPrintf x;}
 
 void
@@ -77,8 +78,8 @@ rsPrintf(char *fmt, ...)
     va_list ap;
 
     va_start(ap, fmt);
-/*  vfprintf(stderr,fmt, ap);*/
-    va_end(ap);	
+    vfprintf(stderr,fmt, ap);
+    va_end(ap); 
 }
 
 
@@ -103,18 +104,32 @@ get_list_item(struct linked_list *l, int i)
 int
 rs_write(FILE *savef, void *ptr, int size)
 {
+    int i = 0;
+    
     if (!write_error)
-        ENCWRITE(ptr,size,fileno(savef));
-		
+        i = ENCWRITE(ptr,size,fileno(savef));
+    if (i != size)
+        write_error = TRUE;
+
+    assert(write_error == 0);
     return(WRITESTAT);
 }
+
+int end_of_file = FALSE;
 
 int
 rs_read(int inf, void *ptr, int size)
 {
+    int actual;
+    end_of_file =FALSE;
     if (!read_error && !format_error)
-        ENCREAD(ptr, size, inf);
-        
+    {
+        actual = ENCREAD(ptr, size, inf);
+
+        if ((actual == 0) && (size != 0))
+           end_of_file = TRUE;
+    }
+       
     if (read_error){
         printf("read error has occurred. restore short-circuited.\n");abort();}
     if (format_error)
@@ -123,48 +138,159 @@ rs_read(int inf, void *ptr, int size)
     return(READSTAT);
 }
 
+int big_endian = 0;
+
 int
 rs_write_int(FILE *savef, int c)
 {
-    rs_write(savef, &c, sizeof(int));
-	DBG(("%d\n",c));    
+    char bytes[4];
+    char *buf = (char *) &c;
+
+    if (big_endian)
+    {
+        bytes[3] = buf[0];
+        bytes[2] = buf[1];
+        bytes[1] = buf[2];
+        bytes[0] = buf[3];
+        buf = bytes;
+    }
+    
+    rs_write(savef, buf, 4);
+
     return(WRITESTAT);
 }
 
 int
 rs_write_ulong(FILE *savef, unsigned long c)
 {
-    rs_write(savef, &c, sizeof(unsigned long));
-	DBG(("%d\n",c));    
+    char bytes[4];
+    char *buf = (char *)&c;
+    
+    if (big_endian)
+    {
+        bytes[3] = buf[0];
+        bytes[2] = buf[1];
+        bytes[1] = buf[2];
+        bytes[0] = buf[3];
+        buf = bytes;
+    }
+    
+    rs_write(savef, buf, 4);
+
+    return(WRITESTAT);
+}
+
+int
+rs_write_long(FILE *savef, long c)
+{
+    char bytes[4];
+    char *buf = (char *)&c;
+    
+    if (big_endian)
+    {
+        bytes[3] = buf[0];
+        bytes[2] = buf[1];
+        bytes[1] = buf[2];
+        bytes[0] = buf[3];
+        buf = bytes;
+    }
+    
+    rs_write(savef, buf, 4);
+
     return(WRITESTAT);
 }
 
 int
 rs_write_boolean(FILE *savef, bool c)
 {
-    rs_write(savef, &c, sizeof(bool));
-	DBG(("%d\n",c));    
+    char buf;
+    
+    if (c == 0)
+        buf = 0;
+    else
+        buf = 1;
+    
+    rs_write(savef, &buf, 1);
+
     return(WRITESTAT);
 }
 
 int
 rs_read_int(int inf, int *i)
 {
-    rs_read(inf, i, sizeof(int));
+    char bytes[4];
+    int  input;
+    char *buf = (char *)&input;
+    
+    rs_read(inf, &input, 4);
+
+    if (big_endian)
+    {
+        bytes[3] = buf[0];
+        bytes[2] = buf[1];
+        bytes[1] = buf[2];
+        bytes[0] = buf[3];
+        buf = bytes;
+    }
+    
+    *i = *((int *) buf);
+
     return(READSTAT);
 }
 
 int
 rs_read_ulong(int inf, unsigned long *i)
 {
-    rs_read(inf, i, sizeof(unsigned long));
+    char bytes[4] = {0,0,0,0};
+    unsigned long input;
+    char *buf = (char *) &input;
+    
+    rs_read(inf, &input, 4);
+
+    if (big_endian)
+    {
+        bytes[3] = buf[0];
+        bytes[2] = buf[1];
+        bytes[1] = buf[2];
+        bytes[0] = buf[3];
+        buf = bytes;
+    }
+    
+    *i = *((unsigned long *) buf);
+    return(READSTAT);
+}
+
+int
+rs_read_long(int inf, long *i)
+{
+    char bytes[4] = {0,0,0,0};
+    long input;
+    char *buf = (char *) &input;
+    
+    rs_read(inf, &input, 4);
+
+    if (big_endian)
+    {
+        bytes[3] = buf[0];
+        bytes[2] = buf[1];
+        bytes[1] = buf[2];
+        bytes[0] = buf[3];
+        buf = bytes;
+    }
+    
+    *i = *((long *) buf);
     return(READSTAT);
 }
 
 int
 rs_read_boolean(int inf, bool *i)
 {
-    rs_read(inf, i, sizeof(bool));
+    char buf;
+    
+    rs_read(inf, &buf, 1);
+    
+    *i = buf;
+    
     return(READSTAT);
 }
 
@@ -184,9 +310,39 @@ rs_write_ints(FILE *savef, int *c, int count)
 int
 rs_write_short(FILE *savef, short c)
 {
-    rs_write(savef, &c, sizeof(short));
-	DBG(("%d\n",c));
+    char bytes[2];
+    char *buf = (char *) &c;
+    
+    if (big_endian)
+    {
+        bytes[1] = buf[0];
+        bytes[0] = buf[1];
+        buf = bytes;
+    }
+    
+    rs_write(savef, buf, 2);
+
     return(WRITESTAT);
+}
+
+int
+rs_read_short(int inf, short *s)
+{
+    char  bytes[2];
+    short input;
+    char *buf = (char *)&input;
+    
+    rs_read(inf, &input, 2);
+
+    if (big_endian)
+    {
+        bytes[1] = buf[0];
+        bytes[0] = buf[1];
+        buf = bytes;
+    }
+    
+    *s = *((short *) buf);
+    return(READSTAT);
 }
 
 int
@@ -337,46 +493,22 @@ rs_read_booleans(int inf, bool *i, int count)
 }
 
 int
-rs_read_short(int inf, short *s)
-{
-    rs_read(inf, s, sizeof(short));
-    
-    return(READSTAT);
-}
-
-int
-rs_write_long(FILE *savef, long c)
-{
-    rs_write(savef, &c, sizeof(long));
-	DBG(("%d",c));    
-    return(WRITESTAT);
-}
-
-int
-rs_read_long(int inf, long *l)
-{
-    rs_read(inf, l, sizeof(long));
-    
-    return(READSTAT);
-}
-
-int
 rs_write_levtype(FILE *savef, LEVTYPE c)
 {
     int lt;
-	
+    
     switch(c)
-	{
-		case NORMLEV: lt = 1; break;
-		case POSTLEV: lt = 2; break;
-		case MAZELEV: lt = 3; break;
-		case OUTSIDE: lt = 4; break;
-		case STARTLEV: lt = 5; break;
-		default: lt = -1; break;
-	}
-	
-	rs_write_int(savef,lt);
-		
+    {
+        case NORMLEV: lt = 1; break;
+        case POSTLEV: lt = 2; break;
+        case MAZELEV: lt = 3; break;
+        case OUTSIDE: lt = 4; break;
+        case STARTLEV: lt = 5; break;
+        default: lt = -1; break;
+    }
+    
+    rs_write_int(savef,lt);
+        
     return(WRITESTAT);
 }
 
@@ -384,18 +516,18 @@ int
 rs_read_levtype(int inf, LEVTYPE *l)
 {
     int lt;
-	
+    
     rs_read_int(inf, &lt);
-	
+    
     switch(lt)
-	{
-		case 1: *l = NORMLEV; break;
-		case 2: *l = POSTLEV; break;
-		case 3: *l = MAZELEV; break;
-		case 4: *l = OUTSIDE; break;
-		case 5: *l = STARTLEV; break;
-		default: *l = -1; break;
-	}
+    {
+        case 1: *l = NORMLEV; break;
+        case 2: *l = POSTLEV; break;
+        case 3: *l = MAZELEV; break;
+        case 4: *l = OUTSIDE; break;
+        case 5: *l = STARTLEV; break;
+        default: *l = NORMLEV; break;
+    }
     
     return(READSTAT);
 }
@@ -403,8 +535,8 @@ rs_read_levtype(int inf, LEVTYPE *l)
 int
 rs_write_char(FILE *savef, char c)
 {
-    rs_write(savef, &c, sizeof(char));
-	DBG(("%c",c));    
+    rs_write(savef, &c, 1);
+    DBG(("%c",c));    
     
     return(WRITESTAT);
 }
@@ -412,7 +544,24 @@ rs_write_char(FILE *savef, char c)
 int
 rs_read_char(int inf, char *c)
 {
-    rs_read(inf, c, sizeof(char));
+    rs_read(inf, c, 1);
+    
+    return(READSTAT);
+}
+
+int
+rs_write_uchar(FILE *savef, unsigned char c)
+{
+    rs_write(savef, &c, 1);
+    DBG(("%c",c));    
+    
+    return(WRITESTAT);
+}
+
+int
+rs_read_uchar(int inf, unsigned char *c)
+{
+    rs_read(inf, c, 1);
     
     return(READSTAT);
 }
@@ -422,13 +571,11 @@ rs_write_string(FILE *savef, char *s)
 {
     int len = 0;
 
-    len = (s == NULL) ? 0L : strlen(s) + 1;
+    len = (s == NULL) ? 0 : strlen(s) + 1;
 
     rs_write_int(savef, len);
-
-    if (len > 0)
-       rs_write(savef, s, len);
-    
+    rs_write(savef, s, len);
+            
     return(WRITESTAT);
 }
 
@@ -585,10 +732,10 @@ rs_write_misc(FILE *savef)
         rs_write_boolean(savef,m_know[i]);
         rs_write_string(savef,m_guess[i]);
     }
- 
+
     return(WRITESTAT);
 }
- 
+
 int
 rs_write_sticks(FILE *savef)
 {
@@ -644,11 +791,10 @@ rs_read_string(int inf, char *s, int max)
     int len = 0;
 
     if (rs_read_int(inf, &len) != FALSE)
-    {   
+    {
         if (len > max)
         {
-            printf("String too long to restore. %d > %d\n",
-                len,max);abort();
+            printf("String too long to restore. %d > %d\n",len,max);
             printf("Sorry, invalid save game format\n");
             format_error = TRUE;
         }
@@ -665,12 +811,12 @@ rs_read_new_string(int inf, char **s)
     int len=0;
     char *buf=0;
 
-    if (rs_read_int(inf, &len) != FALSE)
+    if (rs_read_int(inf, &len) != 0)
     {
         if (len == 0)
             *s = NULL;
         else
-        {       
+        { 
             buf = malloc(len);
 
             if (buf == NULL)            
@@ -678,12 +824,11 @@ rs_read_new_string(int inf, char **s)
             else
             {
                 rs_read(inf, buf, len);
-
                 *s = buf;
             }
         }
     }
-    
+
     return(READSTAT);
 }
 
@@ -700,7 +845,7 @@ rs_write_strings(FILE *savef, char *s[], int count)
         len = (s[n] == NULL) ? 0L : strlen(s[n]) + 1;
         rs_write_int(savef, len);
         rs_write(savef, s[n], len);
-		DBG(("%s",s[n]));
+        DBG(("%s",s[n]));
     }
     
     return(WRITESTAT);
@@ -716,7 +861,7 @@ rs_write_words(FILE *savef, struct words *w, int count)
     for(n = 0; n < count; n++)
     {
         rs_write(savef, w[n].w_string, sizeof(w[n].w_string));
-		DBG(("%s",w[n].w_string));
+        DBG(("%s",w[n].w_string));
     }
     
     return(WRITESTAT);
@@ -783,9 +928,9 @@ int
 rs_write_coord(FILE *savef, coord *c)
 {
     DBG(("X ="));
-	rs_write_int(savef, c->x);
+    rs_write_int(savef, c->x);
     DBG(("Y ="));
-	rs_write_int(savef, c->y);
+    rs_write_int(savef, c->y);
     
     return(WRITESTAT);
 }
@@ -805,7 +950,7 @@ rs_write_daemons(FILE *savef, struct delayed_action *d_list,int count)
     int i = 0;
     int func = 0;
         
-	DBG(("Daemons\n"));
+    DBG(("Daemons\n"));
     rs_write_int(savef, RSXR_DAEMONS);
     rs_write_int(savef, count);
         
@@ -927,7 +1072,7 @@ rs_read_daemons(int inf, struct delayed_action *d_list, int count)
     int func = 0;
     int value = 0;
     int id = 0;
-	int dummy = 0;
+    int dummy = 0;
     
     if (d_list == NULL)
         printf("HELP THERE ARE NO DAEMONS\n");
@@ -1079,8 +1224,8 @@ rs_write_rooms(FILE *savef, struct room r[], int count)
     int n = 0,i = -1;
     struct linked_list *l;
 
-	DBG(("Rooms\n"));
-	rs_write_int(savef, RSXR_ROOMS);
+    DBG(("Rooms\n"));
+    rs_write_int(savef, RSXR_ROOMS);
     rs_write_int(savef, count);
     
     for(n=0; n<count; n++)
@@ -1107,10 +1252,10 @@ int
 rs_read_rooms(int inf, struct room *r, int count)
 {
     int value = 0, n = 0, i = 0, index = 0, id = 0;
-    struct linked_list *fires=NULL, *item;
+    struct linked_list *fires=NULL, *item = NULL;
 
     if (rs_read_int(inf,&id) != 0)
-	{
+    {
         if (id != RSXR_ROOMS)
         {
             printf("Invalid id. %x != %x(RSXR_ROOMS)\n",
@@ -1118,47 +1263,47 @@ rs_read_rooms(int inf, struct room *r, int count)
             printf("Sorry, invalid save game format");
             format_error = TRUE;
         }
-		else if (rs_read_int(inf,&value) != 0)
+        else if (rs_read_int(inf,&value) != 0)
         {
-	        if (value != count)
-	        {
-    	        printf("Incorrect number of rooms in block. %d > %d.",
-        	        value,count);
-    	        printf("Sorry, invalid save game format");
-        	    format_error = TRUE;
-	        }
-    	    else
+            if (value != count)
+            {
+                printf("Incorrect number of rooms in block. %d > %d.",
+                    value,count);
+                printf("Sorry, invalid save game format");
+                format_error = TRUE;
+            }
+            else
             {
                 for(n=0; n<value; n++)
-    	        {   
-        	    	rs_read_coord(inf,&r[n].r_pos);
-            	    rs_read_coord(inf,&r[n].r_max);
-	            	rs_read_long(inf,&r[n].r_flags);
-  	            	rs_read_coord_list(inf, &r[n].r_exit);
+                {   
+                    rs_read_coord(inf,&r[n].r_pos);
+                    rs_read_coord(inf,&r[n].r_max);
+                    rs_read_long(inf,&r[n].r_flags);
+                    rs_read_coord_list(inf, &r[n].r_exit);
 
                     rs_read_int(inf, &i);
-
-    	            while (i>0)
-                	{
-        		        rs_read_int(inf,&index);
-                    	
-						if (index >= 0)
-	                    {
-						    void *data;
-        	                data = get_list_item(mlist,index);
-            	            item = new_item(sizeof(struct linked_list *));
-                	        item->l_data = data;
-                    	    if (fires == NULL)
-								fires = item;
-							else
-							    attach(fires,item);
-	                    }
-    	                i--;
-        	        }
-					r[n].r_fires=fires;
-            	}
-        	}
-		}
+                    fires = NULL;
+                    while (i>0)
+                    {
+                        rs_read_int(inf,&index);
+                        
+                        if (index >= 0)
+                        {
+                            void *data;
+                            data = get_list_item(mlist,index);
+                            item = creat_item();
+                            item->l_data = data;
+                            if (fires == NULL)
+                                fires = item;
+                            else
+                                attach(fires,item);
+                        }
+                        i--;
+                    }
+                    r[n].r_fires=fires; 
+                }
+            }
+        }
     }
 
     return(READSTAT);
@@ -1167,13 +1312,13 @@ rs_read_rooms(int inf, struct room *r, int count)
 int
 rs_write_object(FILE *savef, struct object *o)
 {
-	save_debug = FALSE;
+    save_debug = FALSE;
     rs_write_int(savef, RSXR_OBJECT);
     rs_write_int(savef, o->o_type);
     rs_write_coord(savef, &o->o_pos);
     rs_write_char(savef, o->o_launch);
-    rs_write_string(savef, o->o_damage);
-    rs_write_string(savef, o->o_hurldmg);
+    rs_write(savef, o->o_damage, sizeof(o->o_damage));
+    rs_write(savef, o->o_hurldmg, sizeof(o->o_hurldmg));
     rs_write_int(savef, o->o_count);
     rs_write_int(savef, o->o_which);
     rs_write_int(savef, o->o_hplus);
@@ -1183,40 +1328,40 @@ rs_write_object(FILE *savef, struct object *o)
     rs_write_int(savef, o->o_group);
     rs_write_int(savef, o->o_weight);
     rs_write(savef, o->o_mark, MARKLEN);
-	save_debug = TRUE;
+    save_debug = TRUE;
 
-	DBG(("Object\n"));
-	DBG(("    SaveID  : %X\n",RSXR_OBJECT));
-	DBG(("    Type    : %d\n",o->o_type));
-	DBG(("    Pos     : %d %d\n",o->o_pos.x,o->o_pos.y));
-	DBG(("    Launch  : %c\n",o->o_launch));
-	DBG(("    Damage  : %s\n",o->o_damage));
-	DBG(("    Hurl    : %s\n",o->o_hurldmg));
-	DBG(("    Count   : %d\n",o->o_count));
-	DBG(("    Which   : %d\n",o->o_which));
-	DBG(("    HPlus   : %d\n",o->o_hplus));
-	DBG(("    DPlus   : %d\n",o->o_dplus));
-	DBG(("    AC      : %d\n",o->o_ac));
-	DBG(("    Flags   : %X\n",o->o_flags));
-	DBG(("    Group   : %d\n",o->o_group));
-	DBG(("    Weight  : %d\n",o->o_weight));
-	DBG(("    Mark    : %s\n",o->o_mark));
-	if (o->contents == NULL)
-	{
-		DBG(("    Contents: None\n"));
-		save_debug = FALSE;
-	}
-	else
-	{
-		DBG(("    CONTENTS\n"));
-	}
-		
+    DBG(("Object\n"));
+    DBG(("    SaveID  : %X\n",RSXR_OBJECT));
+    DBG(("    Type    : %d\n",o->o_type));
+    DBG(("    Pos     : %d %d\n",o->o_pos.x,o->o_pos.y));
+    DBG(("    Launch  : %c\n",o->o_launch));
+    DBG(("    Damage  : %s\n",o->o_damage));
+    DBG(("    Hurl    : %s\n",o->o_hurldmg));
+    DBG(("    Count   : %d\n",o->o_count));
+    DBG(("    Which   : %d\n",o->o_which));
+    DBG(("    HPlus   : %d\n",o->o_hplus));
+    DBG(("    DPlus   : %d\n",o->o_dplus));
+    DBG(("    AC      : %d\n",o->o_ac));
+    DBG(("    Flags   : %X\n",o->o_flags));
+    DBG(("    Group   : %d\n",o->o_group));
+    DBG(("    Weight  : %d\n",o->o_weight));
+    DBG(("    Mark    : %s\n",o->o_mark));
+    if (o->contents == NULL)
+    {
+        DBG(("    Contents: None\n"));
+        save_debug = FALSE;
+    }
+    else
+    {
+        DBG(("    CONTENTS\n"));
+    }
+        
     rs_write_object_list(savef, o->contents);
-	
-	if (o->contents != NULL)
-		DBG(("    END_CONTENTS\n"));
-	
-	save_debug = TRUE;
+    
+    if (o->contents != NULL)
+        DBG(("    END_CONTENTS\n"));
+    
+    save_debug = TRUE;
     return(WRITESTAT);
 }
 
@@ -1238,8 +1383,8 @@ rs_read_object(int inf, struct object *o)
             rs_read_int(inf, &o->o_type);
             rs_read_coord(inf, &o->o_pos);
             rs_read_char(inf, &o->o_launch);
-            rs_read_string(inf, o->o_damage,sizeof(o->o_damage));
-            rs_read_string(inf, o->o_hurldmg,sizeof(o->o_hurldmg));
+            rs_read(inf, o->o_damage,sizeof(o->o_damage));
+            rs_read(inf, o->o_hurldmg,sizeof(o->o_hurldmg));
             rs_read_int(inf, &o->o_count);
             rs_read_int(inf, &o->o_which);
             rs_read_int(inf, &o->o_hplus);
@@ -1260,9 +1405,9 @@ rs_read_object(int inf, struct object *o)
 int
 rs_write_stats(FILE *savef, struct stats *s)
 {
-	DBG(("Stats\n"));
+    DBG(("Stats\n"));
     rs_write_int(savef, RSXR_STATS);
-	
+    
     rs_write_short(savef, s->s_str);
     rs_write_short(savef, s->s_intel);
     rs_write_short(savef, s->s_wisdom);
@@ -1276,7 +1421,7 @@ rs_write_stats(FILE *savef, struct stats *s)
     rs_write_int(savef, s->s_hpt);
     rs_write_int(savef, s->s_pack);
     rs_write_int(savef, s->s_carry);
-    rs_write_string(savef, s->s_dmg);
+    rs_write(savef, s->s_dmg, sizeof(s->s_dmg));
 
     return(WRITESTAT);
 }
@@ -1296,30 +1441,30 @@ rs_read_stats(int inf, struct stats *s)
         }
         else
         {
-		    rs_read_short(inf,&s->s_str);
-		    rs_read_short(inf,&s->s_intel);
-		    rs_read_short(inf,&s->s_wisdom);
-		    rs_read_short(inf,&s->s_dext);
-		    rs_read_short(inf,&s->s_const);
-		    rs_read_short(inf,&s->s_charisma);
-		    rs_read_ulong(inf,&s->s_exp);
-		    rs_read_int(inf,&s->s_lvladj);
-		    rs_read_int(inf,&s->s_lvl);
-		    rs_read_int(inf,&s->s_arm);
-		    rs_read_int(inf,&s->s_hpt);
-		    rs_read_int(inf,&s->s_pack);
-		    rs_read_int(inf,&s->s_carry);
-		    rs_read_string(inf,s->s_dmg,sizeof(s->s_dmg));
-		}
-	}
-	    
+            rs_read_short(inf,&s->s_str);
+            rs_read_short(inf,&s->s_intel);
+            rs_read_short(inf,&s->s_wisdom);
+            rs_read_short(inf,&s->s_dext);
+            rs_read_short(inf,&s->s_const);
+            rs_read_short(inf,&s->s_charisma);
+            rs_read_ulong(inf,&s->s_exp);
+            rs_read_int(inf,&s->s_lvladj);
+            rs_read_int(inf,&s->s_lvl);
+            rs_read_int(inf,&s->s_arm);
+            rs_read_int(inf,&s->s_hpt);
+            rs_read_int(inf,&s->s_pack);
+            rs_read_int(inf,&s->s_carry);
+            rs_read(inf,s->s_dmg,sizeof(s->s_dmg));
+        }
+    }
+        
     return(READSTAT);
 }
 
 int
 rs_write_mstats(FILE *savef, struct mstats *s)
 {
-	DBG(("M-Stats\n"));
+    DBG(("M-Stats\n"));
     rs_write_int(savef, RSXR_STATS);
     rs_write_short(savef, s->ms_str);
     /*printf("    Strength: %d\n",s->ms_str);*/
@@ -1328,8 +1473,8 @@ rs_write_mstats(FILE *savef, struct mstats *s)
     rs_write_ulong(savef, s->ms_exp);
     rs_write_short(savef, s->ms_lvl);
     rs_write_short(savef, s->ms_arm);
-    rs_write_string(savef, s->ms_hpt);
-    rs_write_string(savef, s->ms_dmg);
+    rs_write(savef, s->ms_hpt, sizeof(s->ms_hpt));
+    rs_write(savef, s->ms_dmg, sizeof(s->ms_dmg));
     /*printf("    Damage: %s\n",s->ms_dmg);*/
 
     return(WRITESTAT);
@@ -1348,26 +1493,26 @@ rs_read_mstats(int inf, struct mstats *s)
             printf("Sorry, invalid save game format");
             format_error = TRUE;
         }
-		else
-		{
-		    rs_read_short(inf,&s->ms_str);
-			/*printf("    Strength: %d\n",s->ms_str);*/
-		    rs_read_short(inf,&s->ms_dex);
-			/*printf("    Dexterity: %d\n",s->ms_dex);*/
-		    rs_read_short(inf,&s->ms_move);
-			/*printf("    Moves: %d\n",s->ms_move);*/
-		    rs_read_ulong(inf,&s->ms_exp);
-			/*printf("    Experience: %d\n",s->ms_exp);*/
-		    rs_read_short(inf,&s->ms_lvl);
-			/*printf("    Level: %d\n",s->ms_lvl);*/
-		    rs_read_short(inf,&s->ms_arm);
-			/*printf("    Armor: %d\n",s->ms_arm);*/
-		    rs_read_string(inf,s->ms_hpt,sizeof(s->ms_hpt));
-			/*printf("    HP: %s\n",s->ms_hpt);*/
-		    rs_read_string(inf,s->ms_dmg,sizeof(s->ms_dmg));
-			/*printf("    Damage: %s\n",s->ms_dmg);*/
-		}
-	}
+        else
+        {
+            rs_read_short(inf,&s->ms_str);
+            /*printf("    Strength: %d\n",s->ms_str);*/
+            rs_read_short(inf,&s->ms_dex);
+            /*printf("    Dexterity: %d\n",s->ms_dex);*/
+            rs_read_short(inf,&s->ms_move);
+            /*printf("    Moves: %d\n",s->ms_move);*/
+            rs_read_ulong(inf,&s->ms_exp);
+            /*printf("    Experience: %d\n",s->ms_exp);*/
+            rs_read_short(inf,&s->ms_lvl);
+            /*printf("    Level: %d\n",s->ms_lvl);*/
+            rs_read_short(inf,&s->ms_arm);
+            /*printf("    Armor: %d\n",s->ms_arm);*/
+            rs_read(inf,s->ms_hpt,sizeof(s->ms_hpt));
+            /*printf("    HP: %s\n",s->ms_hpt);*/
+            rs_read(inf,s->ms_dmg,sizeof(s->ms_dmg));
+            /*printf("    Damage: %s\n",s->ms_dmg);*/
+        }
+    }
     
     return(READSTAT);
 }
@@ -1377,15 +1522,15 @@ rs_write_init_weps(FILE *savef, struct init_weps *w, int count)
 {
     int i;
 
-	DBG(("Init-Weps\n"));
+    DBG(("Init-Weps\n"));
     rs_write_int(savef, RSXR_IWEAPS);
     rs_write_int(savef, count);
 
     for(i=0;i<count;i++)
     {
-        rs_write_string(savef, w[i].w_name);
-        rs_write_string(savef, w[i].w_dam);
-        rs_write_string(savef, w[i].w_hrl);
+        rs_write(savef, w[i].w_name, sizeof(w[i].w_name));
+        rs_write(savef, w[i].w_dam, sizeof(w[i].w_dam));
+        rs_write(savef, w[i].w_hrl, sizeof(w[i].w_hrl));
         rs_write_char(savef, w[i].w_launch);
         rs_write_int(savef, w[i].w_flags);
         rs_write_int(savef, w[i].w_rate);
@@ -1406,15 +1551,15 @@ rs_read_init_weps(int inf, struct init_weps *w,int count)
     if (value != count)
     {
         printf("Incorrect number of init_weps in block. %d != %d.",
-        	        value,count);
+                    value,count);
         printf("Sorry, invalid save game format");
-   	    format_error = TRUE;
+        format_error = TRUE;
     }
     else for (i = 0; i < count; i++)
     {
-        rs_read_string(inf, w[i].w_name, sizeof(w[i].w_name));
-        rs_read_string(inf, w[i].w_dam, sizeof(w[i].w_dam));
-        rs_read_string(inf, w[i].w_hrl, sizeof(w[i].w_hrl));
+        rs_read(inf, w[i].w_name, sizeof(w[i].w_name));
+        rs_read(inf, w[i].w_dam, sizeof(w[i].w_dam));
+        rs_read(inf, w[i].w_hrl, sizeof(w[i].w_hrl));
         rs_read_char(inf, &w[i].w_launch);
         rs_read_int(inf, &w[i].w_flags);
         rs_read_int(inf, &w[i].w_rate);
@@ -1428,12 +1573,12 @@ int
 rs_write_init_armor(FILE *savef, struct init_armor *a, int count)
 {
     int i;
-	DBG(("Init-Armor\n"));
+    DBG(("Init-Armor\n"));
     rs_write_int(savef, RSXR_IARMOR);
     rs_write_int(savef, count);
     for(i=0;i<count;i++)
     {
-        rs_write_string(savef, a[i].a_name);
+        rs_write(savef, a[i].a_name, sizeof(a[i].a_name));
         rs_write_int(savef, a[i].a_prob);
         rs_write_int(savef, a[i].a_class);
         rs_write_int(savef, a[i].a_worth);
@@ -1452,7 +1597,7 @@ rs_read_init_armor(int inf, struct init_armor *a,int count)
 
     for(i=0;i<count;i++)
     {
-        rs_read_string(inf, a[i].a_name, sizeof(a[i].a_name));
+        rs_read(inf, a[i].a_name, sizeof(a[i].a_name));
         rs_read_int(inf, &a[i].a_prob);
         rs_read_int(inf, &a[i].a_class);
         rs_read_int(inf, &a[i].a_worth);
@@ -1466,7 +1611,7 @@ int
 rs_write_spells(FILE *savef, struct spells *s, int count)
 {
     int i;
-	DBG(("Spells\n"));
+    DBG(("Spells\n"));
     rs_write_int(savef, RSXR_SPELLS);
     rs_write_int(savef, count);
     for(i=0;i<count;i++)
@@ -1500,10 +1645,10 @@ rs_read_spells(int inf, struct spells *s,int count)
 int
 rs_write_item_list(FILE *savef, struct item_list *i)
 {
-	DBG(("Item List\n"));
+    DBG(("Item List\n"));
     rs_write_int(savef, RSXR_ILIST);
-    rs_write_char(savef, i->item_ch);
-    rs_write_string(savef, i->item_desc);
+    rs_write_uchar(savef, i->item_ch);
+    rs_write(savef, i->item_desc, sizeof(i->item_desc));
     return(WRITESTAT);
 }
 
@@ -1514,18 +1659,18 @@ rs_read_item_list(int inf, struct item_list *i)
 
     rs_read_int(inf, &id);
 
-	rs_read_char(inf, &i->item_ch); 
-	rs_read_string(inf, i->item_desc,sizeof(i->item_desc)); 
-	return(READSTAT); 
+    rs_read_uchar(inf, &i->item_ch); 
+    rs_read(inf, i->item_desc,sizeof(i->item_desc));
+    return(READSTAT); 
 }
 
 int
 rs_write_h_list(FILE *savef, struct h_list *h)
 {
-	DBG(("H List\n"));
+    DBG(("H List\n"));
     rs_write_int(savef, RSXR_HLIST);
     rs_write_char(savef, h->h_ch);
-    rs_write_string(savef, h->h_desc);
+    rs_write(savef, h->h_desc, sizeof(h->h_desc));
     return(WRITESTAT);
 }
 
@@ -1537,7 +1682,7 @@ rs_read_h_list(int inf, struct h_list *h)
     rs_read_int(inf, &id);
 
     rs_read_char(inf, &h->h_ch);
-    rs_read_string(inf, h->h_desc,sizeof(h->h_desc));
+    rs_read(inf, h->h_desc,sizeof(h->h_desc));
     return(READSTAT);
 }
 
@@ -1546,14 +1691,14 @@ rs_write_death_types(FILE *savef, struct death_type *d,int count)
 {
     int i;
 
-	DBG(("Death Types\n"));
+    DBG(("Death Types\n"));
     rs_write_int(savef, RSXR_DEATHTYPE);
     rs_write_int(savef, count);
 
     for(i=0; i < count; i++)
     {
         rs_write_int(savef, d[i].reason);
-        rs_write_string(savef, d[i].name);
+        rs_write(savef, d[i].name, sizeof(d[i].name));
     }
     return(WRITESTAT);
 }
@@ -1566,16 +1711,16 @@ rs_read_death_types(int inf, struct death_type *d, int count)
     rs_read_int(inf, &id);
     rs_read_int(inf, &value);
     if (value != count)
-	{
+    {
         printf("Incorrect number of death_types in block. %d > %d.",
                value,count);
-    	printf("Sorry, invalid save game format");
+        printf("Sorry, invalid save game format");
         format_error = TRUE;
     }
     else for(i=0;i < count;i++)
     {
         rs_read_int(inf, &d[i].reason);
-        rs_read_string(inf, d[i].name,sizeof(d[i].name));
+        rs_read(inf, d[i].name,sizeof(d[i].name));
     }
     return(READSTAT);
 }
@@ -1585,13 +1730,13 @@ rs_write_character_types(FILE *savef, struct character_types *c, int count)
 {
     int i;
 
-	DBG(("Character Types\n"));
+    DBG(("Character Types\n"));
     rs_write_int(savef, RSXR_CTYPES);
     rs_write_int(savef,count);
 
     for(i=0;i<count;i++)
     {
-        rs_write_string(savef, c[i].name);
+        rs_write(savef, c[i].name, sizeof(c[i].name));
         rs_write_long(savef, c[i].start_exp);
         rs_write_long(savef, c[i].cap);
         rs_write_int(savef, c[i].hit_pts);
@@ -1613,15 +1758,15 @@ rs_read_character_types(int inf, struct character_types *c,int count)
     rs_read_int(inf, &value);
 
     if (value != count)
-	{
-        printf("Incorrect number of rooms in block. %d > %d.",
+    {
+        printf("Incorrect number of character types in block. %d > %d.",
                value,count);
-    	printf("Sorry, invalid save game format");
+        printf("Sorry, invalid save game format");
         format_error = TRUE;
     }
     else for (i = 0; i < count; i++)
     {
-        rs_read_string(inf, c[i].name,sizeof(c[i].name));
+        rs_read(inf, c[i].name,sizeof(c[i].name));
         rs_read_long(inf, &c[i].start_exp);
         rs_read_long(inf, &c[i].cap);
         rs_read_int(inf, &c[i].hit_pts);
@@ -1639,7 +1784,7 @@ rs_write_traps(FILE *savef, struct trap *trap,int count)
 {
     int n;
 
-	DBG(("Traps\n"));
+    DBG(("Traps\n"));
     rs_write_int(savef, RSXR_TRAP);
     rs_write_int(savef, count);
     
@@ -1700,21 +1845,21 @@ rs_write_monsters(FILE * savef, struct monster * m, int count)
 {
     int n;
     
-	DBG(("Monsters\n"));
+    DBG(("Monsters\n"));
     rs_write_int(savef, RSXR_MONSTERS);
     rs_write_int(savef, count);
 
     for(n=0;n<count;n++)
     {
-        rs_write_string(savef, m[n].m_name);
+        rs_write(savef, m[n].m_name, sizeof(m[n].m_name));
         /*printf("Monster: %s/%d/%d\n",m[n].m_name,sizeof(m[n].m_name),strlen(m[n].m_name));*/
         rs_write_short(savef, m[n].m_carry);
         rs_write_boolean(savef, m[n].m_normal);
         rs_write_boolean(savef, m[n].m_wander);
         rs_write_char(savef, m[n].m_appear);
-        rs_write_string(savef, m[n].m_intel);
+        rs_write(savef, m[n].m_intel,sizeof(m[n].m_intel));
         rs_write_longs(savef, m[n].m_flags, MAXFLAGS);
-        rs_write_string(savef, m[n].m_typesum);
+        rs_write(savef, m[n].m_typesum,sizeof(m[n].m_typesum));
         rs_write_short(savef, m[n].m_numsum);
         rs_write_short(savef, m[n].m_add_exp);
 
@@ -1728,7 +1873,8 @@ int
 rs_read_monsters(int inf, struct monster *m, int count)
 {
     int id = 0, value = 0, n = 0;
-    
+    char buffer[1024];
+
     if (rs_read_int(inf, &id) != 0)
     {
         if (id != RSXR_MONSTERS)
@@ -1740,35 +1886,36 @@ rs_read_monsters(int inf, struct monster *m, int count)
         }
         else if (rs_read_int(inf, &value) != 0)
         {
-			if (value != count)
-			{   printf("Incorrect number of monsters in block. %d != %d.",
+            if (value != count)
+            {   printf("Incorrect number of monsters in block. %d != %d.",
                     value,count);
                 printf("Sorry, invalid save game format\n");
                 format_error = TRUE;
 
-			}
-			else for(n=0;n<value;n++)
+            }
+            else for(n=0;n<value;n++)
             {
-                rs_read_string(inf, m[n].m_name,sizeof(m[n].m_name));
+                rs_read(inf, buffer,sizeof(m[n].m_name));
+                assert( strcmp(buffer,m[n].m_name) == 0);
                 /*printf("Monster: %s\n",m[n].m_name);*/
                 rs_read_short(inf, &m[n].m_carry);
-				/*printf("    Carry: %d\n",m[n].m_carry); */
+                /*printf("    Carry: %d\n",m[n].m_carry); */
                 rs_read_boolean(inf, &m[n].m_normal);
-				/*printf("    Normal: %d\n",m[n].m_normal);*/
+                /*printf("    Normal: %d\n",m[n].m_normal);*/
                 rs_read_boolean(inf, &m[n].m_wander);
-				/*printf("    Wander: %d\n",m[n].m_wander);*/
+                /*printf("    Wander: %d\n",m[n].m_wander);*/
                 rs_read_char(inf, &m[n].m_appear);
-				/*printf("    Appears: %c\n",m[n].m_appear);*/
-                rs_read_string(inf, m[n].m_intel,sizeof(m[n].m_intel));
-				/*printf("    Intelligence: %s\n",m[n].m_intel);*/
+                /*printf("    Appears: %c\n",m[n].m_appear);*/
+                rs_read(inf, m[n].m_intel,sizeof(m[n].m_intel));
+                /*printf("    Intelligence: %s\n",m[n].m_intel);*/
                 rs_read_longs(inf, m[n].m_flags, MAXFLAGS);
-				/*printf("    Flags: %X\n",m[n].m_flags);*/
-                rs_read_string(inf, m[n].m_typesum, sizeof(m[n].m_typesum));
-				/*printf("    Summons: %s\n",m[n].m_typesum);*/
+                /*printf("    Flags: %X\n",m[n].m_flags);*/
+                rs_read(inf, m[n].m_typesum, sizeof(m[n].m_typesum));
+                /*printf("    Summons: %s\n",m[n].m_typesum);*/
                 rs_read_short(inf, &m[n].m_numsum);
-				/*printf("    # Summons: %d\n",m[n].m_numsum);*/
+                /*printf("    # Summons: %d\n",m[n].m_numsum);*/
                 rs_read_short(inf, &m[n].m_add_exp);
-				/*printf("    Experience: %d\n",m[n].m_add_exp);*/
+                /*printf("    Experience: %d\n",m[n].m_add_exp);*/
                 rs_read_mstats(inf, &m[n].m_stats);
 
              }
@@ -1785,7 +1932,7 @@ rs_read_monsters(int inf, struct monster *m, int count)
 int
 rs_write_coord_list(FILE *savef, struct linked_list *l)
 {
-	DBG(("Coordinate List\n"));
+    DBG(("Coordinate List\n"));
     rs_write_int(savef, RSXR_COORDLIST);
     rs_write_int(savef, list_size(l));
 
@@ -1814,7 +1961,7 @@ rs_read_coord_list(int inf, struct linked_list **list)
             printf("Sorry, invalid save game format");
             format_error = TRUE;
         }
-	else if (rs_read_int(inf,&cnt) != 0)
+    else if (rs_read_int(inf,&cnt) != 0)
         {
             for (i = 0; i < cnt; i++)
             {
@@ -1822,8 +1969,6 @@ rs_read_coord_list(int inf, struct linked_list **list)
                 l->l_prev = previous;
                 if (previous != NULL)
                     previous->l_next = l;
-                l->l_data = malloc(sizeof(coord));
-                memset(l->l_data,0,sizeof(coord));
                 rs_read_coord(inf,(coord *) l->l_data);
                 if (previous == NULL)
                     head = l;
@@ -1847,7 +1992,7 @@ rs_read_coord_list(int inf, struct linked_list **list)
 int
 rs_write_object_list(FILE *savef, struct linked_list *l)
 {
-	DBG(("Object List\n"));
+    DBG(("Object List\n"));
     rs_write_int(savef, RSXR_OBJECTLIST);
     rs_write_int(savef, list_size(l));
 
@@ -1900,15 +2045,57 @@ rs_read_object_list(int inf, struct linked_list **list)
 }
 
 int
+find_thing_coord(monlist, c)
+struct linked_list *monlist;
+coord *c;
+{
+    struct linked_list *mitem;
+    struct thing *tp;
+    int i = 0;
+
+    for(mitem = monlist; mitem != NULL; mitem = mitem->l_next)
+    {
+        tp = THINGPTR(mitem);
+        if (c == &tp->t_pos)
+            return(i);
+        i++;
+    }
+
+    return(-1);
+}
+
+int
+find_object_coord(objlist, c)
+struct linked_list *objlist;
+coord *c;
+{
+    struct linked_list *oitem;
+    struct object *obj;
+    int i = 0;
+
+    for(oitem = objlist; oitem != NULL; oitem = oitem->l_next)
+    {
+        obj = OBJPTR(oitem);
+        if (c == &obj->o_pos)
+            return(i);
+        i++;
+    }
+
+    return(-1);
+}
+
+int
 rs_write_thing(FILE *savef, struct thing *t)
 {
-	DBG(("Thing\n"));
-	save_debug = FALSE;
+    int i = -1;
+
+    DBG(("Thing\n"));
+    save_debug = FALSE;
     rs_write_int(savef, RSXR_THING);
     rs_write_boolean(savef,t->t_wasshot);
     rs_write_char(savef, t->t_type);
     rs_write_char(savef, t->t_disguise);
-    rs_write_char(savef, t->t_oldch);
+    rs_write_uchar(savef, t->t_oldch);
     rs_write_short(savef, t->t_ctype);
     rs_write_short(savef, t->t_index);
     rs_write_short(savef, t->t_no_move);
@@ -1920,86 +2107,122 @@ rs_write_thing(FILE *savef, struct thing *t)
     rs_write_short(savef, t->t_summon);
     rs_write_short(savef, t->t_cast);
     rs_write_short(savef, t->t_breathe);
+
     rs_write_string(savef,t->t_name);
     rs_write_coord(savef, &t->t_doorgoal);
 
     if (t->t_dest == &hero)
     {
+        rs_write_int(savef,0);
         rs_write_int(savef,1);
-        rs_write_int(savef,-100);
     }
-    else if (t->t_dest == NULL)
+    else if (t->t_dest != NULL)
+    {
+        i = find_thing_coord(mlist, t->t_dest);
+
+        if (i >= 0)
+        {
+            rs_write_int(savef,1);
+            rs_write_int(savef,i);
+        }
+        else
+        {
+            i = find_object_coord(lvl_obj, t->t_dest);
+
+            if (i >= 0)
+            {
+                rs_write_int(savef,2);
+                rs_write_int(savef,i);
+            }
+            else
+            {
+                rs_write_int(savef,0);
+                rs_write_int(savef,1); /* chase the hero anyway */
+            }
+        }
+    }
+    else
     {
         rs_write_int(savef,0);
-        rs_write_int(savef,-100);
+        rs_write_int(savef,0);
     }
-	else
-	{
-		/* TODO:CRITICAL
-		
-		t_dest is a pointer to a t_pos field of a monster in
-		one of our lists or is a pointer to o_pos field of an object
-		in one of our lists. need to write out an id for the
-		list and an index within that list.
-		*/
-	
-		rs_write_coord(savef,t->t_dest);
-	}
 
     rs_write_coord(savef, &t->t_pos);
     rs_write_coord(savef, &t->t_oldpos);
     rs_write_coord(savef, &t->t_newpos);
     rs_write_ulongs(savef, t->t_flags, 16);
-	save_debug = TRUE;
+    save_debug = TRUE;
 
-	DBG(("Thing\n"));
-	DBG(("    SaveID  : %X\n",RSXR_THING));
-	DBG(("    Name    : %s\n",t->t_name));
-	DBG(("    WasShot : %d\n",t->t_wasshot));
-	DBG(("    Type    : %c(%d)\n",t->t_type,t->t_type));
-	DBG(("    Disguise: %c(%d)\n",t->t_disguise,t->t_disguise));
-	DBG(("    OldCh   : %c(%d)\n",t->t_oldch,t->t_oldch));
-	DBG(("    CType   : %d\n",t->t_ctype));
-	DBG(("    Index   : %d\n",t->t_index));
-	DBG(("    NoMove  : %d\n",t->t_no_move));
-	DBG(("    Quiet   : %d\n",t->t_quiet));
-	DBG(("    Movement: %d\n",t->t_movement));
-	DBG(("    Action  : %d\n",t->t_action));
-	DBG(("    Artifact: %d\n",t->t_artifact));
-	DBG(("    Wand    : %d\n",t->t_wand));
-	DBG(("    Summon  : %d\n",t->t_summon));
-	DBG(("    Cast    : %d\n",t->t_cast));
-	DBG(("    Breathe : %d\n",t->t_breathe));
-	DBG(("    DoorGoal: %d %d\n",t->t_doorgoal.x,t->t_doorgoal.y));
-	if (t->t_dest)
-	{
-		DBG(("    Dest    : %d %d\n",t->t_dest->x,t->t_dest->y));
-	}
-	else
-	{
-		DBG(("    Dest    : None\n"));
-	}
-	DBG(("    Pos     : %d %d\n",t->t_pos.x,t->t_pos.y));
-	DBG(("    OldPos  : %d %d\n",t->t_oldpos.x,t->t_oldpos.y));
-	DBG(("    NewPos  : %d %d\n",t->t_newpos.x,t->t_newpos.y));
-	DBG(("    Flags   : "));
-	{ int i; for(i=0;i<16;i++) {DBG(("%d ",t->t_flags[i]));} DBG(("\n")); }
-	save_debug = TRUE;
+    DBG(("Thing\n"));
+    DBG(("    SaveID  : %X\n",RSXR_THING));
+    DBG(("    Name    : %s\n",t->t_name));
+    DBG(("    WasShot : %d\n",t->t_wasshot));
+    DBG(("    Type    : %c(%d)\n",t->t_type,t->t_type));
+    DBG(("    Disguise: %c(%d)\n",t->t_disguise,t->t_disguise));
+    DBG(("    OldCh   : %c(%d)\n",t->t_oldch,t->t_oldch));
+    DBG(("    CType   : %d\n",t->t_ctype));
+    DBG(("    Index   : %d\n",t->t_index));
+    DBG(("    NoMove  : %d\n",t->t_no_move));
+    DBG(("    Quiet   : %d\n",t->t_quiet));
+    DBG(("    Movement: %d\n",t->t_movement));
+    DBG(("    Action  : %d\n",t->t_action));
+    DBG(("    Artifact: %d\n",t->t_artifact));
+    DBG(("    Wand    : %d\n",t->t_wand));
+    DBG(("    Summon  : %d\n",t->t_summon));
+    DBG(("    Cast    : %d\n",t->t_cast));
+    DBG(("    Breathe : %d\n",t->t_breathe));
+    DBG(("    DoorGoal: %d %d\n",t->t_doorgoal.x,t->t_doorgoal.y));
+    if (t->t_dest)
+    {
+        DBG(("    Dest    : %d %d\n",t->t_dest->x,t->t_dest->y));
+    }
+    else
+    {
+        DBG(("    Dest    : None\n"));
+    }
+    DBG(("    Pos     : %d %d\n",t->t_pos.x,t->t_pos.y));
+    DBG(("    OldPos  : %d %d\n",t->t_oldpos.x,t->t_oldpos.y));
+    DBG(("    NewPos  : %d %d\n",t->t_newpos.x,t->t_newpos.y));
+    DBG(("    Flags   : "));
+    { int i; for(i=0;i<16;i++) {DBG(("%d ",t->t_flags[i]));} DBG(("\n")); }
+    save_debug = TRUE;
 
 
     rs_write_object_list(savef, t->t_pack);
-    rs_write_object_list(savef, t->t_using);
+    i = -1;
+    if (t->t_using != NULL)
+        i = find_list_ptr(t->t_pack, t->t_using->l_data);
+    rs_write_int(savef, i);
     rs_write_stats(savef, &t->t_stats);
     rs_write_stats(savef, &t->maxstats);
     
     return(WRITESTAT);
 }
 
+void
+rs_fix_thing(struct thing *t)
+{
+    struct linked_list *item;
+    struct thing *tp;
+
+    if (t->t_reserved < 0)
+        return;
+
+    item = get_list_item(mlist,t->t_reserved);
+
+    if (item != NULL)
+    {
+        tp = THINGPTR(item);
+        t->t_dest = &tp->t_pos;
+    }
+}
+
 int
 rs_read_thing(int inf, struct thing *t)
 {
     int id;
-    static coord tdest;
+    int listid = 0, index = -1;
+    struct linked_list *item;
     
     if (rs_read_int(inf, &id) != 0)
     {
@@ -2010,7 +2233,7 @@ rs_read_thing(int inf, struct thing *t)
             rs_read_boolean(inf,&t->t_wasshot);
             rs_read_char(inf, &t->t_type);
             rs_read_char(inf, &t->t_disguise);
-            rs_read_char(inf, &t->t_oldch);
+            rs_read_uchar(inf, &t->t_oldch);
             rs_read_short(inf, &t->t_ctype);
             rs_read_short(inf, &t->t_index);
             rs_read_short(inf, &t->t_no_move);
@@ -2022,25 +2245,44 @@ rs_read_thing(int inf, struct thing *t)
             rs_read_short(inf, &t->t_summon);
             rs_read_short(inf, &t->t_cast);
             rs_read_short(inf, &t->t_breathe);
-            rs_read_string(inf,t->t_name,sizeof(t->t_name));
+            rs_read_new_string(inf,&t->t_name);
             rs_read_coord(inf,&t->t_doorgoal);
 
-			t->t_dest = &tdest;
-            rs_read_coord(inf,t->t_dest);
+            rs_read_int(inf,&listid);
+            rs_read_int(inf,&index);
+            t->t_reserved = -1;
+            if (listid == 0)
+            {
+                if (index == 1)
+                    t->t_dest = &hero;
+                else
+                    t->t_dest = NULL;
+            }
+            else if (listid == 1)
+            {
+                t->t_dest     = NULL;
+                t->t_reserved = index;
+            }
+            else if (listid == 2)
+            {
+                struct object *obj;
+                item = get_list_item(lvl_obj,index);
+                if (item != NULL)
+                {
+                    obj = OBJPTR(item);
+                    t->t_dest = &obj->o_pos;
+                }
+            }
+            else
+                t->t_dest = NULL;
 
-			if ((t->t_dest->x == 1) && (t->t_dest->y == -100))
-				t->t_dest = &hero;
-			else if ((t->t_dest->x == 0) && (t->t_dest->y == -100))
-				t->t_dest = NULL;
-			else
-				t->t_dest = NULL;
-				
             rs_read_coord(inf,&t->t_pos);
             rs_read_coord(inf,&t->t_oldpos);
             rs_read_coord(inf,&t->t_newpos);
             rs_read_ulongs(inf,t->t_flags,16);
             rs_read_object_list(inf,&t->t_pack);
-            rs_read_object_list(inf,&t->t_using);
+            rs_read_int(inf,&index);
+            t->t_using = get_list_item(t->t_pack, index);
             rs_read_stats(inf,&t->t_stats);
             rs_read_stats(inf,&t->maxstats);
         }
@@ -2091,7 +2333,7 @@ rs_write_monster_list(FILE *savef, struct linked_list *l)
 {
     int cnt = 0;
     
-	DBG(("Monster List\n"));
+    DBG(("Monster List\n"));
     rs_write_int(savef, RSXR_MONSTERLIST);
 
     cnt = list_size(l);
@@ -2107,6 +2349,16 @@ rs_write_monster_list(FILE *savef, struct linked_list *l)
     }
     
     return(WRITESTAT);
+}
+
+void
+rs_fix_monster_list(list)
+struct linked_list *list;
+{
+    struct linked_list *item;
+
+    for(item = list; item != NULL; item = item->l_next)
+        rs_fix_thing(THINGPTR(item));
 }
 
 int
@@ -2156,13 +2408,13 @@ rs_write_magic_items(FILE *savef, struct magic_item *i, int count)
 {
     int n;
     
-	DBG(("Magic Items\n"));
+    DBG(("Magic Items\n"));
     rs_write_int(savef, RSXR_MAGICITEMS);
     rs_write_int(savef, count);
 
     for(n=0;n<count;n++)
     {
-        rs_write_string(savef,i[n].mi_name);
+        rs_write(savef,i[n].mi_name,sizeof(i[n].mi_name));
         rs_write_int(savef,i[n].mi_prob);
         rs_write_int(savef,i[n].mi_worth);
         rs_write_int(savef,i[n].mi_curse);
@@ -2220,13 +2472,13 @@ rs_write_window(FILE *savef, WINDOW *win)
     int row,col,height,width;
     width = getmaxx(win);
     height = getmaxy(win);
-	DBG(("Window\n"));
+    DBG(("Window\n"));
     rs_write_int(savef,height);
     rs_write_int(savef,width);
     
     for(row=0;row<height;row++)
         for(col=0;col<width;col++)
-            rs_write_int(savef, mvwinch(win,row,col) );
+            rs_write_int(savef, mvwinch(win,row,col));
 
     return(WRITESTAT);
 }
@@ -2250,6 +2502,10 @@ rs_read_window(int inf, WINDOW *win)
         for(col=0;col<maxcols;col++)
         {
             rs_read_int(inf, &value);
+            if ((value == '-') || (value == 196))
+                value = HORZWALL;
+            else if ((value == '|') || (value == 179))
+                value = VERTWALL;
             mvwaddch(win,row,col,value);
         }
 
@@ -2260,12 +2516,19 @@ int
 rs_save_file(int savefd)
 {
     int i, weapon, armor, ring, misc, room = -1;
+    int endian = 0x01020304;
+    big_endian = ( *((char *)&endian) == 0x01 );
     FILE *savef;
 
     savef = fdopen(savefd,"w");
-    rs_write_traps(savef, traps, MAXTRAPS);             /* rogue.c          */
 
     rs_write_thing(savef, &player);                     /* rogue.c          */
+    rs_write_object_list(savef, lvl_obj);               /* rogue.c          */
+    rs_write_monster_list(savef, mlist);                /* rogue.c          */
+    rs_write_monster_list(savef, tlist);                /* rogue.c          */
+ 
+    rs_write_traps(savef, traps, MAXTRAPS);             /* rogue.c          */
+
     armor = find_list_ptr(player.t_pack, cur_armor);
     rs_write_int(savef, armor);                         /* rogue.c          */
 
@@ -2284,16 +2547,6 @@ rs_save_file(int savefd)
     for (i=0; i<MAXRELIC; i++)
        rs_write_int(savef,cur_relic[i]);                /* rogue.c          */
 
-    rs_write_object_list(savef, lvl_obj);               /* rogue.c          */
-    rs_write_monster_list(savef, mlist);                /* rogue.c          */
-    rs_write_monster_list(savef, tlist);                /* rogue.c          */
-
-    if (monst_dead != NULL)
-        i = find_list_ptr(mlist, monst_dead);
-    else
-        i = -1;
-
-    rs_write_int(savef,i);                              /* rogue.c          */
 
     rs_write_rooms(savef, rooms, MAXROOMS);             /* rogue.c          */
 
@@ -2346,17 +2599,13 @@ rs_save_file(int savefd)
     rs_write_int(savef,1234);/*checkpoint*/
     rs_write_char(savef,runch);
     rs_write_int(savef,1234);/*checkpoint*/
-    rs_write_strings(savef, s_names,  MAXSCROLLS);
-    rs_write_strings(savef, p_colors, MAXPOTIONS);
-    rs_write_strings(savef, r_stones, MAXRINGS);
-    rs_write_strings(savef, ws_made,  MAXSTICKS);
+    rs_write_scrolls(savef);
+    rs_write_potions(savef);
+    rs_write_rings(savef);
+    rs_write_sticks(savef);
+    rs_write_misc(savef);
+    rs_write_int(savef,1234);/*checkpoint*/
     rs_write(savef,whoami,LINELEN);
-    rs_write_strings(savef, s_guess,  MAXSCROLLS);
-    rs_write_strings(savef, p_guess,  MAXPOTIONS);
-    rs_write_strings(savef, r_guess,  MAXRINGS);
-    rs_write_strings(savef, ws_guess, MAXSTICKS);
-    rs_write_strings(savef, m_guess, MAXMM);
-    rs_write_strings(savef, ws_type,  MAXSTICKS);
     rs_write_window(savef, cw);
     rs_write_window(savef, hw);
     rs_write_window(savef, mw);
@@ -2366,11 +2615,6 @@ rs_save_file(int savefd)
     rs_write_boolean(savef,inwhgt);
     rs_write_boolean(savef,after);
     rs_write_boolean(savef,waswizard);
-    rs_write_booleans(savef,s_know,MAXSCROLLS);             /* rogue.h          */
-    rs_write_booleans(savef,p_know,MAXPOTIONS);             /* rogue.h          */
-    rs_write_booleans(savef,r_know,MAXRINGS);               /* rogue.h          */
-    rs_write_booleans(savef,ws_know,MAXSTICKS);             /* rogue.h          */
-    rs_write_booleans(savef,m_know,MAXMM);             /* rogue.h          */
     rs_write_boolean(savef, playing);                       /* rogue.h/init.c   */
     rs_write_boolean(savef, running);                       /* rogue.h/init.c   */
     rs_write_boolean(savef, wizard);                        /* rogue.h/init.c   */
@@ -2389,7 +2633,7 @@ rs_save_file(int savefd)
     rs_write_boolean(savef, daytime);                      /* rogue.h/init.c   */
     rs_write_boolean(savef, funfont);                      /* rogue.h/init.c   */
     rs_write_levtype(savef,levtype); 
-	rs_write_character_types(savef,char_class,NUM_CHARTYPES);
+    rs_write_character_types(savef,char_class,NUM_CHARTYPES);
     for(i=0;i<9;i++)
         rs_write_coord(savef,&grid[i]);
     rs_write_death_types(savef,deaths,DEATHNUM);
@@ -2415,11 +2659,8 @@ rs_save_file(int savefd)
     rs_write_int(savef,demoncnt);                           /* daemon.c         */
     rs_write_int(savef,fusecnt);                            /* daemon.c         */
     rs_write_int(savef,killed_chance);                      /* fight.c          */
-    rs_write_scrolls(savef);                                /* init.c           */
-    rs_write_potions(savef);                                /* init.c           */
-    rs_write_rings(savef);                                  /* init.c           */
-    rs_write_sticks(savef);                                 /* init.c           */
-    rs_write_monsters(savef,monsters,NUMMONST+1);           /* mons_def.c       */
+    rs_write_monsters(savef,monsters,
+        sizeof(monsters)/sizeof(struct monster));           /* mons_def.c       */
     rs_write_coord(savef,&move_nh);                         /* move.c           */
     return(WRITESTAT);
 }
@@ -2428,10 +2669,17 @@ int
 rs_restore_file(int inf)
 {
     int weapon, armor, ring, misc, room = -1,i,checkpoint;
-
+    int endian = 0x01020304;
+    big_endian = ( *((char *)&endian) == 0x01 );
+    
+    rs_read_thing(inf, &player);                        /* rogue.h          */
+    rs_read_object_list(inf, &lvl_obj);                 /* rogue.h/init.c   */
+    rs_read_monster_list(inf, &mlist);                  /* rogue.h/init.c   */
+    rs_read_monster_list(inf, &tlist);                  /* rogue.h/init.c   */
+    rs_fix_thing(&player);
+    rs_fix_monster_list(mlist);
     rs_read_traps(inf, traps, MAXTRAPS);
 
-    rs_read_thing(inf, &player);                        /* rogue.h          */
 
     rs_read_int(inf, &armor);                           /* rogue.h          */
     cur_armor = get_list_item(player.t_pack,armor);
@@ -2451,23 +2699,13 @@ rs_restore_file(int inf)
     for(i=0;i<MAXRELIC;i++)
         rs_read_int(inf,&cur_relic[i]);
 
-    rs_read_object_list(inf, &lvl_obj);                 /* rogue.h/init.c   */
-    rs_read_monster_list(inf, &mlist);                  /* rogue.h/init.c   */
-    rs_read_monster_list(inf, &tlist);                  /* rogue.h/init.c   */
-
-    rs_read_int(inf,&i);
-    if (i == -1)
-        monst_dead = NULL;
-    else
-        monst_dead = get_list_item(mlist,i);
-
     rs_read_rooms(inf, rooms, MAXROOMS);
     rs_read_int(inf, &room);
     
     oldrp = &rooms[room];
 
     rs_read_int(inf,&weapon);   
-	cur_weapon = get_list_item(player.t_pack,weapon);
+    cur_weapon = get_list_item(player.t_pack,weapon);
 
     rs_read_int(inf,&char_type);
     rs_read_int(inf,&foodlev);
@@ -2514,17 +2752,14 @@ rs_restore_file(int inf)
     rs_read_char(inf,&runch);
     rs_read_int(inf,&checkpoint);
     if (checkpoint != 1234){printf("Checkpoint failed");abort();}
-    rs_read_new_strings(inf, s_names,  MAXSCROLLS);
-    rs_read_new_strings(inf, p_colors, MAXPOTIONS);
-    rs_read_new_strings(inf, r_stones, MAXRINGS);
-    rs_read_new_strings(inf, ws_made,  MAXSTICKS);
+    rs_read_scrolls(inf);
+    rs_read_potions(inf);
+    rs_read_rings(inf);
+    rs_read_sticks(inf);
+    rs_read_misc(inf);
+    rs_read_int(inf,&checkpoint);
+    if (checkpoint != 1234){printf("Checkpoint failed");abort();}
     rs_read(inf,whoami,LINELEN);
-    rs_read_new_strings(inf, s_guess,  MAXSCROLLS);
-    rs_read_new_strings(inf, p_guess,  MAXPOTIONS);
-    rs_read_new_strings(inf, r_guess,  MAXRINGS);
-    rs_read_new_strings(inf, ws_guess, MAXSTICKS);
-    rs_read_new_strings(inf, m_guess, MAXMM);
-    rs_read_new_strings(inf, ws_type,  MAXSTICKS);
     rs_read_window(inf, cw);
     rs_read_window(inf, hw);
     rs_read_window(inf, mw);
@@ -2534,11 +2769,6 @@ rs_restore_file(int inf)
     rs_read_boolean(inf,&inwhgt);
     rs_read_boolean(inf,&after);
     rs_read_boolean(inf,&waswizard);
-    rs_read_booleans(inf,s_know,MAXSCROLLS);             /* rogue.h          */
-    rs_read_booleans(inf,p_know,MAXPOTIONS);             /* rogue.h          */
-    rs_read_booleans(inf,r_know,MAXRINGS);               /* rogue.h          */
-    rs_read_booleans(inf,ws_know,MAXSTICKS);             /* rogue.h          */
-    rs_read_booleans(inf,m_know,MAXMM);             /* rogue.h          */
     rs_read_boolean(inf, &playing);                       /* rogue.h/init.c   */
     rs_read_boolean(inf, &running);                       /* rogue.h/init.c   */
     rs_read_boolean(inf, &wizard);                        /* rogue.h/init.c   */
@@ -2583,19 +2813,61 @@ rs_restore_file(int inf)
     rs_read_int(inf,&demoncnt);                             /* daemon.c         */
     rs_read_int(inf,&fusecnt);                              /* daemon.c         */
     rs_read_int(inf,&killed_chance);                        /* fight.c          */
-    rs_read_scrolls(inf);                                   /* init.c           */
-    rs_read_potions(inf);                                   /* init.c           */
-    rs_read_rings(inf);                                     /* init.c           */
-    rs_read_sticks(inf);                                    /* init.c           */
 
-
-    rs_read_monsters(inf,monsters,NUMMONST+1);              /* mons_def.c       */
+    rs_read_monsters(inf,monsters,
+        sizeof(monsters)/sizeof(struct monster));           /* mons_def.c       */
     rs_read_coord(inf,&move_nh);                            /* move.c           */
-
-    if (READSTAT)
-        printf("Game restored.\n");
-    else
-        printf("Game restoration failed\n");
 
     return(READSTAT);
 }
+
+void
+rs_print_thing(FILE *outf, struct thing *thing, char *prefix, int list, int index)
+{
+    int i;
+
+    fprintf(outf,"%sList Ident : %d\n", prefix, list);
+    fprintf(outf,"%sList Index : %d\n", prefix, index);
+    fprintf(outf,"%st_wasshot  : %d\n", prefix, thing->t_wasshot);
+    fprintf(outf,"%st_type     : %c\n", prefix, thing->t_type);
+    fprintf(outf,"%st_disguise : %c\n", prefix, thing->t_disguise);
+    fprintf(outf,"%st_oldch    : %c\n", prefix, thing->t_oldch);
+    fprintf(outf,"%st_ctype    : %d\n", prefix, thing->t_ctype);
+    fprintf(outf,"%st_index    : %d\n", prefix, thing->t_index);
+    fprintf(outf,"%st_no_move  : %d\n", prefix, thing->t_no_move);
+    fprintf(outf,"%st_quiet    : %d\n", prefix, thing->t_quiet);
+    fprintf(outf,"%st_movement : %d\n", prefix, thing->t_movement);
+    fprintf(outf,"%st_action   : %d\n", prefix, thing->t_action);
+    fprintf(outf,"%st_artificat: %d\n", prefix, thing->t_artifact);
+    fprintf(outf,"%st_wand     : %d\n", prefix, thing->t_wand);
+    fprintf(outf,"%st_summon   : %d\n", prefix, thing->t_summon);
+    fprintf(outf,"%st_cast     : %d\n", prefix, thing->t_cast);
+    fprintf(outf,"%st_breathe  : %d\n", prefix, thing->t_breathe);
+    fprintf(outf,"%st_name     : %s\n", prefix, (thing->t_name == NULL) ? "none" :
+                                                thing->t_name);
+    fprintf(outf,"%st_doorgoal : %d %d\n", prefix, thing->t_doorgoal.x, thing->t_doorgoal.y);
+    fprintf(outf,"%st_dest     : %p\n", prefix, (void *)thing->t_dest);
+    fprintf(outf,"%st_pos      : %d %d (%p)\n", prefix, thing->t_pos.x, thing->t_pos.y,(void *)&thing->t_pos);
+    fprintf(outf,"%st_oldpos   : %d %d\n", prefix, thing->t_oldpos.x, thing->t_oldpos.y);
+    fprintf(outf,"%st_newpos   : %d %d\n", prefix, thing->t_newpos.x, thing->t_newpos.y);
+    fprintf(outf,"%st_flags    : ", prefix);
+
+    for(i = 0; i<16; i++)
+        fprintf(outf,"%lX ", thing->t_flags[i]);
+    fprintf(outf,"\n");
+
+    fprintf(outf,"%st_pack     : %p\n",prefix,(void *)thing->t_pack);
+    fprintf(outf,"%st_using    : %p\n",prefix,(void *)thing->t_using);
+    fprintf(outf,"%st_stats    : Not Implemented\n",prefix);
+    fprintf(outf,"%st_maxstats : Not Implemented\n",prefix);
+    fprintf(outf,"%st_reserved : %d\n",prefix,thing->t_reserved);
+}
+
+void
+rs_print_game_state(FILE *outf)
+{
+    fprintf(outf, "Player\n");
+
+    rs_print_thing(outf, &player, "    ", 0, 0);
+}
+
