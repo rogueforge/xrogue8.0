@@ -658,12 +658,12 @@ init_player()
                    minimum, maximum, unctrl('\b'));
 
                 wmove(hw, 6, 0);
-                wprintw(hw, "    Int: %2d", pstats.s_intel);
-                wprintw(hw, "    Str: %2d", pstats.s_str);
-                wprintw(hw, "    Wis: %2d", pstats.s_wisdom); 
-                wprintw(hw, "    Dex: %2d", pstats.s_dext);
-                wprintw(hw, "    Con: %2d", pstats.s_const);
-                wprintw(hw, "    Cha: %2d", pstats.s_charisma);
+                wprintw(hw, "    Int: %-2d", pstats.s_intel);
+                wprintw(hw, "    Str: %-2d", pstats.s_str);
+                wprintw(hw, "    Wis: %-2d", pstats.s_wisdom); 
+                wprintw(hw, "    Dex: %-2d", pstats.s_dext);
+                wprintw(hw, "    Con: %-2d", pstats.s_const);
+                wprintw(hw, "    Cha: %-2d", pstats.s_charisma);
                 wclrtoeol(hw);
                 wmove(hw, 6, 11*i + 9);
                 if (do_escape == FALSE) draw(hw);
@@ -679,6 +679,7 @@ init_player()
                         if (i == 0) continue;   /* Can't move back */
                         else {
                             stat_total += *our_stats[i-1];
+                            *our_stats[i] = 0;
                             *our_stats[i-1] = 0;
                             i -= 2;     /* Back out */
                             break;
