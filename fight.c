@@ -654,7 +654,7 @@ roll_em(struct thing *att_er, struct thing *def_er, struct object *weap, bool hu
 
                     if (mult > 5)
                         mult = 5;
-                    if (weap->o_type == RELIC && weap->o_which == MUSTY_DAGGER)
+                    if (weap && weap->o_type == RELIC && weap->o_which == MUSTY_DAGGER)
                         mult++;
                     damage *= mult;
                 }
