@@ -586,6 +586,11 @@ setup()
     signal(SIGTERM, auto_save);
     signal(SIGINT, quit);
     signal(SIGQUIT, endit);
+
+#ifdef __CYGWIN__
+    ESCDELAY = 250;
+#endif
+
     crmode();                           /* Cbreak mode */
     noecho();                           /* Echo off */
 }

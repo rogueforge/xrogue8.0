@@ -48,3 +48,9 @@ dist.djgpp:
 	rm -f $(DISTNAME)-djgpp.zip
 	zip $(DISTNAME)-djgpp.zip xrogue.exe README.md LICENSE
  
+dist.cygwin:
+	make clean
+	make CC=gcc LDFLAGS="-static" CFLAGS="-DNCURSES_STATIC -O3 -Wall -pedantic" xrogue
+	tar cf $(DISTNAME)-cygwin.tar xrogue.exe README.md LICENSE
+	gzip -f $(DISTNAME)-cygwin.tar
+
