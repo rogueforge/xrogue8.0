@@ -15,7 +15,9 @@ void
 buy_it()
 {
         reg int wh;
-        struct linked_list *item;
+        struct linked_list *item = NULL;
+        struct object *obj = NULL;
+        int wasfood = FALSE;
 
         if (purse <= 0) {
             msg("You have no money.");
@@ -48,17 +50,25 @@ buy_it()
          * The hero bought the item here
          */
         item = find_obj(hero.y, hero.x);
+        obj = OBJPTR(item);
         mpos = 0;
+        wasfood = ISMULT(obj->o_type);
         if (add_pack((struct linked_list *)NULL,TRUE)) {/* try to put it in his pack */
             purse -= curprice;          /* take his money */
             ++trader;                   /* another transaction */
             trans_line();               /* show remaining deals */
             curprice = -1;              /* reset stuff */
             curpurch[0] = 0;
+            if (!wasfood) /* if it was food then the object has been deleted */
+            {
             whatis (item);              /* identify it */
-            (OBJPTR(item))->o_flags &= ~ISPOST; /* turn off ISPOST */
-            (OBJPTR(item))->o_flags |= ISKNOW;  /* he knows the item */
-            msg("%s", inv_name(OBJPTR(item), TRUE));
+                obj = OBJPTR(item);
+                obj->o_flags &= ~ISPOST; /* turn off ISPOST */
+                obj->o_flags |= ISKNOW;  /* he knows the item */
+                msg("%s", inv_name(obj, TRUE));
+            }
+            else
+                msg("a food ration.");
         }
 }
 
