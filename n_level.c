@@ -200,6 +200,7 @@ new_level(LEVTYPE ltype)
         }
     }
 
+    rmmsg();
     wclear(cw);
     wclear(mw);
     if (fresh || levtype != OUTSIDE) clear();
