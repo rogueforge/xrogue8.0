@@ -3,6 +3,7 @@
  */
 
 #include <curses.h>
+#include <string.h>
 #include <ctype.h>
 #include "rogue.h"
 
@@ -11,8 +12,7 @@
  */
 
 char *
-charge_str(obj)
-register struct object *obj;
+charge_str(register struct object *obj)
 {
     static char buf[20];
 
@@ -32,16 +32,14 @@ register struct object *obj;
  */
 
 char *
-inv_name(obj, drop)
-register struct object *obj;
-bool drop;
+inv_name(register struct object *obj, bool drop)
 {
     register char *pb;
 
     pb = prbuf;
     pb[0] = '\0';
     switch(obj->o_type) {
-        when SCROLL:
+        case SCROLL:
             if (obj->o_count == 1)
                  sprintf(pb, "A %sscroll ", blesscurse(obj->o_flags));
             else
@@ -150,14 +148,14 @@ bool drop;
         when RELIC:
             if (obj->o_flags & ISKNOW)
                 switch(obj->o_which) {
-                when QUILL_NAGROM:
+                case QUILL_NAGROM:
                     sprintf(pb, "%s%s", rel_magic[obj->o_which].mi_name, 
                             charge_str(obj));
                 otherwise:
                     strcpy(pb, rel_magic[obj->o_which].mi_name);
             }
             else switch(obj->o_which) {
-                when MUSTY_DAGGER:
+                case MUSTY_DAGGER:
                     strcpy(pb, "Two very fine daggers marked MDDE");
                 when EMORI_CLOAK:
                     strcpy(pb, "A silk cloak");
@@ -195,7 +193,7 @@ bool drop;
 
             /* Take care of wielding and wearing */
             switch (obj->o_which) {
-                when EMORI_CLOAK:
+                case EMORI_CLOAK:
                     if (cur_armor == NULL && cur_misc[WEAR_CLOAK] == NULL)
                         strcat(pb, " (being worn)");
                     if (obj->o_charges)
@@ -229,7 +227,7 @@ bool drop;
                         strcpy(pb, misc_name(obj));
             else {
                 switch (obj->o_which) {
-                    when MM_JUG:
+                    case MM_JUG:
                     case MM_BEAKER:
                     case MM_KEOGHTOM:
                         strcpy(pb, "A crystalline jar");
@@ -294,9 +292,9 @@ bool drop;
 
     if (obj->o_flags & ISPROT)
         strcat(pb, " [protected]");
-    if (drop && isupper(prbuf[0]))
+    if (drop && isupper((unsigned char)prbuf[0]))
         prbuf[0] = tolower(prbuf[0]);
-    else if (!drop && islower(*prbuf))
+    else if (!drop && islower((unsigned char)*prbuf))
         *prbuf = toupper(*prbuf);
     if (!drop)
         strcat(pb, ".");
@@ -314,17 +312,16 @@ bool drop;
  */
 
 char *
-weap_name(obj)
-register struct object *obj;
+weap_name(register struct object *obj)
 {
     switch (obj->o_type) {
-        when WEAPON:
+        case WEAPON:
             return(weaps[obj->o_which].w_name);
         when MISSILE:
             return(ws_magic[obj->o_which].mi_name);
         when RELIC:
             switch (obj->o_which) {
-                when MUSTY_DAGGER:
+                case MUSTY_DAGGER:
                     return("daggers");
                 when YEENOGHU_FLAIL:
                     return("flail");
@@ -348,10 +345,10 @@ register struct object *obj;
  *      put something down
  */
 
-drop(item)
-struct linked_list *item;
+int
+drop(struct linked_list *item)
 {
-    register char ch;
+    register char ch = 0;
     register struct linked_list *obj, *nobj;
     register struct object *op;
 
@@ -416,7 +413,7 @@ struct linked_list *item;
     /*
      * Take it out of the pack
      */
-    if (op->o_count >= 2 && op->o_group == NULL)
+    if (op->o_count >= 2 && op->o_group == 0)
     {
         nobj = new_item(sizeof *op);
         op->o_count--;
@@ -456,8 +453,8 @@ struct linked_list *item;
  * do special checks for dropping or unweilding|unwearing|unringing
  */
 
-dropcheck(op)
-register struct object *op;
+int
+dropcheck(register struct object *op)
 {
     int save_max;
 
@@ -505,7 +502,7 @@ register struct object *op;
     cur_null(op);       /* set current to NULL */
     if (op->o_type == RING) {
         switch (op->o_which) {
-        when R_ADDSTR:    save_max = max_stats.s_str;
+        case R_ADDSTR:    save_max = max_stats.s_str;
                           chg_str(-op->o_ac);
                           max_stats.s_str = save_max;
         when R_ADDHIT:    pstats.s_dext -= op->o_ac;
@@ -536,7 +533,7 @@ register struct object *op;
     }
     else if (op->o_type == MM) {
         switch (op->o_which) {
-            when MM_ADAPTION:
+            case MM_ADAPTION:
                 turn_off(player, NOGAS);
                 turn_off(player, NOACID);
 
@@ -566,9 +563,7 @@ register struct object *op;
  */
 
 struct linked_list *
-new_thing(thing_type, allow_curse)
-int thing_type;
-bool allow_curse;
+new_thing(int thing_type, bool allow_curse)
 {
     register struct linked_list *item;
     register struct object *cur;
@@ -613,7 +608,7 @@ bool allow_curse;
         j = pick_one(things, NUMTHINGS);        /* not too many.... */
     switch (j)
     {
-        when TYP_POTION:
+        case TYP_POTION:
             cur->o_type = POTION;
             do {
                 cur->o_which = pick_one(p_magic, MAXPOTIONS);
@@ -691,7 +686,7 @@ bool allow_curse;
                 cur->o_flags |= ISCURSED;
             switch (cur->o_which)
             {
-                when R_ADDSTR:
+                case R_ADDSTR:
                 case R_ADDWISDOM:
                 case R_ADDINTEL:
                 case R_PROTECT:
@@ -730,9 +725,9 @@ bool allow_curse;
             else if (blesschance < m_magic[cur->o_which].mi_bless)
                 cur->o_flags |= ISBLESSED;
             switch (cur->o_which) {
-                when MM_JUG:
+                case MM_JUG:
                     switch(rnd(11)) {
-                        when 0: cur->o_ac = P_PHASE;
+                        case 0: cur->o_ac = P_PHASE;
                         when 1: cur->o_ac = P_CLEAR;
                         when 2: cur->o_ac = P_SEEINVIS;
                         when 3: cur->o_ac = P_HEALING;
@@ -783,8 +778,7 @@ bool allow_curse;
  */
 
 struct linked_list *
-spec_item(type, which, hit, damage)
-int type, which, hit, damage;
+spec_item(int type, int which, int hit, int damage)
 {
     register struct linked_list *item;
     register struct object *obj;
@@ -807,7 +801,7 @@ int type, which, hit, damage;
 
     /* Handle special characteristics */
     switch (type) {
-        when WEAPON:
+        case WEAPON:
             init_weapon(obj, which);
             obj->o_hplus = hit;
             obj->o_dplus = damage;
@@ -822,7 +816,7 @@ int type, which, hit, damage;
         when RING:
             obj->o_ac = hit;
             switch (obj->o_which) {
-                when R_ADDSTR:
+                case R_ADDSTR:
                 case R_ADDWISDOM:
                 case R_ADDINTEL:
                 case R_PROTECT:
@@ -859,9 +853,8 @@ int type, which, hit, damage;
  * pick an item out of a list of nitems possible magic items
  */
 
-pick_one(magic, nitems)
-register struct magic_item *magic;
-int nitems;
+int
+pick_one(register struct magic_item *magic, int nitems)
 {
     register struct magic_item *end;
     register int i;
@@ -890,8 +883,7 @@ int nitems;
  */
 
 char *
-blesscurse(flags)
-int flags;
+blesscurse(int flags)
 {
     if (flags & ISKNOW)  {
         if (flags & ISCURSED) return("cursed ");
@@ -907,8 +899,8 @@ int flags;
  */
 
 char *
-p_kind(obj)
-struct object *obj;     /* We assume that obj points to a potion */
+p_kind(struct object *obj)
+/* obj - We assume that obj points to a potion */
 {
     if (obj->o_which == P_ABIL) return(abilities[obj->o_kind]);
     else return(p_colors[obj->o_which]);
@@ -919,6 +911,7 @@ struct object *obj;     /* We assume that obj points to a potion */
  *      Return the number of extra items to be created
  */
 
+int
 extras()
 {
         reg int i;

@@ -3,6 +3,8 @@
  */
 
 #include <curses.h>
+#include <string.h>
+#include <stdlib.h>
 #include <ctype.h>
 #include "rogue.h"
 
@@ -15,9 +17,8 @@
  * returns true if player has a any chance to hit the monster
  */
 
-player_can_hit(tp, weap)
-register struct thing *tp;
-register struct object *weap;
+int
+player_can_hit(register struct thing *tp, register struct object *weap)
 {
     if (off(*tp, CMAGICHIT) && off(*tp, BMAGICHIT) && off(*tp, MAGICHIT))
         return(TRUE);
@@ -45,10 +46,8 @@ register struct object *weap;
  *      The player attacks the monster.
  */
 
-fight(mp, weap, thrown)
-register coord *mp;
-struct object *weap;
-bool thrown;
+int
+fight(register coord *mp, struct object *weap, bool thrown)
 {
     register struct thing *tp;
     register struct linked_list *item;
@@ -209,10 +208,8 @@ bool thrown;
  *      The monster attacks the player
  */
 
-attack(mp, weapon, thrown)
-register struct thing *mp;
-register struct object *weapon;
-bool thrown;
+int
+attack(register struct thing *mp, register struct object *weapon, bool thrown)
 {
     register char *mname;
     register bool see_att, did_hit = FALSE;
@@ -288,9 +285,8 @@ bool thrown;
  *      returns true if the swing hits
  */
 
-swing(class, at_lvl, op_arm, wplus)
-short class;
-int at_lvl, op_arm, wplus;
+int
+swing(short class, int at_lvl, int op_arm, int wplus)
 {
     register int res = rnd(20)+1;
     register int need;
@@ -310,22 +306,17 @@ int at_lvl, op_arm, wplus;
  *      Roll several attacks
  */
 
-roll_em(att_er, def_er, weap, hurl, cur_weapon, back_stab)
-struct thing *att_er, *def_er;
-struct object *weap;
-bool hurl;
-struct object *cur_weapon;
-bool back_stab;
+int
+roll_em(struct thing *att_er, struct thing *def_er, struct object *weap, bool hurl, struct object *cur_weapon, bool back_stab)
 {
     register struct stats *att, *def;
-    register char *cp;
+    register char *cp = "0d0";
     register int ndice, nsides, nplus, def_arm;
     char dmgbuf[20];
     bool did_hit = FALSE;
     int prop_hplus, prop_dplus;
     int vampiric_damage;
-    char *strchr();
-
+   
     /* Get statistics */
     att = &att_er->t_stats;
     def = &def_er->t_stats;
@@ -344,7 +335,7 @@ bool back_stab;
     }
     else if (weap->o_type == RELIC) {
         switch (weap->o_which) {
-            when MUSTY_DAGGER:
+            case MUSTY_DAGGER:
 	        if (player.t_ctype == C_THIEF) 
 		    cp = "4d8+2/4d8+2";
 		else
@@ -430,7 +421,7 @@ bool back_stab;
 
         if (weap != NULL && weap->o_type == RELIC) {
             switch (weap->o_which) {
-                when MUSTY_DAGGER:
+                case MUSTY_DAGGER:
                     if (att != &pstats || /* Not player or good stats */
                         (str_compute() > 15 && dex_compute() > 15)) {
 
@@ -485,8 +476,8 @@ bool back_stab;
             hplus += 4; /* add in pluses for backstabbing */
 
         /* Get the damage */
-        while (isspace(*cp)) cp++;
-        if (!isdigit(*cp)) {
+        while (isspace((unsigned char)*cp)) cp++;
+        if (!isdigit((unsigned char)*cp)) {
             if (strncmp(cp, "confuse", 7) == 0) ndice = CONF_DAMAGE;
             else if (strncmp(cp, "paralyze", 8) == 0) ndice = PARAL_DAMAGE;
             else if (strncmp(cp, "destroy", 6) == 0) ndice = DEST_DAMAGE;
@@ -540,7 +531,7 @@ bool back_stab;
 
             /* Take care of special effects */
             switch (ndice) {
-              when CONF_DAMAGE:
+              case CONF_DAMAGE:
                 if (def == &pstats) { /* Monster attacks player */
                     if (!save(VS_MAGIC, &player, 0) && off(player, ISCLEAR)) {
                         msg("You feel disoriented.");
@@ -720,9 +711,7 @@ bool back_stab;
  */
 
 char *
-prname(who, upper)
-register char *who;
-bool upper;
+prname(register char *who, bool upper)
 {
     static char tbuf[LINELEN];
 
@@ -734,11 +723,11 @@ bool upper;
     else
     {
         /* If we have a name (starts with a capital), don't use a "the" */
-        if (islower(*who)) strcpy(tbuf, "the ");
+        if (islower((unsigned char)*who)) strcpy(tbuf, "the ");
         strcat(tbuf, who);
     }
     if (upper)
-        *tbuf = toupper(*tbuf);
+        *tbuf = toupper((unsigned char)*tbuf);
     return tbuf;
 }
 
@@ -747,13 +736,10 @@ bool upper;
  *      Print a message to indicate a succesful hit
  */
 
-hit(weapon, see_att, see_def, er, ee, back_stab, thrown, short_msg)
-register struct object *weapon;
-bool see_att, see_def;
-register char *er, *ee;
-bool back_stab, thrown, short_msg;
+void
+hit(register struct object *weapon, bool see_att, bool see_def, register char *er, register char *ee, bool back_stab, bool thrown, bool short_msg)
 {
-    register char *s;
+    register char *s = "";
     char          att_name[LINELEN],    /* Name of attacker */
                   def_name[LINELEN]; /* Name of defender */
 
@@ -795,7 +781,7 @@ bool back_stab, thrown, short_msg;
         else {
             switch (rnd(thrown ? 2 : 3))
             {
-                when 0: s = " hit ";
+                case 0: s = " hit ";
                 when 1: s = " injured ";
                 when 2: s = " smacked ";
             }
@@ -811,13 +797,10 @@ bool back_stab, thrown, short_msg;
  *      Print a message to indicate a poor swing
  */
 
-miss(weapon, see_att, see_def, er, ee, thrown, short_msg)
-register struct object *weapon;
-bool see_att, see_def;
-register char *er, *ee;
-bool thrown, short_msg;
+void
+miss(register struct object *weapon, bool see_att, bool see_def, register char *er, register char *ee, bool thrown, bool short_msg)
 {
-    register char *s;
+    register char *s = "";
     char          att_name[LINELEN],    /* Name of attacker */
                   def_name[LINELEN];    /* Name of defender */
 
@@ -841,7 +824,7 @@ bool thrown, short_msg;
     addmsg(att_name);
     switch (short_msg ? 0 : rnd(thrown ? 3 : 2))
     {
-        when 0: s = (er == 0 ? " miss" : " misses");
+        case 0: s = (er == 0 ? " miss" : " misses");
         when 1: s = (er == 0 ? " don't hit" : " doesn't hit");
         when 2: s = (" whizzes by");
     }
@@ -855,8 +838,8 @@ bool thrown, short_msg;
  *      compute to-hit bonus for dexterity
  */
 
-dext_plus(dexterity)
-register int dexterity;
+int
+dext_plus(register int dexterity)
 {
         return (dexterity > 10 ? (dexterity-13)/3 : (dexterity-10)/3);
 }
@@ -867,8 +850,8 @@ register int dexterity;
  *      compute armor class bonus for dexterity
  */
 
-dext_prot(dexterity)
-register int dexterity;
+int
+dext_prot(register int dexterity)
 {
     return ((dexterity-10)/2);
 }
@@ -878,8 +861,8 @@ register int dexterity;
  *      compute bonus/penalties for strength on the "to hit" roll
  */
 
-str_plus(str)
-register short str;
+int
+str_plus(register short str)
 {
     return((str-10)/3);
 }
@@ -889,8 +872,8 @@ register short str;
  *      compute additional damage done for exceptionally high or low strength
  */
 
-add_dam(str)
-register short str;
+int
+add_dam(register short str)
 {
     return((str-9)/2);
 }
@@ -900,13 +883,14 @@ register short str;
  *      Calculate damage depending on players hungry state
  */
 
+int
 hung_dam()
 {
-        reg int howmuch;
+        reg int howmuch = 0;
 
         switch(hungry_state) {
                 case F_SATIATED:
-                case F_OK:
+                case F_OKAY:
                 case F_HUNGRY:  howmuch = 0;
                 when F_WEAK:    howmuch = -1;
                 when F_FAINT:   howmuch = -2;
@@ -921,10 +905,9 @@ hung_dam()
  *      A missile hits a monster
  */
 
-thunk(weap, tp, mname)
-register struct object *weap;
-register struct thing *tp;      /* Defender */
-register char *mname;
+void
+thunk(register struct object *weap, register struct thing *tp, register char *mname)
+/* tp -  Defender */
 {
     char *def_name;     /* Name of defender */
 
@@ -946,10 +929,8 @@ register char *mname;
  *       A missile from a monster hits the player
  */
 
-m_thunk(weap, tp, mname)
-register struct object *weap;
-register struct thing *tp;
-register char *mname;
+void
+m_thunk(register struct object *weap, register struct thing *tp, register char *mname)
 {
     char *att_name;     /* Name of attacker */
 
@@ -971,10 +952,9 @@ register char *mname;
  *      A missile misses a monster
  */
 
-bounce(weap, tp, mname)
-register struct object *weap;
-register struct thing *tp;      /* Defender */
-register char *mname;
+void
+bounce(register struct object *weap, register struct thing *tp, register char *mname)
+/* tp - Defender */
 {
     char *def_name;     /* Name of defender */
 
@@ -996,10 +976,8 @@ register char *mname;
  *      A missle from a monster misses the player
  */
 
-m_bounce(weap, tp, mname)
-register struct object *weap;
-register struct thing *tp;
-register char *mname;
+void
+m_bounce(register struct object *weap, register struct thing *tp, register char *mname)
 {
     char *att_name;     /* Name of attacker */
 
@@ -1023,8 +1001,8 @@ register char *mname;
  *      Returns true if an object radiates magic
  */
 
-is_magic(obj)
-register struct object *obj;
+int
+is_magic(register struct object *obj)
 {
     switch (obj->o_type)
     {
@@ -1048,9 +1026,8 @@ register struct object *obj;
  *      Called to put a monster to death
  */
 
-killed(item, pr, points, treasure)
-register struct linked_list *item;
-bool pr, points, treasure;
+void
+killed(register struct linked_list *item, bool pr, bool points, bool treasure)
 {
     register struct thing *tp, *mp;
     register struct linked_list *pitem, *nexti, *mitem;
@@ -1125,7 +1102,7 @@ bool pr, points, treasure;
                 }
                 else {
                     switch (rnd(9)) {
-                    when 0:
+                    case 0:
 			msg("You become solid and stiff for a while. ");
                         player.t_no_move += (5*movement(&player)*FREEZETIME);
                         player.t_action = A_FREEZE;
@@ -1147,7 +1124,7 @@ bool pr, points, treasure;
 		}
         }
         else {
-                long test;      /* For overflow check */
+                unsigned long test;      /* For overflow check */
                 /* 
                  * Do an overflow check before increasing experience 
                  */
@@ -1199,9 +1176,7 @@ bool pr, points, treasure;
  */
 
 struct linked_list *
-wield_weap(thrown, mp)
-struct object *thrown;
-struct thing *mp;
+wield_weap(struct object *thrown, struct thing *mp)
 {
     int look_for,       /* The projectile weapon we are looking for */
         new_rate,       /* The rating of a prospective weapon */
@@ -1211,7 +1186,7 @@ struct thing *mp;
 
     if (thrown != NULL) {       /* Using a projectile weapon */
       switch (thrown->o_which) {
-        when BOLT:      look_for = CROSSBOW;    /* Find the crossbow */
+        case BOLT:      look_for = CROSSBOW;    /* Find the crossbow */
         when ARROW:     look_for = BOW;         /* Find the bow */
         when ROCK:      look_for = SLING;       /* find the sling */
         otherwise:      return(NULL);
@@ -1232,7 +1207,7 @@ struct thing *mp;
         /* If we have a usable RELIC, return it */
         if (thrown == NULL && obj->o_type == RELIC) {
             switch (obj->o_which) {
-                when MUSTY_DAGGER:
+                case MUSTY_DAGGER:
                 case YEENOGHU_FLAIL:
                 case HRUGGEK_MSTAR:
                 case AXE_AKLAD:
@@ -1246,7 +1221,7 @@ struct thing *mp;
         /* Otherwise if it's a usable weapon, it is a good candidate */
         else if (thrown == NULL && obj->o_type == WEAPON) {
             switch (obj->o_which) {
-                when DAGGER:
+                case DAGGER:
                 case SPEAR:
                     new_rate = 0;
                 when BATTLEAXE:
@@ -1282,8 +1257,8 @@ struct thing *mp;
 
     return(candidate);
 }
-explode(tp)
-register struct thing *tp;
+void
+explode(register struct thing *tp)
 {
 
     register int x,y, damage;
@@ -1337,11 +1312,8 @@ register struct thing *tp;
  *      Called when one monster attacks another monster.
  */
 
-skirmish(attacker, mp, weap, thrown)
-register struct thing *attacker;
-register coord *mp;
-struct object *weap;
-bool thrown;
+int
+skirmish(register struct thing *attacker, register coord *mp, struct object *weap, bool thrown)
 {
     register struct thing *defender;
     register struct linked_list *item;

@@ -1,8 +1,6 @@
 #include <curses.h>
 #include "rogue.h"
 
-extern char rnd_terrain(), get_terrain();
-
 /*
  * init_terrain:
  *      Get the single "outside room" set up correctly
@@ -26,11 +24,9 @@ init_terrain()
 }
 
 void
-do_terrain(basey, basex, deltay, deltax, fresh)
-int basey, basex, deltay, deltax;
-bool fresh;
+do_terrain(int basey, int basex, int deltay, int deltax, bool fresh)
 {
-    register cury, curx;        /* Current y and x positions */
+    register int cury, curx;        /* Current y and x positions */
 
     /* Lay out the boundary */
     for (cury=1; cury<lines-2; cury++) {        /* Vertical "walls" */
@@ -150,8 +146,7 @@ rnd_terrain()
  */
 
 char
-get_terrain(one, two, three, four)
-char one, two, three, four;
+get_terrain(char one, char two, char three, char four)
 {
     register int i;
     int forest = 0, mountain = 0, lake = 0, meadow = 0, total = 0;
@@ -204,8 +199,7 @@ char one, two, three, four;
 
 /*UNUSED*/
 /* void
- * lake_check(place)
- * register coord *place;
+ * lake_check(register coord *place)
  * {
  * }
  */

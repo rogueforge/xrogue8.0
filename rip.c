@@ -12,6 +12,9 @@
  */
 
 #include <curses.h>
+#include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
 #ifdef BSD
 #include <sys/time.h>
 #else
@@ -39,7 +42,7 @@ struct utsname ourname;
 
 #ifdef NUMNET
 /* Network machines (for mutual score keeping) */
-static struct network Network[NUMNET] = {
+struct network Network[NUMNET] = {
     { "NULL", "NULL" },
 };
 #endif
@@ -63,6 +66,10 @@ struct sc_ent {
 #define SCORELEN \
     (sizeof(unsigned long) + NAMELEN + SYSLEN + LOGLEN + 5*sizeof(short))
 
+static void scorein(unsigned char *input, struct sc_ent scores[], long num_bytes);
+static void scoreout(struct sc_ent scores[], unsigned char *output);
+static int update(struct sc_ent top_ten[], unsigned long amount, short quest, char *whoami, short flags, short level, short monst, short ctype, char *system, char *login);
+
 static char *rip[] = {
 "                      ___________",
 "                     /           \\",
@@ -81,12 +88,9 @@ static char *rip[] = {
 NULL
 };
 
-char    *killname();
-
 /*UNUSED*/
 void
-byebye(n)
-int n;
+byebye(int n)
 {
 #ifdef BSD
     extern bool _endwin;
@@ -110,14 +114,13 @@ int n;
  *      Do something really fun when he dies
  */
 
-death(monst)
-register short monst;
+void
+death(register short monst)
 {
     register char **dp = rip, *killer;
     register struct tm *lt;
     time_t date;
     char buf[LINELEN];
-    struct tm *localtime();
 
     time(&date);
     lt = localtime(&date);
@@ -125,11 +128,11 @@ register short monst;
     move(8, 0);
     while (*dp)
         printw("%s\n", *dp++);
-    mvaddstr(14, 28-((strlen(whoami)+1)/2), whoami);
+    mvaddstr(14, 28-(((int)strlen(whoami)+1)/2), whoami);
     sprintf(buf, "%lu Points", pstats.s_exp );
-    mvaddstr(15, 28-((strlen(buf)+1)/2), buf);
+    mvaddstr(15, 28-(((int)strlen(buf)+1)/2), buf);
     killer = killname(monst);
-    mvaddstr(17, 28-((strlen(killer)+1)/2), killer);
+    mvaddstr(17, 28-(((int)strlen(killer)+1)/2), killer);
     mvaddstr(18, 27, (sprintf(prbuf, "%2d", lt->tm_year), prbuf));
     move(lines-1, 0);
     refresh();
@@ -165,8 +168,7 @@ endhardwin()
 #endif
 
 char *
-killname(monst)
-register short monst;
+killname(register short monst)
 {
     static char mons_name[LINELEN/2];
     int i;
@@ -201,10 +203,8 @@ register short monst;
  */
 
 /* VARARGS2 */
-score(amount, flags, monst)
-unsigned long amount;
-int flags;
-short monst;
+void
+score(unsigned long amount, int flags, short monst)
 {
     static struct sc_ent top_ten[NUMSCORE] = { 0 };
     register struct sc_ent *scp;
@@ -226,7 +226,6 @@ short monst;
         "A total winner",
         "somehow left",
     };
-    void endit();
     char *packend;
 
     signal(SIGINT, byebye);
@@ -275,7 +274,7 @@ short monst;
         scp->sc_level = RN;
         scp->sc_monster = RN;
         scp->sc_ctype = 0;
-        strncpy(scp->sc_system, thissys, SYSLEN);
+        strxcpy(scp->sc_system, thissys, SYSLEN);
         scp->sc_login[0] = '\0';
     }
 
@@ -308,10 +307,10 @@ short monst;
 #endif
 
     /* Read the score and convert it to a compatible format */
-    compatstr = (char *) malloc(NUMSCORE * SCORELEN);
+    compatstr = malloc(NUMSCORE * SCORELEN);
     if (compatstr == NULL) return;
     num_read = encread(compatstr, (long)(NUMSCORE * SCORELEN), fd); 
-    scorein(compatstr, top_ten, num_read);      /* Convert it */
+    scorein((unsigned char *)compatstr, top_ten, num_read);      /* Convert it */
 
 #if NUMNET
     /* Get some values if this is an update */
@@ -354,7 +353,7 @@ short monst;
 
         if (flags != UPDATE) {
 #if !MSDOS
-            struct passwd *pp, *getpwuid();
+            struct passwd *pp;
             if ((pp = getpwuid(getuid())) == NULL) login = "";
             else login = pp->pw_name;
 #else
@@ -369,8 +368,6 @@ short monst;
 #ifdef WIZARD
             if (prflags == ADDSCORE) {  /* Overlay characteristic by new ones */
                 char buffer[LINELEN];
-                int atoi();
-                unsigned long atol();
 
                 clear();
                 mvaddstr(1, 0, "Score: ");
@@ -395,17 +392,17 @@ short monst;
                 /* Get the character's name */
                 move(3, 6);
                 get_str(buffer, stdscr);
-                strncpy(whoami, buffer, NAMELEN);
+                strxcpy(whoami, buffer, NAMELEN);
 
                 /* Get the system */
                 move(4, 8);
                 get_str(buffer, stdscr);
-                strncpy(thissys, buffer, SYSLEN);
+                strxcpy(thissys, buffer, SYSLEN);
 
                 /* Get the login */
                 move(5, 7);
                 get_str(buffer, stdscr);
-                strncpy(login, buffer, LOGLEN);
+                strxcpy(login, buffer, LOGLEN);
 
                 /* Get the level */
                 move(6, 7);
@@ -464,7 +461,7 @@ short monst;
                 && fork() == 0          /* Spin off network process */
 #endif
                 ) {
-#ifdef NUMNET
+#if defined(NUMNET) && defined(NETCOMMAND)
                 /* Send this update to the other systems in the network */
                 int i, j;
                 char cmd[256];  /* Command for remote execution */
@@ -547,13 +544,13 @@ short monst;
         for (scp = top_ten; scp < &top_ten[NUMSCORE]; scp++) {
             char *class;
 
-            if (scp->sc_score != NULL) {
+            if (scp->sc_score != 0) {
                 class = char_class[scp->sc_ctype].name;
 
                 /* Make sure we have an in-bound reason */
                 if (scp->sc_flags > REASONLEN) scp->sc_flags = REASONLEN;
 
-                printf("%3d %10lu\t%s (%s)", scp - top_ten + 1,
+                printf("%3ld %10lu\t%s (%s)", (long) (scp - top_ten + 1),
                     scp->sc_score, scp->sc_name, class);
                     
 #if !MSDOS
@@ -608,13 +605,13 @@ short monst;
                 else printf("\n");
             }
         }
-/*      if (prflags == EDITSCORE) endwin();     /* End editing windowing */
+/*      if (prflags == EDITSCORE) endwin();    *//* End editing windowing */
     }
     lseek(outfd, 0L, 0);
     /*
      * Update the list file
      */
-    scoreout(top_ten, compatstr); /* Get a compatibile format score string */
+    scoreout(top_ten, (unsigned char *)compatstr); /* Get a compatibile format score string */
     encwrite(compatstr, (long)(NUMSCORE * SCORELEN), outfd);
     free(compatstr);
     close(outfd);
@@ -626,10 +623,9 @@ short monst;
  *      score file by scoreout() back to a score file structure.
  */
 
-scorein(input, scores, num_bytes)
-unsigned char *input;
-struct sc_ent scores[];
-long num_bytes; /* Number of bytes of input that we want to convert */
+static void
+scorein(unsigned char *input, struct sc_ent scores[], long num_bytes)
+/* num_bytes - Number of bytes of input that we want to convert */
 {
     register long i, j;
     unsigned long *lptr;
@@ -685,9 +681,8 @@ long num_bytes; /* Number of bytes of input that we want to convert */
  *      in different orders.
  */
 
-scoreout(scores, output)
-struct sc_ent scores[];
-unsigned char *output;
+static void
+scoreout(struct sc_ent scores[], unsigned char *output)
 {
     register long i, j;
     unsigned long *lptr;
@@ -738,8 +733,8 @@ unsigned char *output;
  *      Display the contents of the hero's pack
  */
 
-showpack(howso)
-char *howso;
+void
+showpack(char *howso)
 {
         reg char *iname;
         reg int cnt, packnum;
@@ -768,6 +763,7 @@ char *howso;
         refresh();
 }
 
+void
 total_winner()
 {
     register struct linked_list *item;
@@ -793,7 +789,7 @@ total_winner()
     addstr("Dungeons of Doom alive.  You journey home and sell all your loot at\n");
     addstr("a great profit and are appointed ");
     switch (player.t_ctype) {
-        when C_FIGHTER: addstr("Leader of the Fighter's Guild.\n");
+        case C_FIGHTER: addstr("Leader of the Fighter's Guild.\n");
         when C_RANGER:  addstr("King of the Northern Land.\n");
         when C_PALADIN: addstr("King of the Southern Land.\n");
         when C_MAGICIAN:addstr("High Wizard of the Sorcerer's Guild.\n");
@@ -814,7 +810,7 @@ total_winner()
     {
         obj = OBJPTR(item);
         worth = get_worth(obj);
-        if (obj->o_group == NULL)
+        if (obj->o_group == 0)
             worth *= obj->o_count;
         whatis(item);
         mvprintw(c-'a'+1, 0, "%c) %6ld  %s", c, worth, inv_name(obj, FALSE));
@@ -830,11 +826,8 @@ total_winner()
     exit(0);
 }
 
-update(top_ten, amount, quest, whoami, flags, level, monst, ctype, system, login)
-struct sc_ent top_ten[];
-unsigned long amount;
-short quest, flags, level, monst, ctype;
-char *whoami, *system, *login;
+static int
+update(struct sc_ent top_ten[], unsigned long amount, short quest, char *whoami, short flags, short level, short monst, short ctype, char *system, char *login)
 {
     register struct sc_ent *scp, *sc2;
     int retval=0;       /* 1 if a change, 0 otherwise */
@@ -877,13 +870,13 @@ char *whoami, *system, *login;
             *sc2 = *(sc2-1);
         scp->sc_score = amount;
         scp->sc_quest = quest;
-        strncpy(scp->sc_name, whoami, NAMELEN);
+        strxcpy(scp->sc_name, whoami, NAMELEN);
         scp->sc_flags = flags;
         scp->sc_level = level;
         scp->sc_monster = monst;
         scp->sc_ctype = ctype;
-        strncpy(scp->sc_system, system, SYSLEN);
-        strncpy(scp->sc_login, login, LOGLEN);
+        strxcpy(scp->sc_system, system, SYSLEN);
+        strxcpy(scp->sc_login, login, LOGLEN);
     }
 
     return(retval);

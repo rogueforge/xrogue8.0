@@ -3,6 +3,7 @@
  */
 
 #include <curses.h>
+#include <stdlib.h>
 #include "rogue.h"
 
 /*
@@ -10,9 +11,10 @@
  *      Draw all the passages on a level.
  */
 
+void
 do_passages()
 {
-    register struct rdes *r1, *r2;
+    register struct rdes *r1, *r2 = NULL;
     register int i, j;
     register int roomcount;
     static struct rdes
@@ -118,11 +120,11 @@ do_passages()
  *      Draw a corridor from a room in a certain direction.
  */
 
-conn(r1, r2)
-int r1, r2;
+void
+conn(int r1, int r2)
 {
     register struct room *rpf, *rpt;
-    register char rmt;
+    register int rmt;
     register int distance, max_diag, offset, i;
     register int rm;
     int turns[3], turn_dist[3];
@@ -332,9 +334,8 @@ int r1, r2;
  * also enters the door in the exits array of the room.
  */
 
-door(rm, cp)
-register struct room *rm;
-register coord *cp;
+void
+door(register struct room *rm, register coord *cp)
 {
     struct linked_list *newroom;
     coord *exit;

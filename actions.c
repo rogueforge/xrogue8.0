@@ -1,17 +1,22 @@
 #include <ctype.h>
 #include <curses.h>
+#include <stdlib.h>
+#include <limits.h>
 #include "rogue.h"
 #define MAXINT  32767
 #define MININT  -32768
+
+int mf_count=0;      /* move_free counter - see below */
+int mf_jmpcnt=0;     /* move_free counter for # of jumps */
+
 /* 
  * Did we disrupt a spell? 
  */
-dsrpt_monster(tp, always, see_him)
-register struct thing *tp;
-bool always, see_him;
+void 
+dsrpt_monster (register struct thing *tp, bool always, bool see_him)
 {
     switch (tp->t_action) {
-    when A_SUMMON:
+    case A_SUMMON:
     case A_MISSILE:
     case A_SLOW:
         tp->t_action = A_NIL;	/* Just make the old fellow start over again */
@@ -37,17 +42,18 @@ bool always, see_him;
     }
 }
 
-dsrpt_player()
+void 
+dsrpt_player ()
 {
     int which, action;
     struct linked_list *item;
     struct object *obj;
     
     action = player.t_action;
-    which = (int) player.t_using;
+    which = (long) player.t_using;
 
     switch (action) {
-    when C_CAST: /* Did we disrupt a spell? */
+    case C_CAST: /* Did we disrupt a spell? */
     case C_PRAY:
     case C_CHANT:
     {
@@ -66,7 +72,7 @@ dsrpt_player()
         if (purse > 0) {
             msg("Your gold goes flying everywhere!");
             do {
-                item = spec_item(GOLD, NULL, NULL, NULL);
+                item = spec_item(GOLD, 0, 0, 0);
                 obj = OBJPTR(item);
                 obj->o_count = min(purse, rnd(20)+1);
                 purse -= obj->o_count;
@@ -104,8 +110,8 @@ dsrpt_player()
  *      Otherwise, let it perform its chosen action.
  */
 
-m_act(tp)
-register struct thing *tp;
+void 
+m_act (register struct thing *tp)
 {
     struct object *obj;
     bool flee;			/* Are we scared? */
@@ -114,7 +120,7 @@ register struct thing *tp;
 
     /* What are we planning to do? */
     switch (tp->t_action) {
-        otherwise:
+        default:
             /* An unknown action! */
             msg("Unknown monster action (%d)", tp->t_action);
 
@@ -234,7 +240,7 @@ register struct thing *tp;
              }
          }
          switch (rnd(51)) {
-             when 0: msg("Arrrggghhhhh!! "); 
+             case 0: msg("Arrrggghhhhh!! "); 
              when 5: msg("You can't move! "); 
              when 10: msg("You motion angrily! "); 
              when 15: msg("You feel so weird! ");
@@ -271,11 +277,11 @@ register struct thing *tp;
  *      Breathe in the chosen direction.
  */
 
-m_breathe(tp)
-register struct thing *tp;
+void 
+m_breathe (register struct thing *tp)
 {
     register int damage;
-    register char *breath;
+    register char *breath = NULL;
 
     damage = tp->t_stats.s_hpt;
     turn_off(*tp, CANSURPRISE);
@@ -287,7 +293,7 @@ register struct thing *tp;
 
         /* Select type of breath */
         switch (rnd(10)) {
-            when 0: breath = "acid";
+            case 0: breath = "acid";
                     turn_on(*tp, NOACID);
             when 1: breath = "flame";
                     turn_on(*tp, NOFIRE);
@@ -380,15 +386,15 @@ register struct thing *tp;
 /*
  * m_select:
  *      Select an action for the monster.
+ * flee: True if running away or player is inaccessible in wall
  */
 
-m_select(th, flee)
-register struct thing *th;
-register bool flee; /* True if running away or player is inaccessible in wall */
+void 
+m_select (register struct thing *th, register bool flee)
 {
     register struct room *rer, *ree;    /* room of chaser, room of chasee */
-    int dist = MININT;
-    int mindist = MAXINT, maxdist = MININT;
+    int dist = INT_MIN;
+    int mindist = INT_MAX, maxdist = INT_MIN;
     bool rundoor;                       /* TRUE means run to a door */
     char sch;
     coord *last_door=0,                 /* Door we just came from */
@@ -498,7 +504,7 @@ register bool flee; /* True if running away or player is inaccessible in wall */
         }
 
         /* Could we not find a door? */
-        if (dist == MININT) {
+        if (dist == INT_MIN) {
             /* If we were on a door, go ahead and use it */
             if (last_door) {
                 th->t_doorgoal = last_door;
@@ -509,7 +515,7 @@ register bool flee; /* True if running away or player is inaccessible in wall */
         }
 
         /* Indicate that we do not want to flee from the door */
-        if (dist != MININT) flee = FALSE;
+        if (dist != INT_MIN) flee = FALSE;
     }
     else th->t_doorgoal = 0;    /* Not going to any door */
 
@@ -522,8 +528,8 @@ register bool flee; /* True if running away or player is inaccessible in wall */
  *      The monster is sounding a sonic blast.
  */
 
-m_sonic(tp)
-register struct thing *tp;
+void 
+m_sonic (register struct thing *tp)
 {
     register int damage;
     static struct object blast =
@@ -552,8 +558,8 @@ register struct thing *tp;
  *      The monster casts a spell.  Currently this is limited to
  *      magic missile.
  */
-m_spell(tp)
-register struct thing *tp;
+void 
+m_spell (register struct thing *tp)
 {
     static struct object missile =
     {
@@ -575,8 +581,8 @@ register struct thing *tp;
  *      Summon aid.
  */
 
-m_summon(tp)
-register struct thing *tp;
+void 
+m_summon (register struct thing *tp)
 {
     register char *helpname, *mname;
     int fail, numsum;
@@ -648,11 +654,8 @@ register struct thing *tp;
  *      (ie. an ability or a weapon) other than just move.
  */
 
-bool
-m_use_it(tp, flee, rer, ree)
-register struct thing *tp;
-bool flee;
-register struct room *rer, *ree;
+bool 
+m_use_it (register struct thing *tp, bool flee, register struct room *rer, register struct room *ree)
 {
     int dist;
     register coord *ee = tp->t_dest, *er = &tp->t_pos; 
@@ -814,14 +817,15 @@ register struct room *rer, *ree;
 /*
  * runners:
  *      Make all the awake monsters try to do something.
+ * segments: Number of segments since last called
  */
 
-runners(segments)
-int segments;    /* Number of segments since last called */
+int 
+runners (int segments)
 {
     register struct linked_list *item, *nitem;
     register struct thing *tp;
-    register min_time = 20;     /* Minimum time until a monster can act */
+    register int min_time = 20;     /* Minimum time until a monster can act */
 
     /*
      * loop thru the list of running (wandering) monsters and see what
@@ -893,12 +897,8 @@ int segments;    /* Number of segments since last called */
  * See if a monster has some magic it can use.  Return TRUE if so.
  * Only care about relics and wands for now.
  */
-bool
-m_use_pack(monster, monst_pos, defend_pos, dist, shoot_dir)
-register struct thing *monster;
-coord *monst_pos, *defend_pos;
-register int dist;
-register coord *shoot_dir;
+bool 
+m_use_pack (register struct thing *monster, coord *monst_pos, coord *defend_pos, register int dist, register coord *shoot_dir)
 {
     register struct object *obj;
     register struct linked_list *pitem, *relic, *stick;
@@ -911,7 +911,7 @@ register coord *shoot_dir;
         if (obj->o_flags & ISCURSED) continue;
         if (obj->o_type == RELIC) {
             switch (obj->o_which) {
-                when MING_STAFF:
+                case MING_STAFF:
                     if (shoot_dir != NULL) {
                         units = 2;      /* Use 2 time units */
                         relic = pitem;
@@ -954,7 +954,7 @@ register coord *shoot_dir;
         if (obj->o_type == STICK) {
             if (obj->o_charges < 1) continue;
             switch(obj->o_which) {
-                when WS_ELECT:
+                case WS_ELECT:
                 case WS_FIRE:
                 case WS_COLD:
                     /* The bolt must be able to reach the defendant */

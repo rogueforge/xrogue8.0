@@ -6,6 +6,7 @@
  *      He wants to eat something, so let him try
  */
 
+void
 eat()
 {
     register struct linked_list *item;
@@ -44,9 +45,9 @@ eat()
         msg ("Your stomach feels like it's about to burst!");
     }
     else if (which != E_SLIMEMOLD) {
-        hungry_state = F_OK;
+        hungry_state = F_OKAY;
         switch (rnd(10)) {
-        when 0: msg("Yuck, what a foul tasting %s! ", foods[which].mi_name);
+        case 0: msg("Yuck, what a foul tasting %s! ", foods[which].mi_name);
         when 1: msg("Mmmm, what a tasty %s. ", foods[which].mi_name);
         when 2: msg("Wow, what a scrumptious %s! ", foods[which].mi_name);
         when 3: msg("Hmmm, %s heaven! ", foods[which].mi_name);
@@ -60,7 +61,7 @@ eat()
     }
     updpack(TRUE, &player);
     switch(which) {
-    when E_WHORTLEBERRY:	/* add 1 to intelligence */
+    case E_WHORTLEBERRY:	/* add 1 to intelligence */
         (*add_abil[A_INTELLIGENCE])(1);
     when E_SWEETSOP:	/* add 1 to strength */
     case E_SOURSOP:	/* add 1 to strength */
@@ -112,7 +113,7 @@ eat()
             on(player, DOROT)) {
             if (on(player, HASDISEASE)) {
                 extinguish(cure_disease);
-                cure_disease();
+                cure_disease(NULL);
             }
             if (on(player, HASINFEST)) {
                 msg("You feel yourself improving. ");

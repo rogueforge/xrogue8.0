@@ -58,7 +58,7 @@ int foods_this_level = 0;               /* foods made per level */
 int count = 0;
 int food_left = STOMACHSIZE-MORETIME-1;
 int group = 1;
-int hungry_state = F_OK;
+int hungry_state = F_OKAY;
 int infest_dam=0;
 int lost_str=0;
 int lastscore = -1;
@@ -445,21 +445,21 @@ struct magic_item foods[MAXFOODS] = {
  */
 
 struct spells magic_spells[MAXSPELLS] = {
-        { P_TFIND,         3,     TYP_POTION,   NULL      },
-        { S_IDENT,         5,     TYP_SCROLL,   NULL      },
+        { P_TFIND,         3,     TYP_POTION,   0      },
+        { S_IDENT,         5,     TYP_SCROLL,   0      },
         { S_LIGHT,         7,     TYP_SCROLL,   ISBLESSED },
-        { S_REMOVE,       10,     TYP_SCROLL,   NULL      },
-        { S_FINDTRAPS,    15,     TYP_SCROLL,   NULL      },
-        { P_FLY,          20,     TYP_POTION,   NULL      },
-        { S_TELEP,        25,     TYP_SCROLL,   NULL      },
-        { S_SLEEP,        30,     TYP_SCROLL,   NULL      },
+        { S_REMOVE,       10,     TYP_SCROLL,   0      },
+        { S_FINDTRAPS,    15,     TYP_SCROLL,   0      },
+        { P_FLY,          20,     TYP_POTION,   0      },
+        { S_TELEP,        25,     TYP_SCROLL,   0      },
+        { S_SLEEP,        30,     TYP_SCROLL,   0      },
         { P_SEEINVIS,     35,     TYP_POTION,   ISBLESSED },
-        { P_CLEAR,        40,     TYP_POTION,   NULL      },
-        { WS_COLD,        45,     TYP_STICK,    NULL      },
-        { P_PHASE,        50,     TYP_POTION,   NULL      },
-        { WS_FIRE,        55,     TYP_STICK,    NULL      },
+        { P_CLEAR,        40,     TYP_POTION,   0      },
+        { WS_COLD,        45,     TYP_STICK,    0      },
+        { P_PHASE,        50,     TYP_POTION,   0      },
+        { WS_FIRE,        55,     TYP_STICK,    0      },
         { P_HASTE,        60,     TYP_POTION,   ISBLESSED },
-        { WS_ELECT,       65,     TYP_STICK,    NULL      },
+        { WS_ELECT,       65,     TYP_STICK,    0      },
         { S_HOLD,         70,     TYP_SCROLL,   ISBLESSED },
 };
 
@@ -468,22 +468,22 @@ struct spells magic_spells[MAXSPELLS] = {
  */
 
 struct spells cleric_spells[MAXPRAYERS] = {
-        { P_MFIND,         3,     TYP_POTION,   NULL      },
-        { P_TFIND,         5,     TYP_POTION,   NULL      },
+        { P_MFIND,         3,     TYP_POTION,   0      },
+        { P_TFIND,         5,     TYP_POTION,   0      },
         { S_LIGHT,         7,     TYP_SCROLL,   ISBLESSED },
-        { S_REMOVE,       10,     TYP_SCROLL,   NULL      },
-        { P_FFIND,        15,     TYP_POTION,   NULL      },
-        { P_FLY,          20,     TYP_POTION,   NULL      },
-        { P_HEALING,      25,     TYP_POTION,   NULL      },
-        { S_CURING,       30,     TYP_SCROLL,   NULL      },
-        { P_RESTORE,      35,     TYP_POTION,   NULL      },
-        { S_MAP,          40,     TYP_SCROLL,   NULL      },
+        { S_REMOVE,       10,     TYP_SCROLL,   0      },
+        { P_FFIND,        15,     TYP_POTION,   0      },
+        { P_FLY,          20,     TYP_POTION,   0      },
+        { P_HEALING,      25,     TYP_POTION,   0      },
+        { S_CURING,       30,     TYP_SCROLL,   0      },
+        { P_RESTORE,      35,     TYP_POTION,   0      },
+        { S_MAP,          40,     TYP_SCROLL,   0      },
         { P_SEEINVIS,     45,     TYP_POTION,   ISBLESSED },
-        { P_CLEAR,        50,     TYP_POTION,   NULL      },
-        { P_PHASE,        55,     TYP_POTION,   NULL      },
+        { P_CLEAR,        50,     TYP_POTION,   0      },
+        { P_PHASE,        55,     TYP_POTION,   0      },
         { WS_CURING,      60,     TYP_STICK,    ISBLESSED },
-        { WS_PARALYZE,    65,     TYP_STICK,    NULL      },
-        { S_ALLENCH,      70,     TYP_SCROLL,   NULL      },
+        { WS_PARALYZE,    65,     TYP_STICK,    0      },
+        { S_ALLENCH,      70,     TYP_SCROLL,   0      },
 };
 
 /*
@@ -491,20 +491,20 @@ struct spells cleric_spells[MAXPRAYERS] = {
  */
 
 struct spells druid_spells[MAXCHANTS] = {
-        { P_MFIND,         3,     TYP_POTION,   NULL      },
-        { P_TFIND,         5,     TYP_POTION,   NULL      },
+        { P_MFIND,         3,     TYP_POTION,   0      },
+        { P_TFIND,         5,     TYP_POTION,   0      },
         { S_LIGHT,         7,     TYP_SCROLL,   ISBLESSED },
-        { S_REMOVE,       10,     TYP_SCROLL,   NULL      },
-        { S_FINDTRAPS,    15,     TYP_SCROLL,   NULL      },
-        { S_CONFUSE,      20,     TYP_SCROLL,   NULL      },
-        { P_FFIND,        25,     TYP_POTION,   NULL      },
-        { P_HEALING,      30,     TYP_POTION,   NULL      },
-        { S_MAP,          35,     TYP_SCROLL,   NULL      },
-        { P_CLEAR,        40,     TYP_POTION,   NULL      },
-        { P_COLD,         45,     TYP_POTION,   NULL      },
-        { P_FIRE,         50,     TYP_POTION,   NULL      },
-        { P_PHASE,        55,     TYP_POTION,   NULL      },
-        { P_LIGHTNING,    60,     TYP_POTION,   NULL      },
+        { S_REMOVE,       10,     TYP_SCROLL,   0      },
+        { S_FINDTRAPS,    15,     TYP_SCROLL,   0      },
+        { S_CONFUSE,      20,     TYP_SCROLL,   0      },
+        { P_FFIND,        25,     TYP_POTION,   0      },
+        { P_HEALING,      30,     TYP_POTION,   0      },
+        { S_MAP,          35,     TYP_SCROLL,   0      },
+        { P_CLEAR,        40,     TYP_POTION,   0      },
+        { P_COLD,         45,     TYP_POTION,   0      },
+        { P_FIRE,         50,     TYP_POTION,   0      },
+        { P_PHASE,        55,     TYP_POTION,   0      },
+        { P_LIGHTNING,    60,     TYP_POTION,   0      },
         { S_CHARM,        65,     TYP_SCROLL,   ISBLESSED },
         { S_HOLD,         70,     TYP_SCROLL,   ISBLESSED },
 };

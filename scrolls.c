@@ -3,6 +3,8 @@
  */
 
 #include <curses.h>
+#include <string.h>
+#include <stdlib.h>
 #include <ctype.h>
 #include "rogue.h"
 
@@ -10,17 +12,15 @@
  * let the hero get rid of some type of monster 
  */
 
+void
 genocide()
 {
     register struct linked_list *ip;
     register struct thing *mp;
     register struct linked_list *nip;
                              /* cannot genocide any uniques */
-    register int num_monst = NUMMONST-NUMUNIQUE-NUMDINOS,
-                 pres_monst=1, 
-                 num_lines=2*(lines-3);
+    register int num_monst = NUMMONST-NUMUNIQUE-NUMDINOS;
     register int which_monst;
-    char monst_name[40];
 
     which_monst = makemonster(FALSE, "Genocide", "wipe out");
     if (which_monst <= 0 || which_monst >= num_monst) {
@@ -44,15 +44,13 @@ genocide()
     msg("You have wiped out the %s.", monsters[which_monst].m_name);
 }
 
-read_scroll(which, flag, is_scroll)
-register int which;
-int flag;
-bool is_scroll;
+void
+read_scroll(register int which, int flag, bool is_scroll)
 {
-    register struct object *obj, *nobj;
+    register struct object *obj = NULL, *nobj;
     register struct linked_list *item, *nitem;
     register int i,j;
-    register char ch, nch;
+    register unsigned char ch, nch;
     bool cursed, blessed;
 
     blessed = FALSE;
@@ -114,12 +112,12 @@ bool is_scroll;
     }
 
     switch (which) {
-        when S_CONFUSE: /* Scroll of monster confusion. Give him that power. */
+        case S_CONFUSE: /* Scroll of monster confusion. Give him that power. */
 	{
 	    register char *str;
 
 	    switch (rnd(5)) {
-		when 0:
+		case 0:
 		    str = "glow red";
 		when 1:
 		    str = "vibrate";
@@ -142,7 +140,7 @@ bool is_scroll;
                 on(player, DOROT)) {
                 if (on(player, HASDISEASE)) {
                     extinguish(cure_disease);
-                    cure_disease();
+                    cure_disease(NULL);
                 }
                 if (on(player, HASINFEST)) {
                     msg(terse ? "You feel yourself improving."
@@ -485,7 +483,7 @@ bool is_scroll;
                     nobj->o_flags &= ~ISCURSED;
                 }
                 msg("Your pack glistens brightly!");
-                do_panic(NULL);         /* this startles them */
+                do_panic(0);         /* this startles them */
 		return;
             }
             else {
@@ -559,10 +557,10 @@ pet_message:        msg("The dungeon begins to rumble and shake!");
                 mpos = 0;
                 if (cursed) {
                     switch(lb->o_type) {        /* ruin it completely */
-                        when RING: if (lb->o_ac > 0) {
+                        case RING: if (lb->o_ac > 0) {
                                     if (is_current(lb)) {
                                         switch (lb->o_which) {
-                                            when R_ADDWISDOM: 
+                                            case R_ADDWISDOM: 
                                                 pstats.s_wisdom -= lb->o_ac;
                                             when R_ADDINTEL:  
                                                 pstats.s_intel -= lb->o_ac;
@@ -642,7 +640,7 @@ pet_message:        msg("The dungeon begins to rumble and shake!");
                     flags = ISBLESSED;
                 }
                 switch(lb->o_type) {
-                    when RING:
+                    case RING:
                         if (lb->o_ac + howmuch > MAXENCHANT) {
                             msg("The enchantment doesn't seem to work!");
                             break;
@@ -653,7 +651,7 @@ pet_message:        msg("The dungeon begins to rumble and shake!");
                             lb==cur_ring[RIGHT_1] || lb==cur_ring[RIGHT_2] ||
 			    lb==cur_ring[RIGHT_3] || lb==cur_ring[RIGHT_4]) {
                             switch (lb->o_which) {
-                                when R_ADDWISDOM: pstats.s_wisdom += howmuch;
+                                case R_ADDWISDOM: pstats.s_wisdom += howmuch;
                                 when R_ADDINTEL:  pstats.s_intel  += howmuch;
                                 when R_ADDSTR:    pstats.s_str    += howmuch;
                                 when R_ADDHIT:    pstats.s_dext   += howmuch;
@@ -694,7 +692,7 @@ pet_message:        msg("The dungeon begins to rumble and shake!");
                         msg("Enchanted %s.",inv_name(lb,TRUE));
                     when MM:
                         switch (lb->o_which) {
-                            when MM_BRACERS:
+                            case MM_BRACERS:
                                 if (lb->o_ac + howmuch > MAXENCHANT) {
                                    msg("The enchantment doesn't seem to work!");
                                    break;
@@ -878,8 +876,9 @@ pet_message:        msg("The dungeon begins to rumble and shake!");
              !s_know[which]                     && 
              item                               &&
              askme                              &&
-             (obj->o_flags & ISKNOW) == NULL    &&
-             (obj->o_flags & ISPOST) == NULL    &&
+             obj                                &&
+             (obj->o_flags & ISKNOW) == 0       &&
+             (obj->o_flags & ISPOST) == 0       &&
              s_guess[which] == NULL) {
         nameitem(item, FALSE);
     }

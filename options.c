@@ -5,6 +5,7 @@
  */
 
 #include <curses.h>
+#include <string.h>
 #include <ctype.h>
 #include "rogue.h"
 
@@ -17,21 +18,11 @@ struct optstruct {
     char        *o_name;        /* option name */
     char        *o_prompt;      /* prompt for interactive entry */
     int         *o_opt;         /* pointer to thing to set */
-    int         (*o_putfunc)(); /* function to print value */
-    int         (*o_getfunc)(); /* function to get value interactively */
+    void         (*o_putfunc)(void *, WINDOW *); /* function to print value */
+    int          (*o_getfunc)(void *, WINDOW *); /* function to get value interactively */
 };
 
 typedef struct optstruct        OPTION;
-
-int     put_bool(), 
-        get_bool(),
-        put_str(),
-        get_str(),
-        put_abil(),
-        get_abil(),
-        get_quest(),
-        put_quest(),
-	get_default();
 
 OPTION  optlist[] = {
     {"terse",   "Terse output: ",
@@ -66,45 +57,48 @@ OPTION  optlist[] = {
  * The default attribute field is read-only
  */
 
-get_default(bp, win)
-int *bp;
-WINDOW *win;
+int
+get_default(void *arg, WINDOW *win)
 {
+    bool *bp = arg;
     register int oy, ox;
 
     getyx(win, oy, ox);
     put_bool(bp, win);
     get_ro(win, oy, ox);
+    return 0;
 }
 
 /*
  * The ability (class) field is read-only
  */
 
-get_abil(abil, win)
-int *abil;
-WINDOW *win;
+int
+get_abil(void *arg, WINDOW *win)
 {
+    int *abil = arg;
     register int oy, ox;
 
     getyx(win, oy, ox);
     put_abil(abil, win);
     get_ro(win, oy, ox);
+    return 0;
 }
 
 /*
  * The quest field is read-only
  */
 
-get_quest(quest, win)
-int *quest;
-WINDOW *win;
+int
+get_quest(void *arg, WINDOW *win)
 {
+    int *quest = arg;
     register int oy, ox;
 
     getyx(win, oy, ox);
     waddstr(win, rel_magic[*quest].mi_name);
     get_ro(win, oy, ox);
+    return 0;
 }
 
 /*
@@ -112,9 +106,8 @@ WINDOW *win;
  *      "Get" a read-only value.
  */
 
-get_ro(win, oy, ox)
-WINDOW *win;
-register int oy, ox;
+int
+get_ro(WINDOW *win, register int oy, register int ox)
 {
     register int ny, nx;
     register bool op_bad;
@@ -151,10 +144,10 @@ register int oy, ox;
  * allow changing a boolean option and print it out
  */
 
-get_bool(bp, win)
-bool *bp;
-WINDOW *win;
+int
+get_bool(void *arg, WINDOW *win)
 {
+    bool *bp = arg;
     register int oy, ox;
     register bool op_bad;
 
@@ -201,10 +194,10 @@ WINDOW *win;
  * set a string option
  */
 
-get_str(opt, win)
-register char *opt;
-WINDOW *win;
+int
+get_str(void *arg, WINDOW *win)
 {
+    register char *opt = arg;
     register char *sp;
     register int c, oy, ox;
     char buf[LINELEN];
@@ -242,7 +235,7 @@ WINDOW *win;
                 register int i;
 
                 sp--;
-                for (i = strlen(unctrl(*sp)); i; i--)
+                for (i = (int) strlen(unctrl(*sp)); i; i--)
                     waddch(win, '\b');
             }
             continue;
@@ -265,6 +258,7 @@ WINDOW *win;
             continue;
         }
         else if (sp == buf)
+        {
             if (c == '-' && win == hw)  /* To move back a line in hw */
                 break;
             else if (c == '~')
@@ -274,6 +268,7 @@ WINDOW *win;
                 sp += strlen(home);
                 continue;
             }
+        }
         *sp++ = c;
         waddstr(win, unctrl(c));
     }
@@ -298,6 +293,7 @@ WINDOW *win;
  * print and then set options from the terminal
  */
 
+void
 option()
 {
     register OPTION     *op;
@@ -322,6 +318,7 @@ option()
     {
         waddstr(hw, op->o_prompt);
         if ((retval = (*op->o_getfunc)(op->o_opt, hw)))
+        {
             if (retval == QUIT)
                 break;
             else if (op > optlist) {    /* MINUS */
@@ -334,6 +331,7 @@ option()
                 wmove(hw, 0, 0);
                 op--;
             }
+        }
     }
     /*
      * Switch back to original screen
@@ -353,8 +351,8 @@ option()
  * or the end of the entire option string.
  */
 
-parse_opts(str)
-register char *str;
+void
+parse_opts(register char *str)
 {
     register char *sp;
     register OPTION *op;
@@ -365,7 +363,7 @@ register char *str;
         /*
          * Get option name
          */
-        for (sp = str; isalpha(*sp); sp++)
+        for (sp = str; isalpha((unsigned char)*sp); sp++)
             continue;
         len = sp - str;
         /*
@@ -404,10 +402,10 @@ register char *str;
 
                     /* Put the value into the option field */
                     if (op->o_putfunc != put_abil) 
-                        strcpy(op->o_opt, value);
+                        strcpy((char *)op->o_opt, value);
 
                     else if (*op->o_opt == -1) { /* Only init ability once */
-                        register int len = strlen(value);
+                        register int len = (int) strlen(value);
                         register int i;
 
                         for (i=0; i<NUM_CHARTYPES-1; i++) {
@@ -433,7 +431,7 @@ register char *str;
         /*
          * skip to start of next option name
          */
-        while (*sp && !isalpha(*sp))
+        while (*sp && !isalpha((unsigned char)*sp))
             sp++;
         str = sp;
     }
@@ -443,10 +441,10 @@ register char *str;
  * print the default attributes
  */
 
-/* put_default(b, win)
- * bool *b;
- * WINDOW *win;
+/* void
+ * put_default(void *arg, WINDOW *win)
  * {
+ *     bool *b = arg;
  *     waddstr(win, *b ? "True" : "False");
  * }
  */
@@ -455,10 +453,10 @@ register char *str;
  * print the character type
  */
 
-put_abil(ability, win)
-int *ability;
-WINDOW *win;
+void
+put_abil(void *arg, WINDOW *win)
 {
+    int *ability = arg;
     waddstr(win, char_class[*ability].name);
 }
 
@@ -466,10 +464,10 @@ WINDOW *win;
  * print out the quest
  */
 
-put_quest(quest, win)
-int *quest;
-WINDOW *win;
+void
+put_quest(void *arg, WINDOW *win)
 {
+    int *quest = arg;
     waddstr(win, rel_magic[*quest].mi_name);
 }
 
@@ -477,10 +475,10 @@ WINDOW *win;
  * put out a boolean
  */
 
-put_bool(b, win)
-bool    *b;
-WINDOW *win;
+void
+put_bool(void *arg, WINDOW *win)
 {
+    bool *b = arg;
     waddstr(win, *b ? "True" : "False");
 }
 
@@ -488,10 +486,10 @@ WINDOW *win;
  * put out a string
  */
 
-put_str(str, win)
-char *str;
-WINDOW *win;
+void
+put_str(void *arg, WINDOW *win)
 {
+    char *str = arg;
     waddstr(win, str);
 }
 

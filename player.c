@@ -4,6 +4,7 @@
 
 #include <ctype.h>
 #include <curses.h>
+#include <string.h>
 #include "rogue.h"
 #ifdef PC7300
 #include "pcmenu.h"
@@ -14,6 +15,7 @@
  *      cleric affecting undead
  */
 
+void
 affect()
 {
     register struct linked_list *item;
@@ -25,7 +27,7 @@ affect()
 
     if (!(player.t_ctype == C_CLERIC  ||
           (player.t_ctype == C_PALADIN && pstats.s_lvl > 4) ||
-          cur_relic[HEIL_ANKH] != NULL)) {
+          cur_relic[HEIL_ANKH] != 0)) {
         msg("You cannot affect undead.");
         return;
     }
@@ -62,12 +64,12 @@ affect()
     turn_off(*tp, TURNABLE);
 
     lvl = pstats.s_lvl;
-    if (player.t_ctype == C_PALADIN && cur_relic[HEIL_ANKH] == NULL) {
+    if (player.t_ctype == C_PALADIN && cur_relic[HEIL_ANKH] == 0) {
         lvl -= 4;
     }
     /* Can cleric kill it? */
     if (lvl >= 3 * tp->t_stats.s_lvl) {
-        long test;      /* For overflow check */
+        unsigned long test;      /* For overflow check */
 
         msg("You have destroyed %s%s.", see ? "the " : "it", see ? mname : "");
         test = pstats.s_exp + tp->t_stats.s_exp;
@@ -82,7 +84,7 @@ affect()
     /* Can cleric turn it? */
     if (rnd(100) + 1 >
          (100 * ((2 * tp->t_stats.s_lvl) - lvl)) / lvl) {
-        long test;      /* Overflow test */
+        unsigned long test;      /* Overflow test */
 
         /* Make the monster flee */
         turn_on(*tp, WASTURNED);        /* No more fleeing after this */
@@ -132,6 +134,7 @@ annoy:
  * the cleric asks his deity for a spell
  */
 
+void
 pray()
 {
     register int num_prayers, prayer_ability, which_prayer;
@@ -139,7 +142,7 @@ pray()
     which_prayer = num_prayers = prayer_ability =  0;
 
     if (player.t_ctype != C_CLERIC  && player.t_ctype != C_PALADIN &&
-        cur_relic[HEIL_ANKH] == NULL) {
+        cur_relic[HEIL_ANKH] == 0) {
             msg("You are not permitted to pray.");
             return;
     }
@@ -189,7 +192,7 @@ pray()
     }
 
     /* We've waited our required praying time. */
-    which_prayer = (int) player.t_using;
+    which_prayer = (long) player.t_using;
     player.t_using = NULL;
     player.t_action = A_NIL;
 
@@ -202,7 +205,7 @@ pray()
 
     if (cleric_spells[which_prayer].s_type == TYP_POTION)
         quaff(          cleric_spells[which_prayer].s_which,
-                        NULL,
+                        0,
                         cleric_spells[which_prayer].s_flag,
                         FALSE);
     else if (cleric_spells[which_prayer].s_type == TYP_SCROLL)
@@ -223,6 +226,7 @@ pray()
  * the magician is going to try and cast a spell
  */
 
+void
 cast()
 {
     register int spell_ability, which_spell, num_spells;
@@ -270,7 +274,7 @@ cast()
     }
 
     /* We've waited our required casting time. */
-    which_spell = (int) player.t_using;
+    which_spell = (long) player.t_using;
     player.t_using = NULL;
     player.t_action = A_NIL;
 
@@ -283,7 +287,7 @@ cast()
 
     if (magic_spells[which_spell].s_type == TYP_POTION)
         quaff(  magic_spells[which_spell].s_which,
-                NULL,
+                0,
                 magic_spells[which_spell].s_flag,
                 FALSE);
     else if (magic_spells[which_spell].s_type == TYP_SCROLL)
@@ -304,6 +308,7 @@ cast()
  * the druid asks his deity for a spell
  */
 
+void
 chant()
 {
     register int num_chants, chant_ability, which_chant;
@@ -356,7 +361,7 @@ chant()
     }
 
     /* We've waited our required chanting time. */
-    which_chant = (int) player.t_using;
+    which_chant = (long) player.t_using;
     player.t_using = NULL;
     player.t_action = A_NIL;
 
@@ -369,7 +374,7 @@ chant()
 
     if (druid_spells[which_chant].s_type == TYP_POTION)
         quaff(          druid_spells[which_chant].s_which,
-                        NULL,
+                        0,
                         druid_spells[which_chant].s_flag,
                         FALSE);
     else if (druid_spells[which_chant].s_type == TYP_SCROLL)
@@ -388,6 +393,7 @@ chant()
 
 /* Constitution bonus */
 
+int
 const_bonus()   /* Hit point adjustment for changing levels */
 {
     register int bonus;
@@ -406,7 +412,7 @@ const_bonus()   /* Hit point adjustment for changing levels */
     else
         bonus = -2;
     switch(player.t_ctype) {
-        when C_FIGHTER:         bonus = min(bonus, 11);
+        case C_FIGHTER:         bonus = min(bonus, 11);
         when C_RANGER:          bonus = min(bonus,  9);
         when C_PALADIN:         bonus = min(bonus,  9);
         when C_MAGICIAN:        bonus = min(bonus,  8);
@@ -428,18 +434,18 @@ const_bonus()   /* Hit point adjustment for changing levels */
  * way to get this artifact and remain alive.
  */
 
-give(th)
-register struct thing *th;
+void
+give()
 {
+    register struct thing *th = NULL;  
     /*
      * Find any monster within one space of you
      */
     struct linked_list *ll;
     struct object *lb;
     register int x,y;
-    register struct linked_list *mon;
+    register struct linked_list *mon = NULL;
     bool gotone = FALSE;
-    bool giveflag = TRUE;  /* used in pack.c */
 
     if (levtype != POSTLEV) {  /* no monsters at trading post  */
         for (x = hero.x-1; x <= hero.x+1; x++) {
@@ -460,9 +466,9 @@ register struct thing *th;
             lb = OBJPTR(ll);
             mpos = 0;
             switch(lb->o_type) {
-                when FOOD: 
+                case FOOD: 
                     switch (lb->o_which) {
-                        when E_SLIMEMOLD:   /* only slime-molds for now */
+                        case E_SLIMEMOLD:   /* only slime-molds for now */
 			    if (on(*th, CANSELL)) {  /* quartermaster */
 				msg("%s laughs at you. ");
 				return;
@@ -503,7 +509,7 @@ register struct thing *th;
 			    else if (on(*th, ISRUN) && off(*th, ISUNIQUE)) {
 				/* if NOT sleeping and not a unique */
 				switch (rnd(2)) {
-				    when 0: msg("%s ignores you. ", prname(monster_name(th), TRUE));
+				    case 0: msg("%s ignores you. ", prname(monster_name(th), TRUE));
 				    when 1: {
 					msg("%s nips at your hand. ", prname(monster_name(th), TRUE));
 					if (rnd(100) < 10) { 
@@ -516,14 +522,14 @@ register struct thing *th;
 					    }
 					    else {  
 						switch (rnd(2)) {
-						    when 0: msg("%s's eyes roll back. ", prname(monster_name(th), TRUE));
+						    case 0: msg("%s's eyes roll back. ", prname(monster_name(th), TRUE));
 					            when 1: msg("%s becomes wanderlust. ", prname(monster_name(th), TRUE));
 						}
 						/* just let him roam around */
 					        turn_on(*th, ISRUN);
 						if (on(*th, ISFLEE))
                         			    turn_off(*th, ISFLEE);
-						runto(th, &player);
+						runto(th, &hero);
 						th->t_action = A_NIL;
 						return;
 					    }
@@ -539,7 +545,7 @@ register struct thing *th;
 			    }
 		        otherwise:
 			    switch (rnd(3)) {  /* mention food (hint hint) */
-			        when 0: msg("You cannot give away the %s! ", foods[lb->o_which].mi_name);
+			        case 0: msg("You cannot give away the %s! ", foods[lb->o_which].mi_name);
 			        when 1: msg("The %s looks rancid! ", foods[lb->o_which].mi_name);
 			        when 2: msg("You change your mind. ");
 			    }
@@ -547,7 +553,7 @@ register struct thing *th;
                     }
 	        otherwise:
 		    switch (rnd(3)) {  /* do not mention other items */
-	                when 0: msg("You feel foolish. ");
+	                case 0: msg("You feel foolish. ");
 	                when 1: msg("You change your mind. ");
 	                when 2: msg("%s ignores you. ", prname(monster_name(th), TRUE));
 		    }
@@ -564,14 +570,14 @@ register struct thing *th;
  * Frighten a monster.  Useful for the 'good' characters.
  */
 
-fright(th)
-register struct thing *th;
+void
+fright()
 {
+    register struct thing *th = NULL;
+
     /*
      * Find any monster within one space of you
      */
-    struct linked_list *ll;
-    struct object *lb;
     register int x,y;
     register struct linked_list *mon;
     bool gotone = FALSE;
@@ -592,12 +598,12 @@ register struct thing *th;
     }
     if (gotone) {  /* If 'good' character or is wearing a ring of fear */
         if (player.t_ctype == C_RANGER || player.t_ctype == C_PALADIN ||
-            player.t_ctype == C_MONK   || ISWEARING(R_FEAR) != NULL) { 
+            player.t_ctype == C_MONK   || ISWEARING(R_FEAR) != 0) { 
 
             player.t_action = A_NIL;
             player.t_no_move = movement(&player);
             switch (player.t_ctype) {
-                when C_FIGHTER:   /* loss of strength */
+                case C_FIGHTER:   /* loss of strength */
                     pstats.s_str--;
                     if (pstats.s_str < 3) pstats.s_str = 3;
                 when C_RANGER:    /* loss of charisma */
@@ -639,7 +645,7 @@ register struct thing *th;
 	    else {
 		/* He can't do it after level 16 */
 		switch (rnd(20)) { 
-		    when 0: case 2:
+		    case 0: case 2:
 			msg("You stamp your foot!! ");
 		    when 4: case 8:
 			msg("%s laughs at you! ",prname(monster_name(th),TRUE));
@@ -653,7 +659,7 @@ register struct thing *th;
 	}
         else {
 	    switch (rnd(25)) {
-	    when 0: case 2: case 4:
+	    case 0: case 2: case 4:
 		msg("You motion angrily! ");
 	    when 6: case 8: case 10:
 		msg("You can't frighten anything. ");
@@ -677,13 +683,14 @@ register struct thing *th;
  * gsense: Sense gold
  */
 
+void
 gsense()
 {
     /* Thief & assassin can do this, but fighter & ranger can later */
     if (player.t_ctype == C_THIEF     || player.t_ctype == C_ASSASSIN ||
         ((player.t_ctype == C_FIGHTER || player.t_ctype == C_RANGER)  &&
 	pstats.s_lvl >= 12)) {
-          read_scroll(S_GFIND, NULL, FALSE);
+          read_scroll(S_GFIND, 0, FALSE);
     }
     else msg("You seem to have no gold sense.");
     return;
@@ -693,13 +700,14 @@ gsense()
  * xsense: Sense traps
  */
 
+void
 xsense()
 {
     /* Only thief can do this, but assassin, fighter, & monk can later */
     if (player.t_ctype == C_THIEF   || ((player.t_ctype == C_ASSASSIN ||
 	player.t_ctype == C_FIGHTER || player.t_ctype == C_MONK)      &&
 	pstats.s_lvl >= 14)) {
-        read_scroll(S_FINDTRAPS, NULL, FALSE);
+        read_scroll(S_FINDTRAPS, 0, FALSE);
     }
     else msg("You seem not to be able to sense traps.");
     return;
@@ -710,6 +718,7 @@ xsense()
  *      Steal in direction given in delta
  */
 
+void
 steal()
 {
     register struct linked_list *item;
@@ -760,7 +769,7 @@ steal()
         return;
     }
 
-    if (isinvisible = invisible(tp)) mname = "creature";
+    if ( (isinvisible = invisible(tp)) ) mname = "creature";
     else mname = monster_name(tp);
 
     /* Can player steal something unnoticed? */
@@ -777,7 +786,7 @@ steal()
          5*(tp->t_stats.s_lvl - 3))) {
         register struct linked_list *s_item, *pack_ptr;
         int count = 0;
-        long test;      /* Overflow check */
+        unsigned long test;      /* Overflow check */
 
         s_item = NULL;  /* Start stolen goods out as nothing */
 
@@ -851,6 +860,7 @@ steal()
  * Take charmed monsters with you via up or down commands.
  */
 
+void
 take_with()
 {
     register struct thing *tp;
@@ -887,19 +897,19 @@ static mitem_t Dispitems[MAXSPELLS+1];          /* Info for each line */
 static char Displines[MAXSPELLS+1][LINELEN+1];  /* The lines themselves */
 #endif
 
-pick_spell(spells, ability, num_spells, power, prompt, type)
-struct spells   spells[];       /* spell list                            */
-int             ability;        /* spell ability                         */
-int             num_spells;     /* number of spells that can be cast     */
-int             power;          /* spell power                           */
-char            *prompt;        /* prompt for spell list                 */
-char            *type;          /* type of thing--> spell, prayer, chant */
+int
+pick_spell(struct spells spells[], int ability, int num_spells, int power, char *prompt, char *type)
+/* spells - spell list                            */
+/* ability - spell ability                         */
+/* num_spells - number of spells that can be cast     */
+/* power - spell power                           */
+/* prompt - prompt for spell list                 */
+/* type - type of thing--> spell, prayer, chant */
 {
     bool                nohw = FALSE;
     register int        i;
     int                 curlen,
                         maxlen,
-                        dummy,
                         which_spell,
                         spell_left;
 #ifdef PC7300
@@ -972,9 +982,9 @@ char            *type;          /* type of thing--> spell, prayer, chant */
         wclear(hw);
         touchwin(hw);
         wmove(hw, 2, 0);
-        *type = _toupper(*type);
+        *type = toupper(*type);
         wprintw(hw, "   Cost    %s", type);
-        *type = _tolower(*type);
+        *type = tolower(*type);
         mvwaddstr(hw, 3, 0,
                 "-----------------------------------------------");
         maxlen = 47;    /* Maximum width of header */
@@ -991,7 +1001,7 @@ char            *type;          /* type of thing--> spell, prayer, chant */
             mvwaddstr(hw, i+4, 0, prbuf);
 
             /* Get the length of the line */
-            getyx(hw, dummy, curlen);
+            curlen = getcury(hw);
             if (maxlen < curlen) maxlen = curlen;
 
 #ifdef PC7300
@@ -1012,7 +1022,7 @@ char            *type;          /* type of thing--> spell, prayer, chant */
 
         mvwaddstr(hw, 0, 0, prbuf);
         wprintw(hw, " Which %s are you %sing? ", type, prompt);
-        getyx(hw, dummy, curlen);
+        curlen = getcury(hw);
         if (maxlen < curlen) maxlen = curlen;
 
 #ifdef PC7300
@@ -1054,7 +1064,7 @@ char            *type;          /* type of thing--> spell, prayer, chant */
 #endif
         /* Should we overlay? */
         if (menu_overlay && num_spells + 3 < lines - 3) {
-            over_win(cw, hw, num_spells + 5, maxlen + 3, 0, curlen, NULL);
+            over_win(cw, hw, num_spells + 5, maxlen + 3, 0, curlen, 0);
         }
         else draw(hw);
     }
@@ -1076,13 +1086,13 @@ char            *type;          /* type of thing--> spell, prayer, chant */
             wmove(hw, 0, 0);
             wclrtoeol(hw);
             wprintw(hw, "Please enter one of the listed %ss. ", type);
-            getyx(hw, dummy, curlen);
+            curlen = getcury(hw);
             if (maxlen < curlen) maxlen = curlen;
 
             /* Should we overlay? */
             if (menu_overlay && num_spells + 3 < lines - 3) {
                 over_win(cw, hw, num_spells + 5, maxlen + 3,
-                            0, curlen, NULL);
+                            0, curlen, 0);
             }
             else draw(hw);
 
@@ -1100,8 +1110,9 @@ char            *type;          /* type of thing--> spell, prayer, chant */
             restscr(cw);
         }
     }
-
+#ifdef PC7300
 got_spell:
+#endif
     if (spells[which_spell].s_type == TYP_STICK && 
         need_dir(STICK, spells[which_spell].s_which)) {
             if (!get_dir(&player.t_newpos)) {
@@ -1109,7 +1120,7 @@ got_spell:
                 return(FALSE);
             }
     }
-    player.t_using = (struct linked_list *) which_spell;
+    player.t_using = (struct linked_list *) (long) which_spell;
     player.t_no_move = (which_spell/3 + 1) * movement(&player);
     return(TRUE);
 }
@@ -1119,6 +1130,7 @@ got_spell:
  * Let the player know what's happening with himself
  */
 
+void
 opt_player()
 {
     int i = 1;  /* initialize counters */
@@ -1168,66 +1180,66 @@ opt_player()
 	i++;
     }
 	/* 6 - Give prayers */
-    if (cur_relic[HEIL_ANKH] != NULL || player.t_ctype == C_CLERIC ||
+    if (cur_relic[HEIL_ANKH] != 0 || player.t_ctype == C_CLERIC ||
         (player.t_ctype == C_PALADIN && pstats.s_lvl > 1)) {
 	wprintw(hw, "You can pray\n");
 	i++;
     }
 	/* 7 - Affect the undead */
-    if (cur_relic[HEIL_ANKH] != NULL || player.t_ctype == C_CLERIC ||
+    if (cur_relic[HEIL_ANKH] != 0 || player.t_ctype == C_CLERIC ||
         (player.t_ctype == C_PALADIN && pstats.s_lvl > 4)) { 
 	wprintw(hw, "You can affect the undead\n");
 	i++;
     }
 	/* 8 - Cause fear */
-    if (ISWEARING(R_FEAR) != NULL   || ((player.t_ctype == C_RANGER ||
+    if (ISWEARING(R_FEAR) != 0   || ((player.t_ctype == C_RANGER ||
         player.t_ctype == C_PALADIN || player.t_ctype == C_MONK)    &&
         pstats.s_lvl > 1)) {
 	wprintw(hw, "You are fearful\n");
 	i++;
     }
 	/* 9 - Confuse monster */
-    if (on(player, CANHUH) != NULL) {
+    if (on(player, CANHUH) != 0) {
 	wprintw(hw, "You have multi-colored hands\n");
 	i++;
     }
 	/* 10 - Confused yourself */
-    if (on(player, ISHUH) != NULL) {
+    if (on(player, ISHUH) != 0) {
 	wprintw(hw, "You are confused\n");
 	i++;
     }				   /* really ISHUH or ISCLEAR */
 	/* 11 - Clear thought */
-    if (on(player, ISCLEAR) != NULL) {
+    if (on(player, ISCLEAR) != 0) {
 	wprintw(hw, "You are clear headed\n");
 	i++;
     }
 	/* 12 - Slow */
-    if (on(player, ISSLOW) != NULL) {
+    if (on(player, ISSLOW) != 0) {
 	wprintw(hw, "You are moving slow\n");
 	i++;
     }				  /* really ISSLOW or ISHASTE */
 	/* 13 - Haste */
-    if (on(player, ISHASTE) != NULL) {
+    if (on(player, ISHASTE) != 0) {
 	wprintw(hw, "You are moving fast\n");
 	i++;
     }
 	/* 14 - Flying */
-    if (on(player, ISFLY) != NULL) {
+    if (on(player, ISFLY) != 0) {
 	wprintw(hw, "You are flying\n");
 	i++;
     }
 	/* 15 - Blind */
-    if (on(player, ISBLIND) != NULL) {
+    if (on(player, ISBLIND) != 0) {
 	wprintw(hw, "You are blind\n");
 	i++;
     }				  /* really ISBLIND or CANSEE */
 	/* 16 - Extra sight */
-    if (on(player, CANSEE) != NULL) {
+    if (on(player, CANSEE) != 0) {
 	wprintw(hw, "You have extra sight\n");
 	i++;
     }
 	/* 17 - Invisibility */
-    if (on(player, ISINVIS) != NULL) {
+    if (on(player, ISINVIS) != 0) {
 	/* Okay, start a second column of effects to the screen. */
         if (i > 16) {
             mvwaddstr(hw, j, 37, "You are invisible");
@@ -1239,7 +1251,7 @@ opt_player()
 	}
     }
 	/* 18 - Regeneration and vampiric regen */
-    if (ISWEARING(R_VAMPREGEN) != NULL || ISWEARING(R_REGEN) != NULL) {
+    if (ISWEARING(R_VAMPREGEN) != 0 || ISWEARING(R_REGEN) != 0) {
         if (i > 16) {
             mvwaddstr(hw, j, 37, "You have regenerative powers");
 	    j++;
@@ -1250,7 +1262,7 @@ opt_player()
 	}
     }
 	/* 19 - Phasing */
-    if (on(player, CANINWALL) != NULL) {
+    if (on(player, CANINWALL) != 0) {
         if (i > 16) {
             mvwaddstr(hw, j, 37, "You can walk through walls");
 	    j++;
@@ -1261,7 +1273,7 @@ opt_player()
 	}
     }
 	/* 20 - Skill (good or bad, it won't last) */
-    if (find_slot(unskill) != NULL) {
+    if (find_slot(unskill) != 0) {
         if (i > 16) {
             mvwaddstr(hw, j, 37, "You feel skillful");
 	    j++;
@@ -1272,7 +1284,7 @@ opt_player()
 	}
     }
 	/* 21 - Stealthy */
-    if (ISWEARING(R_STEALTH) != NULL) {
+    if (ISWEARING(R_STEALTH) != 0) {
         if (i > 16) {
             mvwaddstr(hw, j, 37, "You have stealth");
 	    j++;
@@ -1283,7 +1295,7 @@ opt_player()
 	}
     }
 	/* 22 - Alertness */
-    if (ISWEARING(R_ALERT) != NULL) {  
+    if (ISWEARING(R_ALERT) != 0) {  
         if (i > 16) {
             mvwaddstr(hw, j, 37, "You are awake and alert");
 	    j++;
@@ -1294,7 +1306,7 @@ opt_player()
 	}
     }
 	/* 23 - Free action */
-    if (ISWEARING(R_FREEDOM) != NULL) {
+    if (ISWEARING(R_FREEDOM) != 0) {
         if (i > 16) {
             mvwaddstr(hw, j, 37, "You feel free");
 	    j++;
@@ -1305,7 +1317,7 @@ opt_player()
 	}
     }
 	/* 24 - Heroism */
-    if (ISWEARING(R_HEROISM) != NULL) {
+    if (ISWEARING(R_HEROISM) != 0) {
         if (i > 16) {
             mvwaddstr(hw, j, 37, "You are brave");
 	    j++;
@@ -1316,7 +1328,7 @@ opt_player()
 	}
     }
 	/* 25 - Ice protection */
-    if (on(player, NOCOLD) != NULL) {
+    if (on(player, NOCOLD) != 0) {
         if (i > 16) {
             mvwaddstr(hw, j, 37, "You are protected from ice");
 	    j++;
@@ -1327,7 +1339,7 @@ opt_player()
 	}
     }
 	/* 26 - Fire protection */
-    if (on(player, NOFIRE) != NULL) {
+    if (on(player, NOFIRE) != 0) {
         if (i > 16) {
             mvwaddstr(hw, j, 37, "You are protected from fire");
 	    j++;
@@ -1338,7 +1350,7 @@ opt_player()
 	}
     }
 	/* 27 - Lightning protection */
-    if (on(player, NOBOLT) != NULL) {
+    if (on(player, NOBOLT) != 0) {
         if (i > 16) {
             mvwaddstr(hw, j, 37, "You are protected from lightning");
 	    j++;
@@ -1349,7 +1361,7 @@ opt_player()
 	}
     }
 	/* 28 - Gas protection */
-    if (on(player, NOGAS) != NULL) {
+    if (on(player, NOGAS) != 0) {
         if (i > 16) {
             mvwaddstr(hw, j, 37, "You are protected from gas");
 	    j++;
@@ -1360,7 +1372,7 @@ opt_player()
 	}
     }
 	/* 29 - Acid protection */
-    if (on(player, NOACID) != NULL) { 
+    if (on(player, NOACID) != 0) { 
         if (i > 16) {
             mvwaddstr(hw, j, 37, "You are protected from acid");
 	    j++;
@@ -1371,7 +1383,7 @@ opt_player()
 	}
     }
 	/* 30 - Breath protection */
-    if (cur_relic[YENDOR_AMULET] != NULL) {
+    if (cur_relic[YENDOR_AMULET] != 0) {
         if (i > 16) {
             mvwaddstr(hw, j, 37, "You are protected from monster breath");
 	    j++;
@@ -1382,7 +1394,7 @@ opt_player()
 	}			  /* really only YENDOR or STONEBONES */
     }			
 	/* 31 - Magic missile protection */
-    if (cur_relic[STONEBONES_AMULET] != NULL) { 
+    if (cur_relic[STONEBONES_AMULET] != 0) { 
         if (i > 16) {
             mvwaddstr(hw, j, 37, "You are protected from magic missiles");
 	    j++;
@@ -1393,7 +1405,7 @@ opt_player()
 	}
     }
 	/* 32 - Sustain health */
-    if (ISWEARING(R_HEALTH) != NULL && (off(player, HASDISEASE) &&
+    if (ISWEARING(R_HEALTH) != 0 && (off(player, HASDISEASE) &&
 	off(player, HASINFEST) && off(player, DOROT))) {  
         if (i > 16) {     /* he's really healthy */
             mvwaddstr(hw, j, 37, "You are in good health");
@@ -1405,7 +1417,7 @@ opt_player()
 	}
     }
 	/* 33 - Being held */
-    if (on(player, ISHELD) != NULL) {
+    if (on(player, ISHELD) != 0) {
         if (i > 16) {
             mvwaddstr(hw, j, 37, "You are being held");
 	    j++;
@@ -1416,7 +1428,7 @@ opt_player()
 	}
     }
 	/* 34 - Stinks */
-    if (on(player, HASSTINK) != NULL) {
+    if (on(player, HASSTINK) != 0) {
         if (i > 16) {
             mvwaddstr(hw, j, 37, "You are affronted by a bad smell");
 	    j++;
@@ -1443,7 +1455,7 @@ opt_player()
 	}
     }
 	/* 36 - Diseased */
-    if (on(player, HASDISEASE) != NULL) {  
+    if (on(player, HASDISEASE) != 0) {  
         if (i > 16) {
             mvwaddstr(hw, j, 37, "You have a disease");
 	    j++;
@@ -1454,7 +1466,7 @@ opt_player()
 	}
     }
 	/* 37 - Infested */
-    if (on(player, HASINFEST) != NULL) {  
+    if (on(player, HASINFEST) != 0) {  
         if (i > 16) {
             mvwaddstr(hw, j, 37, "You have an infestation");
 	    j++;
@@ -1465,7 +1477,7 @@ opt_player()
 	}
     }
 	/* 38 - Body rot */
-    if (on(player, DOROT) != NULL) {  
+    if (on(player, DOROT) != 0) {  
         if (i > 16) {
             mvwaddstr(hw, j, 37, "You have body rot");
 	    j++;
@@ -1476,7 +1488,7 @@ opt_player()
 	}
     }
 	/* 39 - Dancing */
-    if (on(player, ISDANCE) != NULL) {  
+    if (on(player, ISDANCE) != 0) {  
         if (i > 16) {
             mvwaddstr(hw, j, 37, "You are a dancing fool");
 	    j++;
@@ -1497,7 +1509,7 @@ opt_player()
             if (menu_overlay) {     /* Print the list. */
                 wmove(hw, i+2, 0);
                 wprintw(hw, spacemsg);
-                over_win(cw, hw, i+3, j, i+2, 27, NULL);
+                over_win(cw, hw, i+3, j, i+2, 27, 0);
 	    }
             else {
                 wmove(hw, i+2, 0);
@@ -1512,7 +1524,7 @@ opt_player()
                 wprintw(hw, spacemsg);
 		if (j > 2) j = 78;
 		else j = 39;
-                over_win(cw, hw, i+3, j, i+2, 27, NULL);
+                over_win(cw, hw, i+3, j, i+2, 27, 0);
 	    }
             else {
                 wmove(hw, i+2, 0);

@@ -1,4 +1,6 @@
 #include <curses.h>
+#include <string.h>
+#include <stdlib.h>
 #include <ctype.h>
 #include "rogue.h"
 #ifdef PC7300
@@ -14,9 +16,11 @@
  *      Change the player's class to the specified one.
  */
 
-changeclass(newclass)
-long *newclass;
+void
+changeclass(void *arg)
 {
+    long *newclass = arg;
+
     if (*newclass == player.t_ctype) {
         msg("You feel more skillful.");
         raise_level();
@@ -123,7 +127,7 @@ long *newclass;
          */
         if (*newclass == C_THIEF || *newclass == C_ASSASSIN ||
 	    *newclass == C_MONK)
-                daemon(trap_look, (VOID *)NULL, AFTER);
+                start_daemon(trap_look, (VOID *)NULL, AFTER);
 
 	/* adjust stats */
         char_type = player.t_ctype = *newclass;
@@ -143,8 +147,8 @@ long *newclass;
  * Use the relic that our monster is wielding.
  */
 
-m_use_relic(monster)
-register struct thing *monster;
+void
+m_use_relic(register struct thing *monster)
 {
     register struct object *obj;
 
@@ -158,7 +162,7 @@ register struct thing *monster;
 
     /* Now let's see what we're using */
     if (obj->o_type == RELIC) switch (obj->o_which) {
-        when MING_STAFF: {
+        case MING_STAFF: {
             static struct object missile = {
               MISSILE, {0,0}, "", 0, 0, "0d4 " , NULL, 0, WS_MISSILE, 100, 1
             };
@@ -172,14 +176,14 @@ register struct thing *monster;
         }
         when EMORI_CLOAK:
             debug("stunning with Emori's cloak");
-            do_zap(monster, obj, &monster->t_newpos, WS_PARALYZE, NULL);
+            do_zap(monster, obj, &monster->t_newpos, WS_PARALYZE, 0);
             obj->o_charges = 0;
 
         when ASMO_ROD: {
             char *name;
 
             switch (rnd(3)) { /* Select a function */
-                when 0:    name = "lightning bolt";
+                case 0:    name = "lightning bolt";
                 when 1:    name = "flame";
                 otherwise: name = "ice";
             }
@@ -241,9 +245,10 @@ register struct thing *monster;
  * add something to the contents of something else
  */
 
-put_contents(bag, item)
-register struct object *bag;            /* the holder of the items */
-register struct linked_list *item;      /* the item to put inside  */
+void
+put_contents(register struct object *bag, register struct linked_list *item)
+/* bag - the holder of the items */
+/* item - the item to put inside  */
 {
     register struct linked_list *titem;
     register struct object *tobj;
@@ -270,9 +275,9 @@ register struct linked_list *item;      /* the item to put inside  */
  * remove something from something else
  */
 
-take_contents(bag, item)
-register struct object *bag;            /* the holder of the items */
-register struct linked_list *item;
+void
+take_contents(register struct object *bag, register struct linked_list *item)
+/* bag - the holder of the items */
 {
 
     if (bag->o_ac <= 0) {
@@ -286,11 +291,11 @@ register struct linked_list *item;
 }
 
 
-do_bag(item)
-register struct linked_list *item;
+void
+do_bag(register struct linked_list *item)
 {
 
-    register struct linked_list *titem;
+    register struct linked_list *titem = NULL;
     register struct object *obj, *tobj;
     bool doit = TRUE;
 
@@ -312,7 +317,7 @@ register struct linked_list *item;
                     break;
                 }
                 switch (obj->o_which) {
-                when MM_BEAKER:
+                case MM_BEAKER:
                     titem = get_item(pack, "put in", POTION, FALSE, FALSE);
                 when MM_BOOK:
                     titem = get_item(pack, "put in", SCROLL, FALSE, FALSE);
@@ -331,7 +336,7 @@ register struct linked_list *item;
                 
             when '4': 
                 switch (obj->o_which) {
-                when MM_BEAKER: 
+                case MM_BEAKER: 
                     titem = get_item(obj->contents,"quaff",ALL,FALSE,FALSE);
                     if (titem == NULL)
                         break;
@@ -349,8 +354,8 @@ register struct linked_list *item;
                     }
                     else if (!p_know[tobj->o_which]             && 
                              askme                              &&
-                             (tobj->o_flags & ISKNOW) == NULL   &&
-                             (tobj->o_flags & ISPOST) == NULL   &&
+                             (tobj->o_flags & ISKNOW) == 0   &&
+                             (tobj->o_flags & ISPOST) == 0   &&
                              p_guess[tobj->o_which] == NULL) {
                         nameitem(titem, FALSE);
                     }
@@ -376,8 +381,8 @@ register struct linked_list *item;
                     }
                     else if (!s_know[tobj->o_which]             && 
                              askme                              &&
-                             (tobj->o_flags & ISKNOW) == NULL   &&
-                             (tobj->o_flags & ISPOST) == NULL   &&
+                             (tobj->o_flags & ISKNOW) == 0   &&
+                             (tobj->o_flags & ISPOST) == 0   &&
                              s_guess[tobj->o_which] == NULL) {
                         nameitem(titem, FALSE);
                     }
@@ -395,7 +400,7 @@ register struct linked_list *item;
                 wprintw(hw,"[3]\tTake something out of the %s\n",
                         m_magic[obj->o_which].mi_name);
                 switch(obj->o_which) {
-                    when MM_BEAKER: waddstr(hw,"[4]\tQuaff a potion\n");
+                    case MM_BEAKER: waddstr(hw,"[4]\tQuaff a potion\n");
                     when MM_BOOK:   waddstr(hw,"[4]\tRead a scroll\n");
                 }
 		/* this is confusing! <press space to continue> */
@@ -408,8 +413,9 @@ register struct linked_list *item;
     }
 }
 
-do_panic(who)
-int who;        /* Kind of monster to panic (all if who is NULL) */
+void
+do_panic(int who)
+/* who - Kind of monster to panic (all if who is NULL) */
 {
     register int x,y;
     register struct linked_list *mon, *item;
@@ -476,8 +482,7 @@ int who;        /* Kind of monster to panic (all if who is NULL) */
  */
 
 char *
-misc_name(obj)
-register struct object *obj;
+misc_name(register struct object *obj)
 {
     static char buf[LINELEN];
     char buf1[LINELEN];
@@ -487,18 +492,18 @@ register struct object *obj;
     if (!(obj->o_flags & ISKNOW))
         return (m_magic[obj->o_which].mi_name);
     switch (obj->o_which) {
-        when MM_BRACERS:
+        case MM_BRACERS:
         case MM_PROTECT:
             strcat(buf, num(obj->o_ac, 0));
             strcat(buf, " ");
     }
     switch (obj->o_which) {
-	when MM_CRYSTAL:
+	case MM_CRYSTAL:
             if (obj->o_flags & ISBLESSED)
                 strcat(buf, "glowing ");
     }
     switch (obj->o_which) {
-        when MM_G_OGRE:
+        case MM_G_OGRE:
         case MM_G_DEXTERITY:
         case MM_JEWEL:
         case MM_STRANGLE:
@@ -512,7 +517,7 @@ register struct object *obj;
     }
     strcat(buf, m_magic[obj->o_which].mi_name);
     switch (obj->o_which) {
-        when MM_JUG:
+        case MM_JUG:
             if (obj->o_ac == JUG_EMPTY)
                 strcat(buf1, " [empty]");
             else if (p_know[obj->o_ac])
@@ -547,6 +552,7 @@ register struct object *obj;
     return buf;
 }
 
+void
 use_emori()
 {
     char selection;     /* Cloak function */
@@ -605,7 +611,7 @@ use_emori()
 
     /* We now must have a selection between 1 and 4 */
     switch (selection) {
-        when '1':       /* Fly */
+        case '1':       /* Fly */
             if (on(player, ISFLY)) {
                 extinguish(land);       /* Extinguish in case of potion */
                 msg("%slready flying.", terse ? "A" : "You are a");
@@ -621,7 +627,7 @@ use_emori()
                 if (find_slot(land))
                     msg("%sot flying by the cloak.",
                         terse ? "N" : "You are n");
-                else land();
+                else land(NULL);
             }
         when '3':       /* Turn invisible */
             if (off(player, ISINVIS)) {
@@ -642,7 +648,7 @@ use_emori()
                 if (find_slot(appear) || find_slot(dust_appear))
                     msg("%sot invisible by the cloak.",
                         terse ? "N" : "You are n");
-                else appear();
+                else appear(NULL);
             }
     }
 }
@@ -657,16 +663,15 @@ static char Displines[MAXQUILL+1][LINELEN+1];   /* The lines themselves */
  * try to write a scroll with the quill of Nagrom
  */
 
-use_quill(obj)
-struct object *obj;
+void
+use_quill(register struct object *obj)
 {
     struct linked_list  *item;
     register int        i,
                         scroll_ability;
     int                 which_scroll,
                         curlen,
-                        maxlen,
-                        dummy;
+                        maxlen;
     bool                nohw = FALSE;
 
     i = which_scroll = 0;
@@ -744,16 +749,15 @@ struct object *obj;
             waddstr(hw, prbuf);
 
             /* Get the length of the line */
-            getyx(hw, dummy, curlen);
+            curlen = getcury(hw);
             if (maxlen < curlen) maxlen = curlen;
         }
 
         sprintf(prbuf, "[Current scroll power = %d]", scroll_ability);
         mvwaddstr(hw, 0, 0, prbuf);
         waddstr(hw, " Which scroll are you writing? ");
-        getyx(hw, dummy, curlen);
+        curlen = getcury(hw);
         if (maxlen < curlen) maxlen = curlen;
-
 #ifdef PC7300
         /* Place an end marker for the items */
         Dispitems[MAXQUILL].mi_name = 0;
@@ -789,7 +793,7 @@ struct object *obj;
 #endif
         /* Should we overlay? */
         if (menu_overlay && MAXQUILL + 3 < lines - 3) {
-            over_win(cw, hw, MAXQUILL + 5, maxlen + 3, 0, curlen, NULL);
+            over_win(cw, hw, MAXQUILL + 5, maxlen + 3, 0, curlen, 0);
         }
         else draw(hw);
     }
@@ -811,13 +815,13 @@ struct object *obj;
             wmove(hw, 0, 0);
             wclrtoeol(hw);
             waddstr(hw, "Please enter one of the listed scrolls. ");
-            getyx(hw, dummy, curlen);
+            curlen = getcury(hw);
             if (maxlen < curlen) maxlen = curlen;
 
             /* Should we overlay? */
             if (menu_overlay && MAXQUILL + 3 < lines - 3) {
                 over_win(cw, hw, MAXQUILL + 5, maxlen + 3,
-                            0, curlen, NULL);
+                            0, curlen, 0);
             }
             else draw(hw);
 
@@ -833,8 +837,9 @@ struct object *obj;
         }
         else restscr(cw);
     }
-
+#ifdef PC7300
 got_scroll:
+#endif
     /* We've waited our required time. */
     player.t_using = NULL;
     player.t_action = A_NIL;
@@ -856,14 +861,14 @@ got_scroll:
  * Use something
  */
 
-use_mm(which)
-int which;
+void
+use_mm(int which)
 {
-    register struct object *obj;
+    register struct object *obj = NULL;
     register struct linked_list *item;
-    bool cursed, blessed, is_mm;
+    bool is_mm;
+    long temp;
 
-    cursed = FALSE;
     is_mm = FALSE;
 
     if (which < 0) {    /* A real miscellaneous magic item  */
@@ -896,8 +901,6 @@ int which;
         is_mm = TRUE;
 
         obj = OBJPTR(item);
-        cursed = obj->o_flags & ISCURSED;
-        blessed = obj->o_flags & ISBLESSED;
         which = obj->o_which;
     }
 
@@ -906,7 +909,7 @@ int which;
         inpack--;
         detach (pack, item);
         switch (obj->o_which) {
-            when P_POISON:
+            case P_POISON:
                 if (cur_weapon) {
                     if (cur_weapon->o_type == RELIC) {
                         msg("The poison burns off %s", 
@@ -926,7 +929,7 @@ int which;
     else if (obj->o_type == RELIC) {            /* An artifact */
         is_mm = FALSE;
         switch (obj->o_which) {
-            when EMORI_CLOAK:
+            case EMORI_CLOAK:
                 use_emori();
             when QUILL_NAGROM:
                 use_quill(obj);
@@ -936,7 +939,7 @@ int which;
             when GERYON_HORN:
                 /* Chase close monsters away */
                 msg("The horn blasts a shrill tone.");
-                do_panic(NULL);
+                do_panic(0);
             when EYE_VECNA:
                 msg("The pain slowly subsides.. ");
             when HEIL_ANKH:
@@ -958,12 +961,12 @@ int which;
          * the jug of alchemy manufactures potions when you drink
          * the potion it will make another after a while
          */
-        when MM_JUG:
+        case MM_JUG:
             if (obj->o_ac == JUG_EMPTY) {
                 msg("The jug is empty");
                 break;
             }
-            quaff (obj->o_ac, NULL, NULL, FALSE);
+            quaff (obj->o_ac, 0, 0, FALSE);
             obj->o_ac = JUG_EMPTY;
             fuse (alchemy, obj, ALCHEMYTIME, AFTER);
             if (!(obj->o_flags & ISKNOW))
@@ -1041,7 +1044,7 @@ int which;
                 break;
             }
             obj->o_charges--;
-            do_panic(NULL);
+            do_panic(0);
 	    return;
         /*
          * dust of disappearance makes the player invisible for a while
@@ -1101,7 +1104,7 @@ int which;
             obj->o_charges--;
             if (on(player, HASDISEASE)) {
                 extinguish(cure_disease);
-                cure_disease();
+                cure_disease(NULL);
                 msg(terse ? "You feel yourself improving."
                           : "You begin to feel yourself improving again.");
             }
@@ -1118,7 +1121,7 @@ int which;
             pstats.s_hpt += roll(pstats.s_lvl, 6);
             if (pstats.s_hpt > max_stats.s_hpt)
                 pstats.s_hpt = max_stats.s_hpt;
-            sight();
+            sight(NULL);
             msg("You begin to feel much better.");
                 
         /*
@@ -1131,7 +1134,8 @@ int which;
         when MM_SKILLS:
             detach (pack, item);
             inpack--;
-            changeclass(&obj->o_ac);
+            temp = obj->o_ac;
+            changeclass(&temp);
 	when MM_CRYSTAL:
 	{
 	    register char *str;
@@ -1169,7 +1173,7 @@ int which;
 		    str = "vibrates softly";
 		msg("You rub the crystal and it %s...  ", str);
 		  /* cure him */
-		read_scroll(S_CURING, NULL, FALSE);
+		read_scroll(S_CURING, 0, FALSE);
 		  /* give him weird hands */
                 turn_on(player, CANHUH);
 		msg("Your fingertips turn blue.  ");
@@ -1231,7 +1235,7 @@ int which;
         m_guess[which] = NULL;
     }
     else if (is_mm && !m_know[which] && askme &&
-             (obj->o_flags & ISKNOW) == NULL &&
+             (obj->o_flags & ISKNOW) == 0 &&
              m_guess[which] == NULL) {
         nameitem(item, FALSE);
     }
@@ -1247,19 +1251,18 @@ int which;
  */
 
 int
-usage_time(item)
-struct linked_list *item;
+usage_time(struct linked_list *item)
 {
     register struct object *obj;
     register int units = -1;
 
     obj = OBJPTR(item);
     switch (obj->o_type) {
-        when SCROLL:    units = 4;
+        case SCROLL:    units = 4;
         when POTION:    units = 3;
         when RELIC:                     /* An artifact */
             switch (obj->o_which) {
-                when BRIAN_MANDOLIN:
+                case BRIAN_MANDOLIN:
                 case GERYON_HORN:       units = 4;
                 when QUILL_NAGROM:
                 case EMORI_CLOAK:
@@ -1285,7 +1288,7 @@ struct linked_list *item;
             }
         when MM:
             switch (obj->o_which) {     /* Miscellaneous Magic */
-                when MM_JUG:
+                case MM_JUG:
                     if (obj->o_ac == JUG_EMPTY) {
                         msg("The jug is empty");
                         return (-1);

@@ -1,6 +1,9 @@
 #include <curses.h>
 #include <signal.h>
 #include <pwd.h>
+#include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #ifdef BSD
 #include <sys/time.h>
@@ -9,8 +12,8 @@
 #endif
 
 #include "mach_dep.h"
-#include "network.h"
 #include "rogue.h"
+#include "network.h"
 
 #ifdef PC7300
 #include <sys/window.h>
@@ -20,17 +23,14 @@ extern struct uwdata wdata, oldwin;
 extern char oldtext[WTXTNUM][WTXTLEN];
 #endif
 
-main(argc, argv, envp)
-char **argv;
-char **envp;
+int
+main(int argc, char **argv, char **envp)
 {
     register char *env;
 #if !MSDOS
     register struct passwd *pw;
-    struct passwd *getpwuid();
 #endif
-    char *getpass(), *crypt();
-    long now;
+    time_t now;
 #ifdef PC7300
     int hardwindow;     /* Do we have a hardware window? */
 #endif
@@ -356,7 +356,7 @@ char **envp;
     if (lines % 2 != 0) lines -=1;      /* must be even for maze code */
     if (lines < MAXLINES-4 || cols < MAXCOLS-10) { /* give player a break if larger font used */
         printf("\nERROR: screen size too small for rogue\n");
-        byebye();
+        byebye(0);
     }
 
     /*
@@ -415,7 +415,7 @@ char **envp;
     draw(cw);
     /* A super wizard doesn't have to get equipped */
     /* Check if "" option is TRUE and get environment flag */
-    if (wizard && strcmp(getenv("SUPER"),"YES") == 0 ||
+    if ((wizard && strcmp(getenv("SUPER"),"YES") == 0) ||
     def_attr == TRUE) {
         level = 1;
         new_level(NORMLEV);
@@ -426,7 +426,7 @@ char **envp;
     /*
      * Start up daemons and fuses
      */
-    daemon(doctor, &player, AFTER);
+    start_daemon( doctor, &player, AFTER);
     fuse(swander, (VOID *)NULL, WANDERTIME, AFTER);
 	/* Give characters their innate abilities */
     if (player.t_ctype == C_MAGICIAN || player.t_ctype == C_RANGER)
@@ -435,15 +435,15 @@ char **envp;
             fuse(chant_recovery, (VOID *)NULL, SPELLTIME, AFTER);
     if (player.t_ctype == C_CLERIC   || player.t_ctype == C_PALADIN)
             fuse(prayer_recovery, (VOID *)NULL, SPELLTIME, AFTER);
-    daemon(stomach, (VOID *)NULL, AFTER);
+    start_daemon(stomach, (VOID *)NULL, AFTER);
     if (player.t_ctype == C_THIEF    ||
         player.t_ctype == C_ASSASSIN ||
         player.t_ctype == C_MONK)
-            daemon(trap_look, (VOID *)NULL, AFTER);
+            start_daemon(trap_look, (VOID *)NULL, AFTER);
 
     /* Does this character have any special knowledge? */
     switch (player.t_ctype) {
-        when C_ASSASSIN:
+        case C_ASSASSIN:
             /* Assassins automatically recognize poison */
             p_know[P_POISON] = TRUE;
         when C_FIGHTER:
@@ -471,8 +471,7 @@ char **envp;
 
 /*UNUSED*/
 void
-endit(a)
-int a;
+endit(int a)
 {
     fatal("Ok, if you want to exit that badly, I'll have to allow it\n");
 }
@@ -482,8 +481,8 @@ int a;
  *      Exit the program, printing a message.
  */
 
-fatal(s)
-char *s;
+void
+fatal(char *s)
 {
     clear();
     move(lines-2, 0);
@@ -502,8 +501,8 @@ char *s;
  *      Pick a very random number.
  */
 
-rnd(range)
-register int range;
+int
+rnd(register int range)
 {
 #if BSD || MSDOS
     return(range <= 0 ? 0 : rand() % range);
@@ -517,8 +516,8 @@ register int range;
  *      roll a number of dice
  */
 
-roll(number, sides)
-register int number, sides;
+int
+roll(register int number, register int sides)
 {
     register int dtotal = 0;
 
@@ -535,8 +534,7 @@ register int number, sides;
 
 /*UNUSED*/
 void 
-tstp(a)
-int a;
+tstp(int a)
 {
     mvcur(0, cols - 1, lines - 1, 0);
     endwin();
@@ -552,6 +550,7 @@ int a;
 }
 #endif
 
+void
 setup()
 {
 #ifdef CHECKTIME
@@ -597,6 +596,7 @@ setup()
  * refreshing things and looking at the proper times.
  */
 
+void
 playit()
 {
     register char *opts;
@@ -611,13 +611,14 @@ playit()
     oldrp = roomin(&hero);
     after = TRUE;
     command();                  /* Command execution */
-    endit();
+    endit(0);
 }
 
 /*
  * see if the system is being used too much for this game
  */
 
+int
 too_much()
 {
 #if MAXPROCESSES
@@ -636,6 +637,7 @@ too_much()
  *      See if a user is an author of the program
  */
 
+int
 author()
 {
         switch (getuid()) {
@@ -652,6 +654,7 @@ author()
 #if CHECKTIME
 static int num_checks = 0;      /* times we've gone over in checkout() */
 
+void
 checkout()
 {
         static char *msgs[] = {
@@ -687,9 +690,8 @@ checkout()
  * printf instead of a msg to avoid the refresh.
  */
 
-chmsg(fmt, arg)
-char *fmt;
-int arg;
+void
+chmsg(char *fmt, int arg)
 {
         if (in_shell) {
                 printf(fmt, arg);
@@ -705,6 +707,7 @@ int arg;
 
 #include <fcntl.h>
 
+int
 loadav()
 {
         char *sarcmd = "sar -v | cut -c17-20 | tail -2";
@@ -760,6 +763,7 @@ loadav()
 #include <sys/types.h>
 #include <utmp.h>
 struct utmp buf;
+int
 ucount()
 {
         reg struct utmp *up;
@@ -788,6 +792,7 @@ ucount()
  *      Returns TRUE when it is a good time to play rogue
  */
 
+int
 holiday()
 {
 
@@ -816,14 +821,14 @@ holiday()
 }
 
 #if MSDOS
+int
 getuid()
 {
         return (AUTHOR);
 }
-flushout() {}
+void flushout() {}
 char *
-getpass(str)
-char *str;
+getpass(char *str)
 {
         fputs(str,stdout);
         fflush(stdout);

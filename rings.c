@@ -1,4 +1,6 @@
 #include <curses.h>
+#include <string.h>
+#include <stdlib.h>
 #include "rogue.h"
 
 /*
@@ -9,8 +11,8 @@
  * how much food does this ring use up?
  */
 
-ring_eat(hand)
-register int hand;
+int
+ring_eat(register int hand)
 {
     if (cur_ring[hand] == NULL)
         return 0;
@@ -34,22 +36,20 @@ register int hand;
     return 0;
 }
 
-ring_on(item)
-register struct linked_list *item;
+void
+ring_on(register struct linked_list *item)
 {
     register struct object *obj;
     register int save_max;
-    bool cursed = FALSE;
 
     obj = OBJPTR(item);
-    cursed = obj->o_flags & ISCURSED;
 
     /*
      * Calculate the effect it has on the poor guy.
      */
     switch (obj->o_which)
     {
-        when R_ADDSTR:
+        case R_ADDSTR:
             save_max = max_stats.s_str;
             chg_str(obj->o_ac);
             max_stats.s_str = save_max;
@@ -82,9 +82,9 @@ register struct linked_list *item;
             }
 	}
         when R_SEARCH:
-            daemon(ring_search, (VOID *)NULL, AFTER);
+            start_daemon(ring_search, (VOID *)NULL, AFTER);
         when R_TELEPORT:
-            daemon(ring_teleport, (VOID *)NULL, AFTER);
+            start_daemon(ring_teleport, (VOID *)NULL, AFTER);
     }
     status(FALSE);
     if (r_know[obj->o_which] && r_guess[obj->o_which]) {
@@ -93,7 +93,7 @@ register struct linked_list *item;
     }
     else if (!r_know[obj->o_which] && 
              askme && 
-             (obj->o_flags & ISKNOW) == NULL &&
+             (obj->o_flags & ISKNOW) == 0 &&
              r_guess[obj->o_which] == NULL) {
         nameitem(item, FALSE);
     }
@@ -104,8 +104,7 @@ register struct linked_list *item;
  */
 
 char *
-ring_num(obj)
-register struct object *obj;
+ring_num(register struct object *obj)
 {
     static char buf[5];
 
@@ -113,7 +112,7 @@ register struct object *obj;
         return "";
     switch (obj->o_which)
     {
-        when R_PROTECT:
+        case R_PROTECT:
         case R_ADDSTR:
         case R_ADDDAM:
         case R_ADDHIT:
@@ -140,7 +139,8 @@ register struct object *obj;
  * Return the effect of the specified ring 
  */
 
-ring_value(type)
+int
+ring_value(int type)
 {
     int result = 0;
 

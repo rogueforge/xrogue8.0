@@ -1,4 +1,5 @@
 #include <curses.h>
+#include <stdlib.h>
 #include "rogue.h"
 
 struct cell {
@@ -6,7 +7,7 @@ struct cell {
         char x_pos;
 };
 struct b_cellscells {
-        char num_pos;           /* number of frontier cells next to you */
+        int num_pos;           /* number of frontier cells next to you */
         struct cell conn[4];    /* the y,x position of above cell */
 } b_cells;
 
@@ -14,14 +15,18 @@ static char     *frontier,
                 *bits;
 static int      maze_lines, 
                 maze_cols;
-char            *moffset(), 
-                *foffset();
-
+static void crankout(void);
+static void draw_maze(void);
+static int findcells(register int y, register int x);
+static char *foffset(int y, int x);
+static char *moffset(int y, int x);
+static void rmwall(int newy, int newx, int oldy, int oldx);
 /*
  * crankout:
  *      Does actual drawing of maze to window
  */
 
+static void
 crankout()
 {
     reg int x, y;
@@ -56,6 +61,7 @@ crankout()
  *      Draw the maze on this level.
  */
 
+void
 do_maze()
 {
         reg int least;
@@ -80,7 +86,7 @@ do_maze()
         /*
          * add some gold to make it worth looking for 
          */
-        item = spec_item(GOLD, NULL, NULL, NULL);
+        item = spec_item(GOLD, 0, 0, 0);
         obj = OBJPTR(item);
         obj->o_count *= (rnd(50) + 50);         /* add in one large hunk */
         attach(lvl_obj, item);
@@ -93,7 +99,7 @@ do_maze()
         /*
          * add in some food to make sure he has enough
          */
-        item = spec_item(FOOD, NULL, NULL, NULL);
+        item = spec_item(FOOD, 0, 0, 0);
         obj = OBJPTR(item);
         attach(lvl_obj, item);
         do {
@@ -131,6 +137,7 @@ do_maze()
  *      Generate and draw the maze on the screen
  */
 
+static void
 draw_maze()
 {
         reg int i, j, more;
@@ -168,8 +175,8 @@ draw_maze()
  *      Figure out cells to open up 
  */
 
-findcells(y,x)
-reg int x, y;
+static int
+findcells(reg int y,reg int x)
 {
         reg int rtpos, i;
 
@@ -220,9 +227,8 @@ reg int x, y;
  *      Calculate memory address for frontier
  */
 
-char *
-foffset(y, x)
-int y, x;
+static char *
+foffset(int y, int x)
 {
 
         return (frontier + (y * maze_cols) + x);
@@ -236,10 +242,9 @@ int y, x;
  */
 
 bool
-maze_view(y, x)
-int y, x;
+maze_view(int y, int x)
 {
-    register int start, goal, delta, ycheck, xcheck, absy, absx, see_radius;
+    register int start, goal, delta, ycheck = 0, xcheck = 0, absy, absx, see_radius;
     register bool row;
 
     /* Get the absolute value of y and x differences */
@@ -250,7 +255,7 @@ int y, x;
 
     /* If we are standing in a wall, we can see a bit more */
     switch (winat(hero.y, hero.x)) {
-        when VERTWALL:
+        case VERTWALL:
         case HORZWALL:
         case WALL:
         case SECRETDOOR:
@@ -287,7 +292,7 @@ int y, x;
         if (row) {
             /* See if above us it okay first */
             switch (winat(ycheck, start)) {
-                when VERTWALL:
+                case VERTWALL:
                 case HORZWALL:
                 case WALL:
                 case DOOR:
@@ -302,7 +307,7 @@ int y, x;
         else {
             /* See if above us it okay first */
             switch (winat(start, xcheck)) {
-                when VERTWALL:
+                case VERTWALL:
                 case HORZWALL:
                 case WALL:
                 case DOOR:
@@ -344,9 +349,8 @@ int y, x;
  *      Calculate memory address for bits
  */
 
-char *
-moffset(y, x)
-int y, x;
+static char *
+moffset(int y, int x)
 {
     return (bits + (y * (cols - 1)) + x);
 }
@@ -355,8 +359,8 @@ int y, x;
  * rmwall:
  *      Removes appropriate walls from the maze
  */
-rmwall(newy, newx, oldy, oldx)
-int newy, newx, oldy, oldx;
+static void
+rmwall(int newy, int newx, int oldy, int oldx)
 {
         reg int xdif,ydif;
         

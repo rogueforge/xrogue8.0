@@ -10,9 +10,8 @@
  *      Update his pack weight and adjust fooduse accordingly
  */
 
-updpack(getmax, tp)
-int getmax;
-struct thing *tp;
+void
+updpack(int getmax, struct thing *tp)
 {
 
         reg int topcarry, curcarry;
@@ -42,8 +41,8 @@ struct thing *tp;
  *      Get the total weight of the hero's pack
  */
 
-packweight(tp)
-register struct thing *tp;
+int
+packweight(register struct thing *tp)
 {
         reg struct object *obj;
         reg struct linked_list *pc;
@@ -79,8 +78,8 @@ register struct thing *tp;
  *      Get the weight of an object
  */
 
-itemweight(wh)
-reg struct object *wh;
+int
+itemweight(reg struct object *wh)
 {
         reg int weight;
         reg int ac;
@@ -110,8 +109,8 @@ reg struct object *wh;
  *      Get hero's carrying ability above norm
  */
 
-playenc(tp)
-register struct thing *tp;
+int
+playenc(register struct thing *tp)
 {
         register int strength;
 
@@ -126,15 +125,15 @@ register struct thing *tp;
  *      Get total weight that the hero can carry
  */
 
-totalenc(tp)
-register struct thing *tp;
+int
+totalenc(register struct thing *tp)
 {
         reg int wtotal;
 
         wtotal = NORMENCB + playenc(tp);
         if (tp == &player) switch(hungry_state) {
                 case F_SATIATED:
-                case F_OK:
+                case F_OKAY:
                 case F_HUNGRY:  ;                       /* no change */
                 when F_WEAK:    wtotal -= wtotal / 10;  /* 10% off weak */
                 when F_FAINT:   wtotal /= 2;            /* 50% off faint */
@@ -147,11 +146,11 @@ register struct thing *tp;
  *      See if the hero can carry his pack
  */
 
-wghtchk()
+void
+wghtchk(void *arg)
 {
         reg int dropchk, err = TRUE;
         reg char ch;
-        int wghtchk();
 
         inwhgt = TRUE;
         if (pstats.s_pack > pstats.s_carry) {
@@ -166,7 +165,7 @@ wghtchk()
             msg("Your pack is far too heavy for you.. ");
             do {
                 dropchk = drop((struct linked_list *)NULL);
-                if(dropchk == NULL) {
+                if(dropchk == 0) {
                     mpos = 0;
                     msg("You must drop something");
                 }
@@ -185,6 +184,7 @@ wghtchk()
  *                      -1 hit for heavy pack weight
  */
 
+int
 hitweight()
 {
         return(2 - foodlev);

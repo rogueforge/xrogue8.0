@@ -3,8 +3,10 @@
  */
 
 #include <curses.h>
+#include <stdlib.h>
 #include "rogue.h"
 
+void
 do_rooms()
 {
     register int i;
@@ -92,7 +94,7 @@ do_rooms()
 
             has_gold = TRUE;    /* This room has gold in it */
 
-            item = spec_item(GOLD, NULL, NULL, NULL);
+            item = spec_item(GOLD, 0, 0, 0);
             cur = OBJPTR(item);
 
             /* Put the gold into the level list of items */
@@ -162,9 +164,7 @@ do_rooms()
  */
 
 coord *
-doorway(rp, door)
-register struct room *rp;
-register coord *door;
+doorway(register struct room *rp, register coord *door)
 {
     register int misses = 0;
     static coord answer;
@@ -193,8 +193,8 @@ register coord *door;
  * Draw a box around a room
  */
 
-draw_room(rp)
-register struct room *rp;
+void
+draw_room(register struct room *rp)
 {
     register int j, k;
 
@@ -221,8 +221,8 @@ register struct room *rp;
  *      draw a horizontal line
  */
 
-horiz(cnt)
-register int cnt;
+void
+horiz(register int cnt)
 {
     while (cnt--)
         addch(HORZWALL);
@@ -233,9 +233,8 @@ register int cnt;
  *      pick a random spot in a room
  */
 
-rnd_pos(rp, cp)
-register struct room *rp;
-register coord *cp;
+void
+rnd_pos(register struct room *rp, register coord *cp)
 {
     cp->x = rp->r_pos.x + rnd(rp->r_max.x-2) + 1;
     cp->y = rp->r_pos.y + rnd(rp->r_max.y-2) + 1;
@@ -250,8 +249,7 @@ register coord *cp;
  */
 
 struct room *
-roomin(cp)
-register coord *cp;
+roomin(register coord *cp)
 {
     register struct room *rp;
 
@@ -266,8 +264,8 @@ register coord *cp;
  *      draw a vertical line
  */
 
-vert(cnt)
-register int cnt;
+void
+vert(register int cnt)
 {
     register int x, y;
 

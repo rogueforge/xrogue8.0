@@ -10,9 +10,10 @@
  *      A healing daemon that restors hit points after rest
  */
 
-doctor(tp)
-register struct thing *tp;
+void
+doctor(void *arg)
 {
+    register struct thing *tp = arg;
     register int ohp;
     register int limit, new_points;
     register struct stats *curp; /* current stats pointer */
@@ -26,7 +27,7 @@ register struct thing *tp;
     }
     tp->t_quiet++;
     switch (tp->t_ctype) {
-        when C_MAGICIAN:
+        case C_MAGICIAN:
             limit = 10 - curp->s_lvl;
             new_points = curp->s_lvl - 2;
         when C_CLERIC:
@@ -97,9 +98,10 @@ register struct thing *tp;
  *      Called when it is time to start rolling for wandering monsters
  */
 
-swander()
+void
+swander(void *arg)
 {
-    daemon(rollwand, (VOID *)NULL, BEFORE);
+    start_daemon(rollwand, (VOID *)NULL, BEFORE);
 }
 
 /*
@@ -107,7 +109,8 @@ swander()
  *      Called to roll to see if a wandering monster starts up
  */
 
-rollwand()
+void
+rollwand(void *arg)
 {
     static int between = 0;
 
@@ -130,7 +133,8 @@ rollwand()
  * this function is a daemon called each turn when the character is a thief
  */
 
-trap_look()
+void
+trap_look(void *arg)
 {
     if (rnd(100) < (2*dex_compute() + 5*pstats.s_lvl))
         search(TRUE, FALSE);
@@ -141,7 +145,8 @@ trap_look()
  *      Release the poor player from his confusion
  */
 
-unconfuse()
+void
+unconfuse(void *arg)
 {
     turn_off(player, ISHUH);
     msg("You feel less confused now");
@@ -152,7 +157,8 @@ unconfuse()
  *      He lost his see invisible power
  */
 
-unsee()
+void
+unsee(void *arg)
 {
     if (!ISWEARING(R_SEEINVIS)) {
         turn_off(player, CANSEE);
@@ -165,7 +171,8 @@ unsee()
  *      Remove to-hit handicap from player
  */
 
-unstink()
+void
+unstink(void *arg)
 {
     turn_off(player, HASSTINK);
 }
@@ -175,7 +182,8 @@ unstink()
  *      Player is no longer immune to confusion
  */
 
-unclrhead()
+void
+unclrhead(void *arg)
 {
     turn_off(player, ISCLEAR);
     msg("The blue aura about your head fades away.");
@@ -186,7 +194,8 @@ unclrhead()
  *      Player can no longer walk through walls
  */
 
-unphase()
+void
+unphase(void *arg)
 {
     turn_off(player, CANINWALL);
     msg("Your dizzy feeling leaves you.");
@@ -200,7 +209,7 @@ unphase()
  */
 
 void
-land()
+land(void *arg)
 {
     turn_off(player, ISFLY);
     msg("You regain your normal weight");
@@ -212,7 +221,8 @@ land()
  *      He gets his sight back
  */
 
-sight()
+void
+sight(void *arg)
 {
     if (on(player, ISBLIND))
     {
@@ -228,10 +238,10 @@ sight()
  *      Restore player's strength
  */
 
-VOID
-res_strength(howmuch)
-long howmuch;
+void
+res_strength(void *arg)
 {
+    long int howmuch = *(long int *)arg;
 
     /* If lost_str is non-zero, restore that amount of strength,
      * else all of it 
@@ -254,7 +264,8 @@ long howmuch;
  *      End the hasting
  */
 
-nohaste()
+void
+nohaste(void *arg)
 {
     turn_off(player, ISHASTE);
     msg("You feel yourself slowing down.");
@@ -265,7 +276,8 @@ nohaste()
  *      End the slowing
  */
 
-noslow()
+void
+noslow(void *arg)
 {
     turn_off(player, ISSLOW);
     msg("You feel yourself speeding up.");
@@ -276,7 +288,8 @@ noslow()
  *      If this gets called, the player has suffocated
  */
 
-suffocate()
+void
+suffocate(void *arg)
 {
     pstats.s_hpt = -1;
     death(D_SUFFOCATION);
@@ -286,7 +299,8 @@ suffocate()
  * digest the hero's food
  */
 
-stomach()
+void
+stomach(void *arg)
 {
     register int oldfood, old_hunger, food_use, i;
 
@@ -356,21 +370,22 @@ stomach()
         }
         else if(food_left<STOMACHSIZE-MORETIME && oldfood>=STOMACHSIZE-MORETIME)
         {
-            hungry_state = F_OK;
+            hungry_state = F_OKAY;
         }
     }
     if (old_hunger != hungry_state)  {
         updpack(TRUE, &player);
         status(TRUE);
     }
-    wghtchk();
+    wghtchk(NULL);
 }
 
 /*
  * daemon for curing the diseased
  */
 
-cure_disease()
+void
+cure_disease(void *arg)
 {
     turn_off(player, HASDISEASE);
     if (off (player, HASINFEST))
@@ -383,7 +398,8 @@ cure_disease()
  *      Become visible again
  */
  
-appear()
+void
+appear(void *arg)
 {
     turn_off(player, ISINVIS);
     PLAYER = VPLAYER;
@@ -396,7 +412,8 @@ appear()
  *      dust of disappearance wears off
  */
  
-dust_appear()
+void
+dust_appear(void *arg)
 {
     turn_off(player, ISINVIS);
     PLAYER = VPLAYER;
@@ -409,7 +426,8 @@ dust_appear()
  *      the effects of "dust of choking and sneezing" wear off
  */
  
-unchoke()
+void
+unchoke(void *arg)
 {
     if (!find_slot(unconfuse))
         turn_off(player, ISHUH);
@@ -423,9 +441,10 @@ unchoke()
  * make some potion for the guy in the Alchemy jug
  */
  
-alchemy(obj)
-register struct object *obj;
+void
+alchemy(void *arg)
 {
+    register struct object *obj = arg;
     register struct object *tobj;
     register struct linked_list *item;
 
@@ -456,7 +475,7 @@ register struct object *obj;
         return;
     
     switch(rnd(11)) {
-        when 0: tobj->o_ac = P_PHASE;
+        case 0: tobj->o_ac = P_PHASE;
         when 1: tobj->o_ac = P_CLEAR;
         when 2: tobj->o_ac = P_SEEINVIS;
         when 3: tobj->o_ac = P_HEALING;
@@ -475,7 +494,7 @@ register struct object *obj;
  */
  
 void
-undance()
+undance(void *arg)
 {
     turn_off(player, ISDANCE);
     msg ("Your feet take a break.....whew!");
@@ -485,7 +504,8 @@ undance()
  * if he has our favorite necklace of strangulation then take damage every turn
  */
  
-strangle()
+void
+strangle(void *arg)
 {
      if ((pstats.s_hpt -= 6) <= 0) {
 	 pstats.s_hpt = -1;
@@ -497,7 +517,8 @@ strangle()
  * if he has on the gauntlets of fumbling he might drop his weapon each turn
  */
  
-fumble()
+void
+fumble(void *arg)
 {
     register struct linked_list *item;
 
@@ -539,7 +560,8 @@ fumble()
  * it's a lot like trap_look() 
  */
  
-ring_search()
+void
+ring_search(void *arg)
 {
     if (rnd(75) < (2*dex_compute() + 5*pstats.s_lvl)) search(TRUE, FALSE);
     else search(FALSE, FALSE);
@@ -549,7 +571,8 @@ ring_search()
  * this is called each turn the hero has the ring of teleportation on
  */
  
-ring_teleport()
+void
+ring_teleport(void *arg)
 {
     if (rnd(100) < 3) teleport();
 }
@@ -558,7 +581,8 @@ ring_teleport()
  * this is called to charge up the quill of Nagrom
  */
  
-quill_charge()
+void
+quill_charge(void *arg)
 {
     register struct object *tobj;
     register struct linked_list *item;
@@ -583,7 +607,8 @@ quill_charge()
  * take the skills away gained (or lost) by the potion of skills
  */
  
-unskill()
+void
+unskill(void *arg)
 {
     if (pstats.s_lvladj != 0) {
         pstats.s_lvl -= pstats.s_lvladj;
@@ -598,9 +623,9 @@ unskill()
  */
  
 void
-cloak_charge(obj)
-register struct object *obj;
+cloak_charge(void *arg)
 {
+    register struct object *obj = arg;
         if (obj->o_charges < 1)
                 obj->o_charges = 1;
 }
@@ -610,7 +635,8 @@ register struct object *obj;
  *      He lost his fire resistance
  */
  
-nofire()
+void
+nofire(void *arg)
 {
     if (!ISWEARING(R_FIRE)) {
         turn_off(player, NOFIRE);
@@ -623,7 +649,8 @@ nofire()
  *      He lost his cold resistance
  */
  
-nocold()
+void
+nocold(void *arg)
 {
     if (!ISWEARING(R_WARMTH)) {
         turn_off(player, NOCOLD);
@@ -636,7 +663,8 @@ nocold()
  *      He lost his protection from lightning
  */
  
-nobolt()
+void
+nobolt(void *arg)
 {
     turn_off(player, NOBOLT);
     msg("Your skin loses its bluish tint");
@@ -647,9 +675,11 @@ nobolt()
  *      an artifact eats gold 
  */
  
-eat_gold(obj)
-register struct object *obj;
+void
+eat_gold(void *arg)
 {
+    register struct object *obj = arg;
+
     if (purse == 250)
         msg("%s.. Bids you to find some more gold. ", inv_name(obj, FALSE));
     if (purse == 100)
@@ -672,7 +702,8 @@ register struct object *obj;
  * give the hero back some spell points
  */
  
-spell_recovery()
+void
+spell_recovery(void *arg)
 {
     int time;
 
@@ -686,7 +717,8 @@ spell_recovery()
  * give the hero back some prayer points
  */
  
-prayer_recovery()
+void
+prayer_recovery(void *arg)
 {
     int time;
 
@@ -700,7 +732,8 @@ prayer_recovery()
  * give the hero back some chant points
  */
  
-chant_recovery()
+void
+chant_recovery(void *arg)
 {
     int time;
 

@@ -3,21 +3,14 @@
  */
 
 #include <curses.h>
+#include <unistd.h>
 #include "rogue.h"
 
 #define EMPTY           0
 #define DAEMON          -1
-#define MAXDAEMONS      10
-#define MAXFUSES        20
 
 #define _X_ { EMPTY }
 
-struct delayed_action {
-        int d_type;
-        int (*d_func)();
-        VOID *d_arg;
-        int d_time;
-} ;
 struct delayed_action d_list[MAXDAEMONS] = {
         _X_, _X_, _X_, _X_, _X_, _X_, _X_, _X_, _X_, _X_
 };
@@ -67,8 +60,7 @@ f_slot()
  */
 
 struct delayed_action *
-find_slot(func)
-reg int (*func)();
+find_slot(reg void (*func)(void *))
 {
         reg int i;
         reg struct delayed_action *dev;
@@ -80,13 +72,12 @@ reg int (*func)();
 }
 
 /*
- * daemon:
+ * start_daemon:
  *      Start a daemon, takes a function.
  */
 
-daemon(func, arg, type)
-reg VOID  *arg;
-reg int type, (*func)();
+void
+start_daemon(reg void (*func)(void *), reg VOID *arg, reg int type)
 {
         reg struct delayed_action *dev;
 
@@ -105,8 +96,8 @@ reg int type, (*func)();
  *      Remove a daemon from the list
  */
 
-kill_daemon(func)
-reg int (*func)();
+void
+kill_daemon(reg void (*func)(void *))
 {
         reg struct delayed_action *dev;
         reg int i;
@@ -129,8 +120,8 @@ reg int (*func)();
  *      passing the argument to the function.
  */
 
-do_daemons(flag)
-reg int flag;
+void
+do_daemons(reg int flag)
 {
         reg struct delayed_action *dev;
 
@@ -150,9 +141,8 @@ reg int flag;
  *      Start a fuse to go off in a certain number of turns
  */
 
-fuse(func, arg, time, type)
-VOID *arg;
-reg int (*func)(), time, type;
+void
+fuse(reg void (*func)(void *), void *arg, reg int time, reg int type)
 {
         reg struct delayed_action *wire;
 
@@ -171,8 +161,8 @@ reg int (*func)(), time, type;
  *      Increase the time until a fuse goes off
  */
 
-lengthen(func, xtime)
-reg int (*func)(), xtime;
+void
+lengthen(reg void (*func)(void *), reg int xtime)
 {
         reg struct delayed_action *wire;
 
@@ -186,8 +176,8 @@ reg int (*func)(), xtime;
  *      Put out a fuse
  */
 
-extinguish(func)
-reg int (*func)();
+void
+extinguish(reg void (*func)(void *))
 {
         reg struct delayed_action *wire;
 
@@ -202,8 +192,8 @@ reg int (*func)();
  *      Decrement counters and start needed fuses
  */
 
-do_fuses(flag)
-reg int flag;
+void
+do_fuses(reg int flag)
 {
         reg struct delayed_action *wire;
 
@@ -229,6 +219,7 @@ reg int flag;
  *      Show wizard number of demaons and memory blocks used
  */
 
+void
 activity()
 {
         msg("Daemons = %d : Fuses = %d : Memory Items = %d : Memory Used = %d",

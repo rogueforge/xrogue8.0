@@ -4,9 +4,9 @@
 
 #include <ctype.h>
 #include <curses.h>
+#include <stdlib.h>
+#include <limits.h>
 #include "rogue.h"
-#define MAXINT  32767
-#define MININT  -32768
 
 /*
  * Canblink checks if the monster can teleport (blink).  If so, it will
@@ -14,8 +14,7 @@
  */
 
 bool
-can_blink(tp)
-register struct thing *tp;
+can_blink(register struct thing *tp)
 {
     register int y, x, index=9;
     coord tryp; /* To hold the coordinates for use in diag_ok */
@@ -110,8 +109,7 @@ register struct thing *tp;
  */
 
 coord *
-can_shoot(er, ee)
-register coord *er, *ee;
+can_shoot(register coord *er, register coord *ee)
 {
     static coord shoot_dir;
 
@@ -131,21 +129,19 @@ register coord *er, *ee;
  *      Find the spot for the chaser(er) to move closer to the
  *      chasee(ee).  Rer is the room of the chaser, and ree is the
  *      room of the creature being chased (chasee).
+ * 	flee: True if destination (ee) is player and monster is running away
+ *	or the player is in a wall and the monster can't get to it
  */
 
-chase(tp, ee, rer, ree, flee)
-register struct thing *tp;
-register coord *ee;
-register struct room *rer, *ree;
-bool flee; /* True if destination (ee) is player and monster is running away
-            * or the player is in a wall and the monster can't get to it
-            */
+void
+chase(register struct thing *tp, coord *ee, register struct room *rer, register struct room *ree, bool flee)
 {
-    int dist, thisdist, monst_dist = MAXINT; 
+    int dist, thisdist, monst_dist = INT_MAX; 
     register coord *er = &tp->t_pos; 
     struct thing *prey;                 /* What we are chasing */
     coord ch_ret;                       /* Where chasing takes you */
-    char ch, mch;
+    char ch;
+    unsigned char mch;
     bool next_player = FALSE;
 
     /* 
@@ -193,13 +189,13 @@ bool flee; /* True if destination (ee) is player and monster is running away
      */
     else {
         register int ey, ex, x, y;
-        int dist_to_old = MININT; /* Dist from goal to old position */
+        int dist_to_old = INT_MIN; /* Dist from goal to old position */
 
         /*
          * This will eventually hold where we move to get closer
          * If we can't find an empty spot, we stay where we are.
          */
-        dist = flee ? 0 : MAXINT;
+        dist = flee ? 0 : INT_MAX;
         ch_ret = *er;
 
         /* Are we at our goal already? */
@@ -332,7 +328,7 @@ bool flee; /* True if destination (ee) is player and monster is running away
                  * there is a fightable creature next to the player, try
                  * to move next to it.
                  */
-                dist = MAXINT;
+                dist = INT_MAX;
                 for (x = hero.x - 1; x <= hero.x + 1; x++) {
                     if (x < 0 || x >= cols) /* Don't try off the board */
                         continue;
@@ -361,7 +357,7 @@ bool flee; /* True if destination (ee) is player and monster is running away
                 }
 
                 /* Try to move to the bad guy */
-                else if (dist < MAXINT)
+                else if (dist < INT_MAX)
                     chase(tp, &ch_ret,
                           roomin(&tp->t_pos), roomin(&ch_ret), FALSE);
 
@@ -385,16 +381,16 @@ bool flee; /* True if destination (ee) is player and monster is running away
         /* If we can't get closer to the player (if that's our goal)
          * because other monsters are in the way, just stay put
          */
-        if (!flee && ce(hero, *ee) && monst_dist < MAXINT &&
+        if (!flee && ce(hero, *ee) && monst_dist < INT_MAX &&
             DISTANCE(er->y, er->x, hero.y, hero.x) < dist) {
                 tp->t_action = A_NIL; /* do nothing for awhile */
                 return;
         }
 
         /* Do we want to go back to the last position? */
-        else if (dist_to_old != MININT &&      /* It is possible to move back */
+        else if (dist_to_old != INT_MIN &&      /* It is possible to move back */
             ((flee && dist == 0) ||     /* No other possible moves */
-             (!flee && dist == MAXINT))) {
+             (!flee && dist == INT_MAX))) {
             /* Do we move back or just stay put (default)? */
             dist = DISTANCE(er->y, er->x, ee->y, ee->x); /* Current distance */
             if (!flee || (flee && (dist_to_old > dist))) ch_ret = tp->t_oldpos;
@@ -476,8 +472,8 @@ bool flee; /* True if destination (ee) is player and monster is running away
  *      Make one thing chase another.
  */
 
-do_chase(th)
-register struct thing *th;
+void
+do_chase(register struct thing *th)
 {
     register struct room *orig_rer,     /* Original room of chaser */
                          *new_room;     /* new room of monster */
@@ -509,7 +505,7 @@ register struct thing *th;
             cansee(unc(th->t_pos))  &&
 	    !invisible(th) && (rnd(15) < 5)) {
 	        switch (rnd(10)) {
-	          when 0: case 1:
+	          case 0: case 1:
 		    msg("%s lashes out at you! ",prname(monster_name(th),TRUE));
 		  when 2: case 3:
 		    msg("%s scrambles around. ",prname(monster_name(th), TRUE));
@@ -635,7 +631,7 @@ register struct thing *th;
             else {
                 wants_it = FALSE;       /* Default case */
                 switch (n_obj->o_type) {
-                    when FOOD:  if(on(*th, CARRYFOOD))   wants_it = TRUE;
+                    case FOOD:  if(on(*th, CARRYFOOD))   wants_it = TRUE;
                     when GOLD:  if(on(*th, CARRYGOLD))   wants_it = TRUE;
                     when SCROLL:if(on(*th, CARRYSCROLL)) wants_it = TRUE;
                     when POTION:if(on(*th, CARRYPOTION)) wants_it = TRUE;
@@ -793,8 +789,7 @@ register struct thing *th;
  */
 
 struct linked_list *
-get_hurl(tp)
-register struct thing *tp;
+get_hurl(register struct thing *tp)
 {
     struct linked_list *arrow=NULL, *bolt=NULL, *rock=NULL,
         *spear = NULL, *dagger=NULL, *dart=NULL, *aklad=NULL;
@@ -806,7 +801,7 @@ register struct thing *tp;
         obj = OBJPTR(pitem);
         if (obj->o_type == WEAPON)
             switch (obj->o_which) {
-                when BOW:       bow = TRUE;
+                case BOW:       bow = TRUE;
                 when CROSSBOW:  crossbow = TRUE;
                 when SLING:     sling = TRUE;
                 when ROCK:      rock = pitem;
@@ -841,9 +836,8 @@ register struct thing *tp;
  *      Set a monster running after something
  */
 
-runto(runner, spot)
-register struct thing *runner;
-coord *spot;
+void
+runto(register struct thing *runner, coord *spot)
 {
     if (on(*runner, ISSTONE))
         return;
@@ -869,12 +863,10 @@ coord *spot;
  */
 
 bool
-straight_shot(ery, erx, eey, eex, shooting)
-register int ery, erx, eey, eex;
-register coord *shooting;
+straight_shot(register int ery, register int erx, register int eey, register int eex, register coord *shooting)
 {
     register int dy, dx;        /* Deltas */
-    char ch;
+    unsigned char ch;
 
     /* Does the monster have a straight shot at prey */
     if ((ery != eey) && (erx != eex) &&
@@ -902,7 +894,7 @@ register coord *shooting;
             case FOREST:
                 return(FALSE);
             default:
-                if (shooting && isalpha(ch)) return(FALSE);
+                if (shooting && isalpha((unsigned char)ch)) return(FALSE);
         }
         ery += dy;
         erx += dx;

@@ -3,6 +3,8 @@
  */
 
 #include <curses.h>
+#include <string.h>
+#include <stdlib.h>
 #include <ctype.h>
 #include "rogue.h"
 #include "mach_dep.h"
@@ -95,10 +97,8 @@ static char metal[][10] = {
  * right amounts
  */
 
-badcheck(name, magic, bound)
-char *name;
-register struct magic_item *magic;
-register int bound;
+void
+badcheck(char *name, register struct magic_item *magic, register int bound)
 {
     register struct magic_item *end;
 
@@ -107,7 +107,7 @@ register int bound;
     printf("\nBad percentages for %s:\n", name);
     for (end = &magic[bound] ; magic < end ; magic++)
         printf("%4d%% %s\n", magic->mi_prob, magic->mi_name);
-    printf(retstr);
+    printf("%s", retstr);
     fflush(stdout);
     while (getchar() != '\n')
         continue;
@@ -118,6 +118,7 @@ register int bound;
  *      Initialize the potion color scheme for this time
  */
 
+void
 init_colors()
 {
     register int i;
@@ -127,8 +128,8 @@ init_colors()
     {
         do
             str = rainbow[rnd(NCOLORS)];
-        until (isupper(*str));
-        *str = tolower(*str);
+        until (isupper((unsigned char)*str));
+        *str = tolower((unsigned char)*str);
         p_colors[i] = str;
         p_know[i] = FALSE;
         p_guess[i] = NULL;
@@ -142,6 +143,7 @@ init_colors()
  * do any initialization for food
  */
 
+void
 init_foods()
 {
     register int i;
@@ -158,6 +160,7 @@ init_foods()
  *      Initialize the construction materials for wands and staffs
  */
 
+void
 init_materials()
 {
     register int i;
@@ -169,17 +172,17 @@ init_materials()
             if (rnd(100) > 50)
             {
                 str = metal[rnd(NMETAL)];
-                if (isupper(*str))
+                if (isupper((unsigned char)*str))
                         ws_type[i] = "wand";
             }
             else
             {
                 str = wood[rnd(NWOOD)];
-                if (isupper(*str))
+                if (isupper((unsigned char)*str))
                         ws_type[i] = "staff";
             }
-        until (isupper(*str));
-        *str = tolower(*str);
+        until (isupper((unsigned char)*str));
+        *str = tolower((unsigned char)*str);
         ws_made[i] = str;
         ws_know[i] = FALSE;
         ws_guess[i] = NULL;
@@ -193,6 +196,7 @@ init_materials()
  * do any initialization for miscellaneous magic
  */
 
+void
 init_misc()
 {
     register int i;
@@ -211,6 +215,7 @@ init_misc()
  *      Generate the names of the various scrolls
  */
 
+void
 init_names()
 {
     register int nsyl;
@@ -233,7 +238,7 @@ init_names()
             *cp++ = ' ';
         }
         *--cp = '\0';
-        s_names[i] = (char *) new(strlen(prbuf)+1);
+        s_names[i] = (char *) new((int) strlen(prbuf)+1);
         s_know[i] = FALSE;
         s_guess[i] = NULL;
         strcpy(s_names[i], prbuf);
@@ -248,9 +253,10 @@ init_names()
  *      roll up the rogue
  */
 
+void
 init_player()
 {
-    int stat_total, round, minimum, maximum, ch, i, j;
+    int stat_total, round = 0, minimum, maximum, ch, i, j = 0;
     short do_escape, *our_stats[NUMABILITIES-1];
     struct linked_list  *weap_item, *armor_item, *food_item;
     struct object *obj;
@@ -284,7 +290,7 @@ init_player()
     /* Select the gold */
     purse = 3000;
     switch (player.t_ctype) {
-        when C_FIGHTER:
+        case C_FIGHTER:
             purse += 200;
         when C_MAGICIAN:
         case C_CLERIC:
@@ -391,7 +397,7 @@ init_player()
     if (def_attr == TRUE) {  /* "default" option used in ROGUEOPTS */
 	switch(player.t_ctype) {
 	    /* set "default attributes" option and quest items here */
-	    when C_FIGHTER:
+	    case C_FIGHTER:
 	    case C_MONK:
                 pstats.s_intel = 7;
                 pstats.s_dext = 16;
@@ -485,7 +491,7 @@ init_player()
         else if (player.t_ctype == C_FIGHTER || player.t_ctype == C_RANGER ||
 	         player.t_ctype == C_PALADIN) {
 		 switch (rnd(4)) {
-		     when 0:         j = PLATE_ARMOR;
+		     case 0:         j = PLATE_ARMOR;
 		     when 1:         j = PLATE_MAIL;
 		     when 2: case 3: j = BANDED_MAIL;
 		}
@@ -503,7 +509,7 @@ init_player()
 	}
 	else {  /* other characters */
 	    switch (rnd(7)) {
-		when 0:         j = PLATE_MAIL;
+		case 0:         j = PLATE_MAIL;
 		when 1: case 2: j = BANDED_MAIL;
 		when 3: case 4: j = SPLINT_MAIL;
 		when 5: case 6: j = PADDED_ARMOR;
@@ -521,7 +527,7 @@ init_player()
         if (player.t_ctype == C_THIEF || player.t_ctype == C_ASSASSIN ||
             player.t_ctype == C_MONK) {
 	    switch (rnd(5)) {
-		when 0:         j = BASWORD;
+		case 0:         j = BASWORD;
 		when 1: case 2: j = TRIDENT;
 		when 3: case 4: j = BARDICHE;
 	    }
@@ -529,14 +535,14 @@ init_player()
         else if (player.t_ctype == C_FIGHTER || player.t_ctype == C_RANGER ||
 	    player.t_ctype == C_PALADIN) {
 	    switch (rnd(5)) {
-		when 0:         j= TWOSWORD;
+		case 0:         j= TWOSWORD;
 		when 1: case 2: j= TRIDENT;
 		when 3: case 4: j= SWORD;
 	    }
 	}
         else {
 	    switch (rnd(7)) {
-	    when 0:         j = TRIDENT;
+	    case 0:         j = TRIDENT;
 	    when 1: case 2: j = SWORD;
 	    when 3: case 4: j = BARDICHE;
 	    when 5:         j = MACE;
@@ -558,7 +564,7 @@ init_player()
 
 	/* give him some fruit - coose from those w/o special effects */
 	switch (rnd(6)) {
-	    when 0: j = E_BANANA;
+	    case 0: j = E_BANANA;
 	    when 1: j = E_BLUEBERRY;
 	    when 2: j = E_ELDERBERRY;
 	    when 3: j = E_GUANABANA;
@@ -576,7 +582,7 @@ init_player()
     }
     else {  /* select attibutes */
         switch(player.t_ctype) {
-            when C_FIGHTER:     round = A_STRENGTH;
+            case C_FIGHTER:     round = A_STRENGTH;
             when C_RANGER:      round = A_CHARISMA;
             when C_PALADIN:     round = A_CHARISMA;
             when C_MAGICIAN:    round = A_INTELLIGENCE;
@@ -781,6 +787,7 @@ init_player()
  *      Initialize the ring stone setting scheme for this time
  */
 
+void
 init_stones()
 {
     register int i;
@@ -790,8 +797,8 @@ init_stones()
     {
         do
             str = stones[rnd(NSTONES)];
-        until (isupper(*str));
-        *str = tolower(*str);
+        until (isupper((unsigned char)*str));
+        *str = tolower((unsigned char)*str);
         r_stones[i] = str;
         r_know[i] = FALSE;
         r_guess[i] = NULL;
@@ -806,6 +813,7 @@ init_stones()
  *      Initialize the probabilities for types of things
  */
 
+void
 init_things()
 {
     register struct magic_item *mp;

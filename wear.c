@@ -3,6 +3,7 @@
  */
 
 #include <curses.h>
+#include <stdlib.h>
 #include "rogue.h"
 
 /*
@@ -10,6 +11,7 @@
  *      Get the armor off of the players back
  */
 
+void
 take_off()
 {
     register struct object *obj;
@@ -59,6 +61,7 @@ take_off()
  *      The player wants to wear something, so let him/her put it on.
  */
 
+void
 wear()
 {
     register struct linked_list *item;
@@ -74,7 +77,7 @@ wear()
         obj = OBJPTR(item);
 
         switch (obj->o_type) {
-            when ARMOR:
+            case ARMOR:
                 if (cur_armor != NULL) {
                     addmsg("You are already wearing armor");
                     if (!terse) addmsg(".  You'll have to take it off first.");
@@ -117,7 +120,7 @@ wear()
                  * when wearing the boots of elvenkind the player will not
                  * set off any traps
                  */
-                when MM_ELF_BOOTS:
+                case MM_ELF_BOOTS:
                     if (cur_misc[WEAR_BOOTS] != NULL) {
                         msg("Already wearing a pair of boots. ");
                         return;
@@ -250,7 +253,7 @@ wear()
     obj = OBJPTR(item);
 
     switch (obj->o_type) {
-        when ARMOR:
+        case ARMOR:
             obj->o_flags |= ISKNOW;
             cur_armor = obj;
             addmsg(terse ? "W" : "You are now w");
@@ -262,7 +265,7 @@ wear()
              * when wearing the boots of elvenkind the player will not
              * set off any traps
              */
-            when MM_ELF_BOOTS:
+            case MM_ELF_BOOTS:
                 msg("Wearing %s",inv_name(obj,TRUE));
                 cur_misc[WEAR_BOOTS] = obj;
             /*
@@ -309,7 +312,7 @@ wear()
                 msg("Wearing %s", inv_name(obj,TRUE));
                 cur_misc[WEAR_GAUNTLET] = obj;
                 if (obj->o_which == MM_FUMBLE)
-                    daemon(fumble, (VOID *)NULL, AFTER);
+                    start_daemon(fumble, (VOID *)NULL, AFTER);
             /*
              * the jewel of attacks does an aggavate monster
              */
@@ -339,7 +342,7 @@ wear()
                 msg("Wearing %s",inv_name(obj,TRUE));
                 cur_misc[WEAR_NECKLACE] = obj;
                 msg("The necklace is beginning to strangle you!");
-                daemon(strangle, (VOID *)NULL, AFTER);
+                start_daemon(strangle, (VOID *)NULL, AFTER);
             otherwise:
                 msg("What a strange item you have!");
             }
@@ -350,7 +353,7 @@ wear()
             }
             else if (!m_know[obj->o_which] && 
                      askme &&
-                     (obj->o_flags & ISKNOW) == NULL &&
+                     (obj->o_flags & ISKNOW) == 0 &&
                      m_guess[obj->o_which] == NULL) {
                 nameitem(item, FALSE);
             }
@@ -380,21 +383,21 @@ wear()
  *      given item of "clothing"?
  */
 
-dress_units(item)
-struct linked_list *item;
+int
+dress_units(struct linked_list *item)
 {
     register struct object *obj;
 
     obj = OBJPTR(item);
 
     switch (obj->o_type) {
-        when ARMOR:
+        case ARMOR:
             return(10-armors[obj->o_which].a_class);
         when RING:
             return(2);
         when MM:
             switch (obj->o_which) {
-                when MM_ELF_BOOTS:
+                case MM_ELF_BOOTS:
                 case MM_DANCE:
                     /* Boots */
                     return(5);

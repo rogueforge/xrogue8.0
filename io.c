@@ -2,17 +2,20 @@
  * Various input/output functions
  */
 
+#include <curses.h>
+#include <string.h>
 #include <stdarg.h>
 #include <curses.h>
 #include <ctype.h>
 #include "rogue.h"
+#include "network.h"
 
 /*
  * msg:
  *      Display a message at the top of the screen.
  */
 
-static unsigned char msgbuf[BUFSIZ];
+static char msgbuf[BUFSIZ];
 static int newpos = 0;
 
 /* VARARGS */
@@ -33,8 +36,8 @@ msg(char *fmt, ...)
         clearok(msgw, FALSE);
         draw(msgw);
         mpos = 0;
-        return;
         va_end(args);
+        return;
     }
     /*
      * otherwise add to the message and flush it out
@@ -64,6 +67,7 @@ addmsg(char *fmt, ...)
  * player with the --More-- string.  Then erase the message.
  */
 
+void
 rmmsg()
 {
     if (mpos) {
@@ -83,6 +87,7 @@ rmmsg()
  * is up there with the --More--)
  */
 
+void
 endmsg()
 {
     /* Needed to track where we are for 5.0 (PC) curses */
@@ -93,7 +98,7 @@ endmsg()
          * If this message will fit on the line (plus space for --More--)
          * then just add it (only during combat).
          */
-        if (player.t_quiet < 0 && mpos + newpos + strlen(morestr) + 5 < cols) {
+        if (player.t_quiet < 0 && mpos + newpos + (int) strlen(morestr) + 5 < cols) {
             wmove(msgw, 0, mpos + 5);
             newpos += mpos + 5;
             strcat(huh, "  ");
@@ -129,12 +134,11 @@ endmsg()
 }
 
 #ifdef USG5_2
-doadd(fmt, args)
-char *fmt;
-va_list args;
+void
+doadd(char *fmt, va_list args)
 {
     vsprintf((char *) &msgbuf[newpos], fmt, args);
-    newpos = strlen(msgbuf);
+    newpos = (int) strlen(msgbuf);
 }
 #else
 doadd(fmt, args)
@@ -170,14 +174,13 @@ int **args;
  *      flgptr will be NULL if we don't know what the monster is yet!
  */
 
-step_ok(y, x, can_on_monst, flgptr)
-register int y, x, can_on_monst;
-register struct thing *flgptr;
+int
+step_ok(register int y, register int x, register int can_on_monst, register struct thing *flgptr)
 {
     /* can_on_monst = MONSTOK if all we care about are physical obstacles */
     register struct linked_list *item;
     register struct thing *tp;
-    char ch;
+    unsigned char ch;
 
     /* What is here?  Don't check monster window if MONSTOK is set */
     if (can_on_monst == MONSTOK) ch = mvinch(y, x);
@@ -201,7 +204,7 @@ register struct thing *flgptr;
     }
     else switch (ch)
     {
-        when ' ':
+        case ' ':
         case VERTWALL:
         case HORZWALL:
         case SECRETDOOR:
@@ -239,7 +242,8 @@ register struct thing *flgptr;
  *      returns true if it is ok for type to shoot over ch
  */
 
-shoot_ok(ch)
+int
+shoot_ok(int ch)
 {
     switch (ch)
     {
@@ -262,8 +266,7 @@ shoot_ok(ch)
  */
 
 char *
-unctrl(ch)
-char ch;
+unctrl(char ch)
 {
     extern char *_unctrl[];             /* Defined in curses library */
 
@@ -274,10 +277,11 @@ char ch;
 /*
  * status:
  *      Display the important stats line.  Keep the cursor where it was.
+ * display: is TRUE, display unconditionally
  */
 
-status(display)
-bool display;   /* is TRUE, display unconditionally */
+void
+status(bool display)
 {
     register struct stats *stat_ptr, *max_ptr;
     register int oy, ox, temp;
@@ -350,9 +354,9 @@ bool display;   /* is TRUE, display unconditionally */
     /* Print the line */
     mvwaddstr(cw, lines-2, 0, buf);
     switch (hungry_state) {
-        when F_SATIATED:
+        case F_SATIATED:
             waddstr(cw, "  Satiated");
-        when F_OK: ;
+        when F_OKAY: ;
         when F_HUNGRY:
             waddstr(cw, "  Hungry");
         when F_WEAK:
@@ -411,8 +415,8 @@ line_two:
  *      Sit around until the guy types the right key
  */
 
-wait_for(ch)
-register char ch;
+void
+wait_for(register char ch)
 {
     register char c;
 
@@ -441,10 +445,8 @@ register char ch;
  *      typed and then redraw the starting screen.
  */
 
-over_win(oldwin, newin, maxy, maxx, cursory, cursorx, redraw)
-WINDOW *oldwin, *newin;
-int maxy, maxx, cursory, cursorx;
-char redraw;
+void
+over_win(WINDOW *oldwin, WINDOW *newin, int maxy, int maxx, int cursory, int cursorx, char redraw)
 {
     char blanks[LINELEN+1];
     register int line, i;
@@ -494,9 +496,8 @@ char redraw;
  *      function used to display a window and wait before returning
  */
 
-show_win(scr, message)
-register WINDOW *scr;
-char *message;
+void
+show_win(register WINDOW *scr, char *message)
 {
     mvwaddstr(scr, 0, 0, message);
     touchwin(scr);
@@ -511,9 +512,8 @@ char *message;
  *      Displays message on bottom line and waits for a space to return
  */
 
-dbotline(scr,message)
-WINDOW *scr;
-char *message;
+void
+dbotline(WINDOW *scr,char *message)
 {
         mvwaddstr(scr,lines-1,0,message);
         draw(scr);
@@ -525,8 +525,8 @@ char *message;
  *      Restores the screen to the terminal
  */
 
-restscr(scr)
-WINDOW *scr;
+void
+restscr(WINDOW *scr)
 {
         clearok(scr,TRUE);
         touchwin(scr);
@@ -542,10 +542,7 @@ WINDOW *scr;
  */
 
 unsigned long
-netread(error, size, stream)
-int *error;
-int size;
-FILE *stream;
+netread(int *error, int size, FILE *stream)
 {
     unsigned long result = 0L,  /* What we read in */
                   partial;      /* Partial value */
@@ -578,12 +575,13 @@ FILE *stream;
 /*
  * netwrite:
  *      Write out a byte, short, or long machine independently.
+ * value: What to write
+ * size: How much to write out
+ * stream: Where to write it
  */
 
-netwrite(value, size, stream)
-unsigned long value;    /* What to write */
-int size;       /* How much to write out */
-FILE *stream;   /* Where to write it */
+int
+netwrite(unsigned long value, int size, FILE *stream)
 {
     int i;      /* Goes through value one byte at a time */
     char outc;  /* The next character to be written */

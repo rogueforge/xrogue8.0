@@ -3,6 +3,7 @@
  */
 
 #include <curses.h>
+#include <string.h>
 #include <ctype.h>
 #include "rogue.h"
 #ifdef PC7300
@@ -26,15 +27,14 @@ static char Moves[3][3] = {
  *      The guy stepped on a trap.... Make him pay.
  */
 
-be_trapped(th, tc)
-register struct thing *th;
-register coord *tc;
+int
+be_trapped(register struct thing *th, register coord *tc)
 {
     register struct trap *tp;
-    register char ch, *mname;
+    register char ch, *mname = NULL;
     register bool is_player = (th == &player),
                   can_see;
-    register struct linked_list *mitem;
+    register struct linked_list *mitem = NULL;
     register struct thing *mp;
 
 
@@ -70,7 +70,7 @@ register coord *tc;
         mvwaddch(cw, tp->tr_pos.y, tp->tr_pos.x, tp->tr_type);
     }
     switch (ch = tp->tr_type) {
-        when TRAPDOOR:
+        case TRAPDOOR:
             if (is_player) {
                 level++;
                 pstats.s_hpt -= roll(1, 10);
@@ -139,7 +139,7 @@ register coord *tc;
 		    death(D_FALL);
 		}
                 new_level(OUTSIDE);
-		return;
+		return 0;
             }
             else {
                 if (can_see) msg("%s fell into the worm hole! ", prname(mname, TRUE));
@@ -498,8 +498,7 @@ register coord *tc;
  */
 
 bool
-blue_light(blessed, cursed)
-bool blessed, cursed;
+blue_light(bool blessed, bool cursed)
 {
     register struct room *rp;
     bool ret_val=FALSE; /* Whether or not affect is known */
@@ -557,8 +556,8 @@ bool blessed, cursed;
  *      If not, if player came from a legal place, then try to turn him.
  */
 
-corr_move(dy, dx)
-int dy, dx;
+void
+corr_move(int dy, int dx)
 {
     int legal=0;                /* Number of legal alternatives */
     register int y, x,          /* Indexes though possible positions */
@@ -636,6 +635,7 @@ int dy, dx;
  *      Dip an object into a magic pool
  */
 
+void
 dip_it()
 {
         reg struct linked_list *what;
@@ -696,12 +696,12 @@ dip_it()
             wh = ob->o_which;
             ob->o_flags |= ISKNOW;
             i = rnd(100);
-            if (ob->o_group != NULL)
+            if (ob->o_group != 0)
                 ob->o_group = newgrp(); /* change the group */
             switch(ob->o_type) {
                 case WEAPON:
                     if(i < 60) {                /* enchant weapon here */
-                        if ((ob->o_flags & ISCURSED) == NULL) {
+                        if ((ob->o_flags & ISCURSED) == 0) {
                                 ob->o_hplus += 1;
                                 ob->o_dplus += 1;
                         }
@@ -713,7 +713,7 @@ dip_it()
                         msg("The %s glows blue for a moment.",weaps[wh].w_name);
                     }
                     else if(i < 75) {   /* curse weapon here */
-                        if ((ob->o_flags & ISCURSED) == NULL) {
+                        if ((ob->o_flags & ISCURSED) == 0) {
                                 ob->o_hplus = -(rnd(2)+1);
                                 ob->o_dplus = -(rnd(2)+1);
                         }
@@ -728,7 +728,7 @@ dip_it()
                         msg(nothing);
                 when ARMOR:
                     if (i < 60) {       /* enchant armor */
-                        if((ob->o_flags & ISCURSED) == NULL)
+                        if((ob->o_flags & ISCURSED) == 0)
                             ob->o_ac -= rnd(2) + 1;
                         else
                             ob->o_ac = -rnd(3)+ armors[wh].a_class;
@@ -736,7 +736,7 @@ dip_it()
                         msg("The %s glows blue for a moment",armors[wh].a_name);
                     }
                     else if(i < 75){    /* curse armor */
-                        if ((ob->o_flags & ISCURSED) == NULL)
+                        if ((ob->o_flags & ISCURSED) == 0)
                             ob->o_ac = rnd(3)+ armors[wh].a_class;
                         else
                             ob->o_ac += rnd(2) + 1;
@@ -778,14 +778,14 @@ dip_it()
                     msg("The %s potion bubbles for a moment.. ",p_colors[wh]);
                 when RING:
                     if(i < 60) {         /* enchant ring */
-                        if ((ob->o_flags & ISCURSED) == NULL)
+                        if ((ob->o_flags & ISCURSED) == 0)
                             ob->o_ac += rnd(2) + 1;
                         else
                             ob->o_ac = rnd(2) + 1;
                         ob->o_flags &= ~ISCURSED;
                     }
                     else if(i < 75) { /* curse ring */
-                        if ((ob->o_flags & ISCURSED) == NULL)
+                        if ((ob->o_flags & ISCURSED) == 0)
                             ob->o_ac = -(rnd(2) + 1);
                         else
                             ob->o_ac -= (rnd(2) + 1);
@@ -799,14 +799,14 @@ dip_it()
                     case MM_BRACERS:
                     case MM_PROTECT:
                         if(i < 60) {     /* enchant item */
-                            if ((ob->o_flags & ISCURSED) == NULL)
+                            if ((ob->o_flags & ISCURSED) == 0)
                                 ob->o_ac += rnd(2) + 1;
                             else
                                 ob->o_ac = rnd(2) + 1;
                             ob->o_flags &= ~ISCURSED;
                         }
                         else if(i < 75) { /* curse item */
-                            if ((ob->o_flags & ISCURSED) == NULL)
+                            if ((ob->o_flags & ISCURSED) == 0)
                                 ob->o_ac = -(rnd(2) + 1);
                             else
                                 ob->o_ac -= (rnd(2) + 1);
@@ -833,13 +833,13 @@ dip_it()
  * consequences (fighting, picking up, etc.)
  */
 
-do_move(dy, dx)
-int dy, dx;
+void
+do_move(int dy, int dx)
 {
     register struct room *rp, *orp;
-    register char ch;
+    register unsigned char ch;
     struct linked_list *item;
-    register struct thing *tp;
+    register struct thing *tp = NULL;
     coord old_hero;
     register int wasfirstmove, moved, num_hits;
     bool changed=FALSE;   /* Did we switch places with a friendly monster? */
@@ -894,7 +894,7 @@ int dy, dx;
     }
 
     /* If we want to move to a monster, see what it is */
-    if (isalpha(ch)) {
+    if (isalpha((unsigned char)ch)) {
         item = find_mons(nh.y, nh.x);
         if (item == NULL) {
             debug("Cannot find monster in move.");
@@ -910,7 +910,7 @@ int dy, dx;
      * or attacking a friendly monster that can't move.
      */
     if (on(player, ISHELD) &&
-        (!isalpha(ch) || (on(*tp, ISFRIENDLY) && off(*tp, ISHELD)))) {
+        (!isalpha((unsigned char)ch) || (on(*tp, ISFRIENDLY) && off(*tp, ISHELD)))) {
         msg("You are being held.");
         player.t_action = A_NIL;
         return;
@@ -937,7 +937,7 @@ int dy, dx;
     player.t_action = A_NIL;
 
     /* If we're moving onto a friendly monster, let's change places. */
-    if (isalpha(ch) && on(*tp, ISFRIENDLY) && off(*tp, ISHELD)) {
+    if (isalpha((unsigned char)ch) && on(*tp, ISFRIENDLY) && off(*tp, ISHELD)) {
         coord tpos,     /* Where monster may have been going */
               current;  /* Current hero position */
         int action;     /* The monster's action */
@@ -981,7 +981,7 @@ int dy, dx;
     }
 
     /* assume he's not in a wall */
-    if (!isalpha(ch)) turn_off(player, ISINWALL);
+    if (!isalpha((unsigned char)ch)) turn_off(player, ISINWALL);
 
     switch (ch) {
         case VERTWALL:
@@ -1053,7 +1053,7 @@ int dy, dx;
             break;
     }
 
-    if (isalpha(ch)) { /* if its a monster then fight it */
+    if (isalpha((unsigned char)ch)) { /* if its a monster then fight it */
         /*
          * If we were running down a corridor and didn't start right
          * next to the critter, don't do anything.
@@ -1080,7 +1080,7 @@ int dy, dx;
          * and the right class
          */
         switch(player.t_ctype) {
-            when C_FIGHTER: num_hits = player.t_stats.s_lvl/25 + 1;
+            case C_FIGHTER: num_hits = player.t_stats.s_lvl/25 + 1;
             when C_PALADIN: num_hits = player.t_stats.s_lvl/35 + 1;
             when C_RANGER:  num_hits = player.t_stats.s_lvl/35 + 1;
             when C_MONK:  if(cur_weapon) num_hits = player.t_stats.s_lvl/40 + 1;
@@ -1179,8 +1179,8 @@ int dy, dx;
  *      Start the hero running
  */
 
-do_run(ch)
-char ch;
+void
+do_run(char ch)
 {
     firstmove = TRUE;
     running = TRUE;
@@ -1196,11 +1196,9 @@ char ch;
  */
 
 bool
-getdelta(match, dy, dx)
-char match;
-int *dy, *dx;
+getdelta(char match, int *dy, int *dx)
 {
-    register y, x;
+    register int y, x;
 
     for (y = 0; y < 3; y++)
         for (x = 0; x < 3; x++)
@@ -1218,8 +1216,8 @@ int *dy, *dx;
  *      Returns TRUE if this character is some kind of trap
  */
 
-isatrap(ch)
-reg char ch;
+int
+isatrap(reg char ch)
 {
         switch(ch) {
                 case WORMHOLE:
@@ -1240,12 +1238,13 @@ reg char ch;
  * If it is dark, remove anything that might move.
  */
 
-light(cp)
-coord *cp;
+void
+light(coord *cp)
 {
     register struct room *rp;
     register int j, k, x, y;
-    register char ch, rch, sch;
+    register unsigned char ch, rch;
+    register char sch;
     register struct linked_list *item;
     int jlow, jhigh, klow, khigh;       /* Boundaries of lit area */
 
@@ -1284,7 +1283,7 @@ coord *cp;
         {
             for (k = 0; k < rp->r_max.x; k++)
             {
-                bool see_here, see_before;
+                bool see_here, see_before = 0;
 
                 /* Is this in the give area -- needed for maze */
                 if ((j < jlow || j >= jhigh) && (k < klow || k >= khigh))
@@ -1390,7 +1389,7 @@ coord *cp;
                         case VERTWALL:
                         case HORZWALL:
                         case WALL:
-                            if (isalpha(sch)) ch = rch;
+                            if (isalpha((unsigned char)sch)) ch = rch;
                             else if (sch != FLOOR) ch = sch;
                             else ch = ' '; /* Hide undiscoverd things */
                         when FLOOR:
@@ -1418,8 +1417,7 @@ coord *cp;
  */
 
 bool
-lit_room(rp)
-register struct room *rp;
+lit_room(register struct room *rp)
 {
     register struct linked_list *fire_item;
     register struct thing *fire_creature;
@@ -1429,7 +1427,7 @@ register struct room *rp;
     /* Is it lit by fire light? */
     if (rp->r_flags & HASFIRE) {
         switch ((int)levtype) {
-            when MAZELEV:
+            case MAZELEV:
                 /* See if a fire creature is in line of sight */
                 for (fire_item = rp->r_fires; fire_item != NULL;
                      fire_item = next(fire_item)) {
@@ -1456,8 +1454,7 @@ register struct room *rp;
  */
 
 short
-movement(tp)
-register struct thing *tp;
+movement(register struct thing *tp)
 {
     register int result;
     register int carry;         /* Percentage carried */
@@ -1471,7 +1468,7 @@ register struct thing *tp;
         /* Blessed armor adds less */
         diff = cur_armor->o_ac - armors[cur_armor->o_which].a_class;
         switch (cur_armor->o_which) {
-            when LEATHER:
+            case LEATHER:
             case RING_MAIL:
             case CHAIN_MAIL:
             case SCALE_MAIL:
@@ -1521,8 +1518,7 @@ register struct thing *tp;
  */
 
 coord *
-rndmove(who)
-struct thing *who;
+rndmove(struct thing *who)
 {
     register int x, y;
     register int ex, ey, nopen = 0;
@@ -1584,14 +1580,13 @@ static char Displines[TRAPTYPES+1][TRAPWIDTH+TRAPPREFIX+1];
  *      set a trap at (y, x) on screen.
  */
 
-set_trap(tp, y, x)
-register struct thing *tp;
-register int y, x;
+void
+set_trap(register struct thing *tp, register int y, register int x)
 {
     register bool is_player = (tp == &player);
-    register char selection = rnd(TRAPTYPES-WIZARDTRAPS) + '1';
+    register long selection = rnd(TRAPTYPES-WIZARDTRAPS) + '1';
     register int i, num_traps;
-    register char ch, och;
+    register char ch = 0, och;
     int thief_bonus = 0;
     int s_dext;
 
@@ -1617,7 +1612,7 @@ register int y, x;
             units;     /* Number of movement units for the given trap */
 
         if (player.t_action == C_SETTRAP) {
-            selection = (char) player.t_using;
+            selection = (long) player.t_using;
             player.t_using = NULL;
             player.t_action = A_NIL;
         }
@@ -1693,7 +1688,7 @@ register int y, x;
                              * Put out the selection.  The longest line is
                              * the prompt line (39 characters long).
                              */
-                            over_win(cw, hw, num_traps + 3, 41, 0, 39, NULL);
+                            over_win(cw, hw, num_traps + 3, 41, 0, 39, 0);
                         else
                             draw(hw);
                         state = 1;      /* Now in prompt window */
@@ -1753,7 +1748,7 @@ register int y, x;
                                  * Put out the selection.  The longest line is
                                  * the prompt line (43 characters long).
                                  */
-                                over_win(cw, hw, num_traps+3, 45, 0, 43, NULL);
+                                over_win(cw, hw, num_traps+3, 45, 0, 43, 0);
                             else 
                                 draw(hw);
                         }
@@ -1765,8 +1760,8 @@ register int y, x;
                 }
             } while (state != 2);
 
-            switch ((int)(player.t_using = (struct linked_list *) selection)) {
-                when '1': units = 10;   /* Trap door */
+            switch ((long)(player.t_using = (struct linked_list *) selection)) {
+                case '1': units = 10;   /* Trap door */
                 when '2': units = 5;    /* Bear trap */
                 when '3': units = 7;    /* Sleeping gas trap */
                 when '4': units = 5;    /* Arrow trap */
@@ -1794,7 +1789,7 @@ register int y, x;
     }
 
     switch (selection) {
-        when '1': ch = TRAPDOOR;
+        case '1': ch = TRAPDOOR;
         when '2': ch = BEARTRAP;
         when '3': ch = SLEEPTRAP;
         when '4': ch = ARROWTRAP;
@@ -1824,8 +1819,8 @@ register int y, x;
  *      returns what a certain thing will display as to the un-initiated
  */
 
-show(y, x)
-register int y, x;
+int
+show(register int y, register int x)
 {
     register unsigned char ch = winat(y, x);
     register struct linked_list *it;
@@ -1865,8 +1860,7 @@ register int y, x;
  */
 
 struct trap *
-trap_at(y, x)
-register int y, x;
+trap_at(register int y, register int x)
 {
     register struct trap *tp, *ep;
 
@@ -1886,9 +1880,10 @@ register int y, x;
  *      even something else).
  */
 
-weap_move(wielder, weap)
-register struct thing *wielder; /* Who's wielding the weapon */
-register struct object *weap;   /* The weapon */
+int
+weap_move(register struct thing *wielder, register struct object *weap)
+/* wielder - Who's wielding the weapon */
+/* weap - The weapon */
 {
     register int weap_rate;
     int          dexterity;
@@ -1897,7 +1892,7 @@ register struct object *weap;   /* The weapon */
     if (weap == NULL) return(1); /* hand, claw, bite attacks are quick */
 
     switch (weap->o_type) {
-        when STICK:
+        case STICK:
             if (EQUAL(ws_type[weap->o_which], "staff"))
                 weap_rate = 2;
             else weap_rate = 1; /* A wand */
@@ -1913,7 +1908,7 @@ register struct object *weap;   /* The weapon */
 
         when RELIC:
             switch (weap->o_which) {
-                when MUSTY_DAGGER:
+                case MUSTY_DAGGER:
                 case HRUGGEK_MSTAR:
                 case AXE_AKLAD:
                 case YEENOGHU_FLAIL:
