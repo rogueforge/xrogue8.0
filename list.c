@@ -84,6 +84,24 @@ o_discard(register struct linked_list *item)
 }
 
 /*
+   r_free_fire_list
+       Throw the whole list of fire monsters away. But don't
+       discard the item (monster) itself as that belong to mlist.
+*/
+
+void
+_r_free_fire_list(register struct linked_list **ptr)
+{
+    register struct linked_list *item;
+
+        while (*ptr != NULL)
+        {
+            item = *ptr;
+            *ptr = next(item);
+            free(item);
+        }
+}
+/*
  * r_free_list:
  *      Throw the whole list of room exits away
  */
@@ -145,6 +163,8 @@ t_discard(register struct linked_list *item)
     total -= 2;
     tp = THINGPTR(item);
     if (tp->t_name != NULL) FREE(tp->t_name);
+    if (tp->t_pack != NULL)
+        o_free_list(tp->t_pack);
     FREE(tp);
     FREE(item);
 }

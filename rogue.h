@@ -1525,6 +1525,7 @@ extern void restscr(WINDOW *scr);
 /* list.c */
 extern void _detach(register struct linked_list **list, register struct linked_list *item);
 extern void _attach(register struct linked_list **list, register struct linked_list *item);
+extern void _r_free_fire_list(register struct linked_list **ptr);
 extern void _o_free_list(register struct linked_list **ptr);
 extern void o_discard(register struct linked_list *item);
 extern void _r_free_list(register struct linked_list **ptr);
