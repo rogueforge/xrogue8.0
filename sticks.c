@@ -307,7 +307,7 @@ do_zap(struct thing *zapper, struct object *obj, coord *direction, int which, in
 
             if (!obj)
                 dice = zapper->t_stats.s_lvl;
-            if (obj->o_type == RELIC)
+            else if (obj->o_type == RELIC)
                  dice = 15;
             else if (EQUAL(ws_type[which], "staff"))
                  dice = 10;
