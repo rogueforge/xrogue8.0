@@ -1,7 +1,7 @@
 #
 # Makefile for xrogue
 #
-DISTNAME=xrogue8.0.1
+DISTNAME=xrogue8.0.2
 
 HDRS=	rogue.h mach_dep.h network.h
 

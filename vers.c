@@ -6,6 +6,6 @@
  */
 
 unsigned char encstr[] = "\0\0\0";
-char version[] = "@(#)vers.c    8.0.1 - 05/01/2000";
-char *release = "8.0.1";
+char version[] = "@(#)vers.c    8.0.2 - 02/07/2005";
+char *release = "8.0.2";
 
