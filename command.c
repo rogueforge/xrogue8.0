@@ -178,6 +178,7 @@ command()
                  */
                 if (count && !running)
                     count--;
+
                 switch (ch) {
 #if !MSDOS
                     case '!' : shell(); break;
@@ -187,13 +188,16 @@ command()
                     when KEY_DOWN       : do_move(1, 0);
                     when KEY_UP         : do_move(-1, 0);
                     when KEY_RIGHT      : do_move(0, 1);
+                    when KEY_HOME       : do_move(-1, -1);
                     when KEY_A1         : do_move(-1, -1);
+                    when KEY_PPAGE      : do_move(-1, 1);
                     when KEY_A3         : do_move(-1, 1);
+                    when KEY_END         : do_move(1, -1);
                     when KEY_C1         : do_move(1, -1);
                     when KEY_NPAGE      : do_move(1, 1);
-                    when KEY_C3         : do_move(1, 1); break;
+                    when KEY_C3         : do_move(1, 1);
 #ifdef CTL_RIGHT
-                    case CTL_RIGHT      : do_run('l');
+                    when CTL_RIGHT      : do_run('l');
                     when CTL_LEFT       : do_run('h');
                     when CTL_UP         : do_run('k');
                     when CTL_DOWN       : do_run('j');
@@ -201,7 +205,6 @@ command()
                     when CTL_PGUP       : do_run('u');
                     when CTL_END        : do_run('b');
                     when CTL_PGDN       : do_run('n'); break;
-#endif
 #endif
                     case 'h' : do_move(0, -1);
                     when 'j' : do_move(1, 0);
