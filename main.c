@@ -141,9 +141,9 @@ main(int argc, char **argv, char **envp)
 #endif
     }
     if (wizard)
-        printf("Hello %s, welcome to dungeon #%d", whoami, seed);
+        printf("Hello %s, welcome to dungeon #%d\n", whoami, seed);
     else
-        printf("Hello %s, just a moment while I dig the dungeon...", whoami);
+        printf("Hello %s, just a moment while I dig the dungeon...\n", whoami);
     fflush(stdout);
    
 #if BSD || MSDOS
