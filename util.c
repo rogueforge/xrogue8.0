@@ -1290,9 +1290,6 @@ void
 strucpy(register char *s1, register char *s2, register size_t len)
 {
     register char *sp;
-#if USG5_0 
-    char *unctrl();
-#endif
 
     while (len--)
     {
