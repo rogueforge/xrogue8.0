@@ -115,8 +115,6 @@ m_act (register struct thing *tp)
 {
     struct object *obj;
     bool flee;			/* Are we scared? */
-    static int mf_count=0;      /* move_free counter - see below */
-    static int mf_jmpcnt=0;     /* move_free counter for # of jumps */
 
     /* What are we planning to do? */
     switch (tp->t_action) {
@@ -441,20 +439,20 @@ m_select (register struct thing *th, register bool flee)
         int exity, exitx;                       /* Door's coordinates */
         char dch='\0';                          /* Door character */
 
-        if (th->t_doorgoal)
-            dch = mvwinch(stdscr, th->t_doorgoal->y, th->t_doorgoal->x);
+        if ((th->t_doorgoal.x != -1) && (th->t_doorgoal.y != -1))
+            dch = mvwinch(stdscr, th->t_doorgoal.y, th->t_doorgoal.x);
             
         /* Do we have a valid goal? */
         if ((dch == PASSAGE || dch == DOOR) &&  /* A real door */
-            (!flee || !ce(*th->t_doorgoal, *th->t_dest))) { /* Prey should not
+            (!flee || !ce(th->t_doorgoal, *th->t_dest))) { /* Prey should not
                                                              * be at door if
                                                              * we are running
                                                              * away
                                                              */
             /* Make sure the player is not in the doorway, either */
-            entrance = doorway(rer, th->t_doorgoal);
+            entrance = doorway(rer, &th->t_doorgoal);
             if (!flee || entrance == NULL || !ce(*entrance, *th->t_dest)) {
-                this = *th->t_doorgoal;
+                this = th->t_doorgoal;
                 dist = 0;       /* Indicate that we have our door */
             }
         }
@@ -495,7 +493,7 @@ m_select (register struct thing *th, register bool flee)
                     /* Maximize distance if fleeing, otherwise minimize it */
                     if ((flee && (dist > maxdist)) ||
                         (!flee && (dist < mindist))) {
-                        th->t_doorgoal = exit;  /* Use this door */
+                        th->t_doorgoal = *exit;  /* Use this door */
                         this = *exit;
                         mindist = maxdist = dist;
                     }
@@ -507,17 +505,17 @@ m_select (register struct thing *th, register bool flee)
         if (dist == INT_MIN) {
             /* If we were on a door, go ahead and use it */
             if (last_door) {
-                th->t_doorgoal = last_door;
+                th->t_doorgoal = *last_door;
                 this = th->t_oldpos;
                 dist = 0;       /* Indicate that we found a door */
             }
-            else th->t_doorgoal = NULL; /* No more door goal */
+            else th->t_doorgoal.x = th->t_doorgoal.y = -1; /* No more door goal */
         }
 
         /* Indicate that we do not want to flee from the door */
         if (dist != INT_MIN) flee = FALSE;
     }
-    else th->t_doorgoal = 0;    /* Not going to any door */
+    else th->t_doorgoal.x = th->t_doorgoal.y = -1;    /* Not going to any door */
 
     /* Now select someplace to go and start the action */
     chase(th, &this, rer, ree, flee);
@@ -532,9 +530,9 @@ void
 m_sonic (register struct thing *tp)
 {
     register int damage;
-    static struct object blast =
+    struct object blast =
     {
-        MISSILE, {0, 0}, "", 0, 0, "150" , NULL, 0, 0, 0, 0
+        MISSILE, {0, 0}, 0, "", "150" , NULL, 0, 0, 0, 0
     };
 
     turn_off(*tp, CANSONIC);
@@ -561,9 +559,9 @@ m_sonic (register struct thing *tp)
 void 
 m_spell (register struct thing *tp)
 {
-    static struct object missile =
+    struct object missile =
     {
-        MISSILE, {0, 0}, "", 0, 0, "0d4 " , NULL, 0, WS_MISSILE, 100, 1
+        MISSILE, {0, 0}, 0, "", "0d4 " , NULL, 0, WS_MISSILE, 100, 1
     };
 
     sprintf(missile.o_hurldmg, "%dd4", tp->t_stats.s_lvl);
@@ -659,7 +657,9 @@ m_use_it (register struct thing *tp, bool flee, register struct room *rer, regis
 {
     int dist;
     register coord *ee = tp->t_dest, *er = &tp->t_pos; 
-    coord *shoot_dir;
+    coord *shoot_dir = NULL;
+    coord straight_dir;
+    int   straight_shot = FALSE;
     struct linked_list *weapon;
     struct thing *prey;
     bool dest_player;   /* Are we after the player? */
@@ -704,9 +704,14 @@ m_use_it (register struct thing *tp, bool flee, register struct room *rer, regis
      * shoot_dir must get set before rer is checked so
      * that we get a valid value.
      */
+ 
+    if (can_shoot(er, ee, &straight_dir) == 0)
+        shoot_dir = &straight_dir;
+    else
+        shoot_dir = NULL;
+
     if (on(*prey, ISINWALL) ||
-        ((shoot_dir = can_shoot(er, ee)) == NULL &&
-        (rer == NULL || rer != ree)))
+        ( (shoot_dir == NULL) && (rer == NULL || rer != ree)))
         return(FALSE);
 
     /*
@@ -760,7 +765,7 @@ m_use_it (register struct thing *tp, bool flee, register struct room *rer, regis
     }
 
     /* From now on, we must have a direct shot at the prey */
-    if (shoot_dir == NULL) return(FALSE);
+    if (!straight_shot) return(FALSE);
 
     /* We may use a sonic blast if we can, only on the player */
     if (on(*tp, CANSONIC)               && 

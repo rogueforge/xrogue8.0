@@ -109,10 +109,11 @@ swander(void *arg)
  *      Called to roll to see if a wandering monster starts up
  */
 
+int between = 0;
+
 void
 rollwand(void *arg)
 {
-    static int between = 0;
 
     if (++between >= 4)
     {

@@ -607,7 +607,8 @@ effect(register struct thing *att, register struct thing *def, struct object *we
                         obj->o_type = GOLD;
                         obj->o_count = lastpurse - purse;
                         obj->o_hplus = obj->o_dplus = 0;
-                        obj->o_damage = obj->o_hurldmg = "0d0";
+                        strcpy(obj->o_damage,"0d0");
+                        strcpy(obj->o_hurldmg,"0d0");
                         obj->o_ac = 11;
                         obj->contents = NULL;
                         obj->o_group = 0;

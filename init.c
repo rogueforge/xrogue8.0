@@ -1,3 +1,5 @@
+
+
 /*
  * global variable initializaton
  */
@@ -23,7 +25,7 @@ other time enter a '?' or a '='.";
 enter a '\\' on any other screen.";
 */
 
-static char rainbow[][11] = {
+char rainbow[][15] = {
 
 "Amber",                "Aquamarine",           "Beige",
 "Black",                "Blue",                 "Brown",
@@ -37,9 +39,10 @@ static char rainbow[][11] = {
 "Turquoise",            "Vermilion",            "Violet",
 "White",                "Yellow",
 };
-#define NCOLORS (sizeof rainbow / sizeof (char *))
+#define NCOLORS (sizeof rainbow / sizeof (char [15]))
+const int cNCOLORS = NCOLORS;
 
-static char *sylls[] = {
+char *sylls[] = {
     "a", "ae", "ak", "an", "ax", "ach", "ano", "ars", "bha", "bar", "bre",
     "cha", "cre", "cum", "cow", "duh", "dha", "e", "ea", "em", "et", "ey",
     "eck", "etk", "egg", "exl", "fu", "fen", "fid", "gan", "gle", "h", "ha",
@@ -54,7 +57,7 @@ static char *sylls[] = {
     "yih", "zef", "zen", "zil", "zym", "-", 
 };
 
-static char stones[][14] = {
+char stones[][15] = {
         "Agate",                "Alexandrite",          "Amethyst",
         "Azurite",              "Bloodstone",           "Cairngorm",
         "Carnelian",            "Chalcedony",           "Chrysoberyl",
@@ -72,9 +75,10 @@ static char stones[][14] = {
         "Tiger eye",            "Topaz",                "Tourmaline",
         "Turquoise",            "Zircon",
 };
-#define NSTONES (sizeof stones / sizeof (char *))
+#define NSTONES (sizeof stones / sizeof (char [15]))
+const int cNSTONES = NSTONES;
 
-static char wood[][13] = {
+char wood[][15] = {
         "Avocado wood", "Balsa",        "Banyan",       "Birch",
         "Cedar",        "Cherry",       "Cinnabar",     "Dogwood",
         "Driftwood",    "Ebony",        "Eucalyptus",   "Hemlock",
@@ -82,15 +86,17 @@ static char wood[][13] = {
         "Oak",          "Pine",         "Redwood",      "Rosewood",
         "Teak",         "Walnut",       "Aloe",         "Sandalwood",
 };
-#define NWOOD (sizeof wood / sizeof (char *))
+#define NWOOD (sizeof wood / sizeof (char [15]))
+const int cNWOOD = NWOOD;
 
-static char metal[][10] = {
+char metal[][15] = {
         "Aluminium",    "Bone",         "Brass",        "Bronze",
         "Copper",       "Chromium",     "Iron",         "Lead",
         "Magnesium",    "Pewter",       "Platinum",     "Silver",
         "Steel",        "Tin",          "Titanium",     "Zinc",
 };
-#define NMETAL (sizeof metal / sizeof (char *))
+#define NMETAL (sizeof metal / sizeof (char [15]))
+const int cNMETAL = NMETAL;
 
 /*
  * make sure all the percentages specified in the tables add up to the
@@ -322,7 +328,7 @@ init_player()
         pstats.s_lvladj = 0;
         pstats.s_hpt = 500;
         pstats.s_carry = totalenc(&player);
-        pstats.s_dmg = "4d8";
+        strcpy(pstats.s_dmg,"4d8");
         check_level();
         wmove(hw,0,0);
         wclrtoeol(hw);
@@ -471,7 +477,7 @@ init_player()
         pstats.s_lvl = 1;
         pstats.s_lvladj = 0;
         pstats.s_exp = 0L;
-        pstats.s_dmg = "2d4";
+        strcpy(pstats.s_dmg,"2d4");
         pstats.s_carry = totalenc(&player);
         check_level();
         wmove(hw,0,0);
@@ -732,7 +738,7 @@ init_player()
             pstats.s_lvl = 1;
             pstats.s_lvladj = 0;
             pstats.s_exp = 0L;
-            pstats.s_dmg = "2d4";
+            strcpy(pstats.s_dmg,"2d4");
             pstats.s_carry = totalenc(&player);
 
             /* Get the hit points. */

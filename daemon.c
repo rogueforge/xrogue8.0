@@ -18,8 +18,9 @@ struct delayed_action f_list[MAXFUSES] = {
         _X_, _X_, _X_, _X_, _X_, _X_, _X_, _X_, _X_, _X_,
         _X_, _X_, _X_, _X_, _X_, _X_, _X_, _X_, _X_, _X_
 };
-static int demoncnt = 0;        /* number of active daemons */
-static int fusecnt = 0;
+
+int demoncnt = 0;        /* number of active daemons */
+int fusecnt = 0;
 
 
 /*

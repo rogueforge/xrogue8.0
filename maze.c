@@ -11,8 +11,8 @@ struct b_cellscells {
         struct cell conn[4];    /* the y,x position of above cell */
 } b_cells;
 
-static char     *frontier, 
-                *bits;
+static char     *maze_frontier, 
+                *maze_bits;
 static int      maze_lines, 
                 maze_cols;
 static void crankout(void);
@@ -145,10 +145,10 @@ draw_maze()
 
         maze_lines = (lines - 3) / 2;
         maze_cols = (cols - 1) / 2;
-        bits = ALLOC((lines - 3) * (cols - 1));
-        frontier = ALLOC(maze_lines * maze_cols);
-        ptr = frontier;
-        while (ptr < (frontier + (maze_lines * maze_cols)))
+        maze_bits = ALLOC((lines - 3) * (cols - 1));
+        maze_frontier = ALLOC(maze_lines * maze_cols);
+        ptr = maze_frontier;
+        while (ptr < (maze_frontier + (maze_lines * maze_cols)))
                 *ptr++ = TRUE;
         for (i = 0; i < lines - 3; i++) {
                 for (j = 0; j < cols - 1; j++) {
@@ -166,8 +166,8 @@ draw_maze()
                 }
         }
         crankout();
-        FREE(frontier);
-        FREE(bits);
+        FREE(maze_frontier);
+        FREE(maze_bits);
 }
 
 /*
@@ -231,7 +231,7 @@ static char *
 foffset(int y, int x)
 {
 
-        return (frontier + (y * maze_cols) + x);
+        return (maze_frontier + (y * maze_cols) + x);
 }
 
 
@@ -352,7 +352,7 @@ maze_view(int y, int x)
 static char *
 moffset(int y, int x)
 {
-    return (bits + (y * (cols - 1)) + x);
+    return (maze_bits + (y * (cols - 1)) + x);
 }
 
 /*

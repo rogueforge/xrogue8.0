@@ -214,7 +214,7 @@ new_monster(struct linked_list *item, short type, coord *cp, bool max_monster)
     tp->t_type = monsters[type].m_appear;
     tp->t_ctype = C_MONSTER;
     tp->t_action = A_NIL;
-    tp->t_doorgoal = 0;
+    tp->t_doorgoal.x = tp->t_doorgoal.y = -1;
     tp->t_quiet = 0;
     tp->t_dest = NULL;
     tp->t_name = NULL;
@@ -224,7 +224,7 @@ new_monster(struct linked_list *item, short type, coord *cp, bool max_monster)
     mp = &monsters[tp->t_index];
 
     /* Figure out monster's hit points */
-    hitp = mp->m_stats.s_hpt;
+    hitp = mp->m_stats.ms_hpt;
     num_dice = atoi(hitp);
     if ((hitp = strchr(hitp, 'd')) != NULL) {
         num_sides = atoi(++hitp);
@@ -233,12 +233,12 @@ new_monster(struct linked_list *item, short type, coord *cp, bool max_monster)
     }
 
     tp->t_stats.s_lvladj = 0;
-    tp->t_stats.s_lvl = mp->m_stats.s_lvl;
-    tp->t_stats.s_arm = mp->m_stats.s_arm;
-    tp->t_stats.s_dmg = mp->m_stats.s_dmg;
-    tp->t_stats.s_str = mp->m_stats.s_str;
-    tp->t_stats.s_dext = mp->m_stats.s_dex;
-    tp->t_movement = mp->m_stats.s_move;
+    tp->t_stats.s_lvl = mp->m_stats.ms_lvl;
+    tp->t_stats.s_arm = mp->m_stats.ms_arm;
+    strcpy(tp->t_stats.s_dmg,mp->m_stats.ms_dmg);
+    tp->t_stats.s_str = mp->m_stats.ms_str;
+    tp->t_stats.s_dext = mp->m_stats.ms_dex;
+    tp->t_movement = mp->m_stats.ms_move;
     if (vlevel > HARDER) { /* the deeper, the meaner we get */
          tp->t_stats.s_lvl += (vlevel - HARDER);
          num_dice += (vlevel - HARDER)/2;
@@ -248,7 +248,7 @@ new_monster(struct linked_list *item, short type, coord *cp, bool max_monster)
         tp->t_stats.s_hpt = num_dice * num_sides + num_extra;
     else
         tp->t_stats.s_hpt = roll(num_dice, num_sides) + num_extra;
-    tp->t_stats.s_exp = mp->m_stats.s_exp + mp->m_add_exp*tp->t_stats.s_hpt;
+    tp->t_stats.s_exp = mp->m_stats.ms_exp + mp->m_add_exp*tp->t_stats.s_hpt;
 
     /*
      * just initailize others values to something reasonable for now
@@ -329,8 +329,10 @@ new_monster(struct linked_list *item, short type, coord *cp, bool max_monster)
                                     : (rnd(3) + 1) * ((rnd(3) < 2) ? 1 : -1);
         cur1->o_dplus = (rnd(4) < 3) ? 0
                                     : (rnd(3) + 1) * ((rnd(3) < 2) ? 1 : -1);
-        cur->o_damage = cur->o_hurldmg =
-                cur1->o_damage = cur1->o_hurldmg = "0d0";
+        strcpy(cur->o_damage,"0d0");
+        strcpy(cur->o_hurldmg,"0d0");
+        strcpy(cur1->o_damage,"0d0");
+        strcpy(cur1->o_hurldmg,"0d0");
         cur->o_ac = cur1->o_ac = 11;
         cur->o_count = cur1->o_count = 1;
         cur->o_group = cur1->o_group = 0;

@@ -13,6 +13,8 @@
 #define DEST_DAMAGE     -3
 #define DRAIN_DAMAGE    -4
 
+int killed_chance = 0;  /* cumulative chance for goodies to loose it */
+
 /*
  * returns true if player has a any chance to hit the monster
  */
@@ -383,7 +385,7 @@ roll_em(struct thing *att_er, struct thing *def_er, struct object *weap, bool hu
          */
         if(weap->o_type==STICK && weap->o_which==WS_HIT && weap->o_charges==0)
         {
-            weap->o_damage = "4d8";
+            strcpy(weap->o_damage,"4d8");
             weap->o_hplus = weap->o_dplus = 0;
         }
     }
@@ -1031,7 +1033,6 @@ killed(register struct linked_list *item, bool pr, bool points, bool treasure)
 {
     register struct thing *tp, *mp;
     register struct linked_list *pitem, *nexti, *mitem;
-    static int chance = 0;  /* cumulative chance for goodies to loose it */
     char *monst;
     int adj;    /* used for hit point adj. below. */
     long temp;
@@ -1091,10 +1092,10 @@ killed(register struct linked_list *item, bool pr, bool points, bool treasure)
 		    pstats.s_hpt = -1;
 		    death(D_STRENGTH);
 		}
-                chance += rnd(3)+1;
+                killed_chance += rnd(3)+1;
                 if (on(*tp, ISUNIQUE)) /* real bad news to kill a diety */
-                    chance += 25;
-                if (roll(1,100) < chance) {
+                    killed_chance += 25;
+                if (roll(1,100) < killed_chance) {
 		    msg("You had a feeling this was going to happen... ");
                     msg("**POOF**  ");
                     temp = C_ASSASSIN;	/* make him pay */

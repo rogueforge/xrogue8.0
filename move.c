@@ -14,7 +14,7 @@
  * Used to hold the new hero position
  */
 
-static coord nh;
+coord move_nh;
 
 static char Moves[3][3] = {
     { 'y', 'k', 'u' },
@@ -564,19 +564,19 @@ corr_move(int dy, int dx)
                  locy, locx;    /* Hold delta of chosen location */
 
     /* New position */
-    nh.y = hero.y + dy;
-    nh.x = hero.x + dx;
+    move_nh.y = hero.y + dy;
+    move_nh.x = hero.x + dx;
 
     /* If it is a legal move, just return */
-    if (nh.x >= 0 && nh.x < cols && nh.y > 0 && nh.y < lines - 2) {
+    if (move_nh.x >= 0 && move_nh.x < cols && move_nh.y > 0 && move_nh.y < lines - 2) {
         
-        switch (winat(nh.y, nh.x)) {
+        switch (winat(move_nh.y, move_nh.x)) {
             case WALL:
             case VERTWALL:
             case HORZWALL:
                 break;
             default:
-                if (diag_ok(&hero, &nh, &player))
+                if (diag_ok(&hero, &move_nh, &player))
                         return;
         }
     }
@@ -604,9 +604,9 @@ corr_move(int dy, int dx)
                 case HORZWALL:
                     break;
                 default:
-                    nh.y = y;
-                    nh.x = x;
-                    if (diag_ok(&hero, &nh, &player)) {
+                    move_nh.y = y;
+                    move_nh.x = x;
+                    if (diag_ok(&hero, &move_nh, &player)) {
                         legal++;
                         locy = y - (hero.y - 1);
                         locx = x - (hero.x - 1);
@@ -856,26 +856,26 @@ do_move(int dy, int dx)
          (on(player, ISDANCE) && rnd(100) < 90) || 
          (ISWEARING(R_DELUSION) && rnd(100) < 70)))
         /* Get a random move */
-        nh = *rndmove(&player);
+        move_nh = *rndmove(&player);
     else {
-        nh.y = hero.y + dy;
-        nh.x = hero.x + dx;
+        move_nh.y = hero.y + dy;
+        move_nh.x = hero.x + dx;
     }
 
     /*
      * Check if he tried to move off the screen or make an illegal
      * diagonal move, and stop him if he did.
      */
-    if (nh.x < 0 || nh.x > cols-1 || nh.y < 1 || nh.y >= lines - 2
-        || !diag_ok(&hero, &nh, &player))
+    if (move_nh.x < 0 || move_nh.x > cols-1 || move_nh.y < 1 || move_nh.y >= lines - 2
+        || !diag_ok(&hero, &move_nh, &player))
     {
         after = running = FALSE;
         player.t_action = A_NIL;
         return;
     }
-    if (running && ce(hero, nh))
+    if (running && ce(hero, move_nh))
         after = running = FALSE;
-    ch = winat(nh.y, nh.x);
+    ch = winat(move_nh.y, move_nh.x);
 
     /* Take care of hero trying to move close to something frightening */
     if (on(player, ISFLEE)) {
@@ -883,7 +883,7 @@ do_move(int dy, int dx)
             turn_off(player, ISFLEE);
             msg("You regain your composure.");
         }
-        else if (DISTANCE(nh.y, nh.x, player.t_dest->y, player.t_dest->x) <
+        else if (DISTANCE(move_nh.y, move_nh.x, player.t_dest->y, player.t_dest->x) <
                  DISTANCE(hero.y, hero.x, player.t_dest->y, player.t_dest->x)) {
                         running = FALSE;
                         msg("You are too terrified to move that way");
@@ -895,7 +895,7 @@ do_move(int dy, int dx)
 
     /* If we want to move to a monster, see what it is */
     if (isalpha((unsigned char)ch)) {
-        item = find_mons(nh.y, nh.x);
+        item = find_mons(move_nh.y, move_nh.x);
         if (item == NULL) {
             debug("Cannot find monster in move.");
             player.t_action = A_NIL;
@@ -959,7 +959,7 @@ do_move(int dy, int dx)
         /* Did we succeed? */
         if (ce(tp->t_pos, current)) {
             /* Reset our idea of what ch is */
-            ch = winat(nh.y, nh.x);
+            ch = winat(move_nh.y, move_nh.x);
 
             /* Let it be known that we made the switch */
             changed = TRUE;
@@ -967,7 +967,7 @@ do_move(int dy, int dx)
 
             /* Make the monster think it didn't move */
             tp->t_oldpos = current;
-            tp->t_doorgoal = NULL;
+            tp->t_doorgoal.x = tp->t_doorgoal.y = -1;
 
             /* Let the player know something funny happened. */
             msg("What a sidestep!");
@@ -987,7 +987,7 @@ do_move(int dy, int dx)
         case VERTWALL:
         case HORZWALL:
             if (levtype == OUTSIDE) {
-                hero = nh;
+                hero = move_nh;
                 new_level(OUTSIDE);
                 return;
             }
@@ -1008,7 +1008,7 @@ do_move(int dy, int dx)
             break;
         case POOL:
             if (levtype == OUTSIDE) {
-                /* lake_check(&nh); */  /* not implemented yet */
+                /* lake_check(&move_nh); */  /* not implemented yet */
                 running = FALSE;
                 break;
             }
@@ -1024,7 +1024,7 @@ do_move(int dy, int dx)
         case ARROWTRAP:
         case DARTTRAP:
         case WORMHOLE:
-            ch = be_trapped(&player, &nh);
+            ch = be_trapped(&player, &move_nh);
             if (ch == TRAPDOOR || ch == TELTRAP || 
                 pool_teleport  || ch == MAZETRAP) {
                 pool_teleport = FALSE;
@@ -1061,7 +1061,7 @@ do_move(int dy, int dx)
         if (running && wasfirstmove == FALSE && roomin(&hero) == NULL) {
             struct linked_list *item;
 
-            item = find_mons(nh.y, nh.x);
+            item = find_mons(move_nh.y, move_nh.x);
             if (item != NULL && !invisible(THINGPTR(item))) {
                 after = running = FALSE;
                 return;
@@ -1102,7 +1102,7 @@ do_move(int dy, int dx)
 
         /* Mark that we are attacking and save the attack coordinate */
         player.t_action = A_ATTACK;
-        player.t_newpos = nh;
+        player.t_newpos = move_nh;
         runch = Moves[dy+1][dx+1];      /* Remember the direction */
 
         if (player.t_no_move <= 0) after = FALSE;
@@ -1114,7 +1114,7 @@ do_move(int dy, int dx)
      */
     if (changed == FALSE) {
         old_hero = hero;        /* Save hero's old position */
-        hero = nh;              /* Move the hero */
+        hero = move_nh;              /* Move the hero */
     }
     rp = roomin(&hero);
     orp = roomin(&old_hero);

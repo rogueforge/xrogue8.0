@@ -3,6 +3,7 @@
  */
 
 #include <curses.h>
+#include <string.h>
 #include <ctype.h>
 #include "rogue.h"
 
@@ -188,8 +189,8 @@ init_weapon(register struct object *weap, char type)
         register struct init_weps *iwp;
 
         iwp = &weaps[(int)type];
-        weap->o_damage = iwp->w_dam;
-        weap->o_hurldmg = iwp->w_hrl;
+        strcpy(weap->o_damage,iwp->w_dam);
+        strcpy(weap->o_hurldmg,iwp->w_hrl);
         weap->o_launch = iwp->w_launch;
         weap->o_flags = iwp->w_flags;
         weap->o_weight = iwp->w_wght;

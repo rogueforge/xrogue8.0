@@ -302,7 +302,7 @@ do_zap(struct thing *zapper, struct object *obj, coord *direction, int which, in
             int dice;
             static struct object bolt =
             {
-                MISSILE , {0, 0}, "", 0, 0, "1d4 " , NULL, 0, WS_MISSILE, 50, 1
+                MISSILE , {0, 0}, 0, "", "1d4 " , NULL, 0, WS_MISSILE, 50, 1
             };
 
             if (!obj)
@@ -331,9 +331,9 @@ do_zap(struct thing *zapper, struct object *obj, coord *direction, int which, in
                 strike = *obj;
                 strike.o_hplus  = 7;
                 if (EQUAL(ws_type[which], "staff"))
-                    strike.o_damage = "3d8";
+                    strcpy(strike.o_damage,"3d8");
                 else
-                    strike.o_damage = "2d8";
+                    strcpy(strike.o_damage,"2d8");
                 fight(direction, &strike, FALSE);
             }
         }
@@ -716,20 +716,20 @@ fix_stick(register struct object *cur)
     if (EQUAL(ws_type[cur->o_which], "staff")) {
         cur->o_weight = 100;
         cur->o_charges = 5 + rnd(11);
-        cur->o_damage = "3d4";
+        strcpy(cur->o_damage,"3d4");
         cur->o_hplus = 1;
         cur->o_dplus = 0;
         switch (cur->o_which) {
             case WS_HIT:
                 cur->o_hplus = 3;
                 cur->o_dplus = 3;
-                cur->o_damage = "2d8";
+                strcpy(cur->o_damage,"2d8");
             when WS_LIGHT:
                 cur->o_charges = 15 + rnd(11);
             }
     }
     else {
-        cur->o_damage = "2d3";
+        strcpy(cur->o_damage,"2d3");
         cur->o_weight = 75;
         cur->o_hplus = 1;
         cur->o_dplus = 0;
@@ -738,12 +738,12 @@ fix_stick(register struct object *cur)
             case WS_HIT:
                 cur->o_hplus = 3;
                 cur->o_dplus = 3;
-                cur->o_damage = "2d8";
+                strcpy(cur->o_damage,"2d8");
             when WS_LIGHT:
                 cur->o_charges = 15 + rnd(11);
             }
     }
-    cur->o_hurldmg = "3d3";
+    strcpy(cur->o_hurldmg,"3d3");
 
 }
 

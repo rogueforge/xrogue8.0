@@ -108,20 +108,26 @@ can_blink(register struct thing *tp)
  * at the prey (ee).  If so, it returns the direction in which to shoot.
  */
 
-coord *
-can_shoot(register coord *er, register coord *ee)
+int
+can_shoot(register coord *er, register coord *ee, register coord *shoot_dir)
 {
-    static coord shoot_dir;
-
     /* 
      * They must be in the same room or very close (at door)
      */
     if (roomin(er) != roomin(ee) && DISTANCE(er->y,er->x,ee->y,ee->x) > 1)
-        return(NULL);
+    {
+        shoot_dir->x = shoot_dir->y = 0;
+        return(-1);
+    }
 
     /* Do we have a straight shot? */
-    if (!straight_shot(er->y, er->x, ee->y, ee->x, &shoot_dir)) return(NULL);
-    else return(&shoot_dir);
+    if (!straight_shot(er->y, er->x, ee->y, ee->x, shoot_dir)) 
+    {
+        shoot_dir->x = shoot_dir->y = 0;
+        return(-2);
+    }
+    else 
+        return(0);
 }
 
 /*

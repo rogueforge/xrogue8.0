@@ -977,12 +977,12 @@ typedef enum {
  
 struct h_list {
     char h_ch;
-    char *h_desc;
+    char h_desc[40];
 };
 
 struct item_list {
     unsigned char item_ch;
-    char *item_desc;
+    char item_desc[40];
 };
 
 /*
@@ -1000,7 +1000,7 @@ typedef struct {
  
 struct death_type {
     int reason;
-    char *name;
+    char name[30];
 };
 
 /*
@@ -1018,11 +1018,11 @@ struct linked_list {
  */
  
 struct magic_item {
-    char *mi_name;
-    int mi_prob;
-    int mi_worth;
-    int mi_curse;
-    int mi_bless;
+    char mi_name[30];
+    int  mi_prob;
+    int  mi_worth;
+    int  mi_curse;
+    int  mi_bless;
 };
 
 /*
@@ -1066,7 +1066,7 @@ struct stats {
     int s_hpt;                          /* Hit points */
     int s_pack;                         /* current weight of his pack */
     int s_carry;                        /* max weight he can carry */
-    char *s_dmg;                        /* String describing damage done */
+    char s_dmg[8];                      /* String describing damage done */
 };
 
 /*
@@ -1074,14 +1074,14 @@ struct stats {
  */
  
 struct mstats {
-    short s_str;                        /* Strength */
-    short s_dex;                        /* dexterity */
-    short s_move;                       /* movement rate */
-    unsigned long s_exp;                /* Experience */
-    short s_lvl;                        /* Level of mastery */
-    short s_arm;                        /* Armor class */
-    char *s_hpt;                        /* Hit points */
-    char *s_dmg;                        /* String describing damage done */
+    short ms_str;                        /* Strength */
+    short ms_dex;                        /* dexterity */
+    short ms_move;                       /* movement rate */
+    unsigned long ms_exp;                /* Experience */
+    short ms_lvl;                        /* Level of mastery */
+    short ms_arm;                        /* Armor class */
+    char ms_hpt[8];                        /* Hit points */
+    char ms_dmg[30];                      /* String describing damage done */
 };
 
 /*
@@ -1105,7 +1105,7 @@ struct thing {
     short t_cast;                       /* base chance of casting a spell */
     short t_breathe;                    /* base chance to swing at player */
     char  *t_name;                      /* name player gave his pet */
-    coord *t_doorgoal;                  /* What door are we heading to? */
+    coord t_doorgoal;                   /* What door are we heading to? */
     coord *t_dest;                      /* Where it is running to */
     coord t_pos;                        /* Position */
     coord t_oldpos;                     /* Last position */
@@ -1122,14 +1122,14 @@ struct thing {
  */
  
 struct monster {
-    char *m_name;                       /* What to call the monster */
+    char m_name[30];                    /* What to call the monster */
     short m_carry;                      /* Probability of carrying something */
     bool m_normal;                      /* Does monster exist? */
     bool m_wander;                      /* Does monster wander? */
     char m_appear;                      /* What does monster look like? */
-    char *m_intel;                      /* Intelligence range */
+    char m_intel[8];                    /* Intelligence range */
     long m_flags[MAXFLAGS];             /* Things about the monster */
-    char *m_typesum;                    /* type of creature can he summon */
+    char m_typesum[30];                 /* type of creature can he summon */
     short m_numsum;                     /* how many creatures can he summon */
     short m_add_exp;                    /* Added experience per hit point */
     struct mstats m_stats;              /* Initial stats */
@@ -1142,10 +1142,9 @@ struct monster {
 struct object {
     int o_type;                         /* What kind of object it is */
     coord o_pos;                        /* Where it lives on the screen */
-    char *o_text;                       /* What it says if you read it */
     char o_launch;                      /* What you need to launch it */
-    char *o_damage;                     /* Damage if used like sword */
-    char *o_hurldmg;                    /* Damage if thrown */
+    char o_damage[8];                   /* Damage if used like sword */
+    char o_hurldmg[8];                  /* Damage if thrown */
     struct linked_list *contents;       /* contents of this object */
     int o_count;                        /* Count for plural objects */
     int o_which;                        /* Which object of a type it is */
@@ -1163,9 +1162,9 @@ struct object {
  */
  
 struct init_weps {
-    char *w_name;               /* name of weapon */
-    char *w_dam;                /* hit damage */
-    char *w_hrl;                /* hurl damage */
+    char w_name[20];            /* name of weapon */
+    char w_dam[8];              /* hit damage */
+    char w_hrl[8];              /* hurl damage */
     char w_launch;              /* need to launch it */
     int  w_flags;               /* flags */
     int  w_rate;                /* rate of fire */
@@ -1178,7 +1177,7 @@ struct init_weps {
  */
  
 struct init_armor {
-        char *a_name;           /* name of armor */
+        char a_name[30];        /* name of armor */
         int  a_prob;            /* chance of getting armor */
         int  a_class;           /* normal armor class */
         int  a_worth;           /* worth of armor */
@@ -1190,6 +1189,11 @@ struct spells {
     short s_cost;               /* cost of casting spell */
     short s_type;               /* scroll or potion */
     int   s_flag;               /* is the spell blessed/cursed? */
+};
+
+struct words
+{
+    char w_string[30];
 };
 
 /*
@@ -1234,7 +1238,7 @@ extern struct spells magic_spells[];    /* spells for magicians */
 extern struct spells cleric_spells[];   /* spells for clerics */
 extern struct spells druid_spells[];    /* spells for druids */
 extern struct spells quill_scrolls[];   /* scrolls for quill */
-extern char *cnames[][NUM_CNAMES];      /* Character level names */
+extern char *cnames[NUM_CHARTYPES-1][NUM_CNAMES];      /* Character level names */
 extern char *abilities[NUMABILITIES];   /* Names of the various abilities */
 extern char curpurch[];                 /* name of item ready to buy */
 extern char PLAYER;                     /* what the player looks like */
@@ -1339,6 +1343,15 @@ extern int mf_count;       /* move_free counter - see actions.c(m_act()) */
 extern int mf_jmpcnt;      /* move_free counter for # of jumps 		  */
 extern int killed_chance;  /* cumulative chance for goodies to loose it, fight.c */
 extern coord move_nh;        /* move.c */
+extern const int cNCOLORS;
+extern const int cNSTONES;
+extern const int cNWOOD;
+extern const int cNMETAL;
+extern char rainbow[][15];
+extern char *sylls[];
+extern char stones[][15];
+extern char wood[][15];
+extern char metal[][15];
 
 #if u370 || uts || i386
 #define ENCREAD(b,n,fd) read(fd,b,n)
@@ -1354,6 +1367,9 @@ extern coord move_nh;        /* move.c */
  
 extern struct delayed_action d_list[MAXDAEMONS];
 extern struct delayed_action f_list[MAXFUSES];
+
+extern int demoncnt;        /* number of active daemons */
+extern int fusecnt;
 
 /* actions.c */
 extern void dsrpt_monster(register struct thing *tp, bool always, bool see_him);
@@ -1371,7 +1387,7 @@ extern bool m_use_pack(register struct thing *monster, coord *monst_pos, coord *
 extern void shoot_bolt(struct thing *shooter, coord start, coord dir, bool get_points, short reason, char *name, int damage);
 /* chase.c */
 extern bool can_blink(register struct thing *tp);
-extern coord *can_shoot(register coord *er, register coord *ee);
+extern int can_shoot(register coord *er, register coord *ee, register coord *can_shoot);
 extern void chase(register struct thing *tp, coord *ee, register struct room *rer, register struct room *ree, bool flee);
 extern void do_chase(register struct thing *th);
 extern struct linked_list *get_hurl(register struct thing *tp);
@@ -1666,6 +1682,110 @@ extern long encread(register char *start, register unsigned long size, int inf);
 /* scrolls.c */
 extern void genocide(void);
 extern void read_scroll(register int which, int flag, bool is_scroll);
+/* state.c */
+extern void rsPrintf(char *fmt, ...);
+extern void *get_list_item(struct linked_list *l, int i);
+extern int rs_write(FILE *savef, void *ptr, int size);
+extern int rs_read(int inf, void *ptr, int size);
+extern int rs_write_uint(FILE *savef, unsigned int c);
+extern int rs_write_int(FILE *savef, int c);
+extern int rs_write_ulong(FILE *savef, unsigned long c);
+extern int rs_write_long(FILE *savef, long c);
+extern int rs_write_boolean(FILE *savef, bool c);
+extern int rs_read_int(int inf, int *i);
+extern int rs_read_uint(int inf, unsigned int *i);
+extern int rs_read_ulong(int inf, unsigned long *i);
+extern int rs_read_long(int inf, long *i);
+extern int rs_read_boolean(int inf, bool *i);
+extern int rs_write_ints(FILE *savef, int *c, int count);
+extern int rs_write_short(FILE *savef, short c);
+extern int rs_read_short(int inf, short *s);
+extern int rs_write_shorts(FILE *savef, short *c, int count);
+extern int rs_write_longs(FILE *savef, long *c, int count);
+extern int rs_write_ulongs(FILE *savef, unsigned long *c, int count);
+extern int rs_write_booleans(FILE *savef, bool *c, int count);
+extern int rs_read_ints(int inf, int *i, int count);
+extern int rs_read_shorts(int inf, short *i, int count);
+extern int rs_read_longs(int inf, long *i, int count);
+extern int rs_read_ulongs(int inf, unsigned long *i, int count);
+extern int rs_read_booleans(int inf, bool *i, int count);
+extern int rs_write_levtype(FILE *savef, LEVTYPE c);
+extern int rs_read_levtype(int inf, LEVTYPE *l);
+extern int rs_write_char(FILE *savef, char c);
+extern int rs_read_char(int inf, char *c);
+extern int rs_write_uchar(FILE *savef, unsigned char c);
+extern int rs_read_uchar(int inf, unsigned char *c);
+extern int rs_write_string(FILE *savef, char *s);
+extern int rs_read_string_index(int inf, char master[][15], int maxindex, char **str);
+extern int rs_write_string_index(FILE *savef, char master[][15], int maxindex, char *str);
+extern int rs_read_scrolls(int inf);
+extern int rs_write_scrolls(FILE *savef);
+extern int rs_read_potions(int inf);
+extern int rs_write_potions(FILE *savef);
+extern int rs_read_rings(int inf);
+extern int rs_write_rings(FILE *savef);
+extern int rs_read_misc(int inf);
+extern int rs_write_misc(FILE *savef);
+extern int rs_write_sticks(FILE *savef);
+extern int rs_read_sticks(int inf);
+extern int rs_read_string(int inf, char *s, int max);
+extern int rs_read_new_string(int inf, char **s);
+extern int rs_write_strings(FILE *savef, char *s[], int count);
+extern int rs_write_words(FILE *savef, struct words *w, int count);
+extern int rs_read_words(int inf, struct words *w, int count);
+extern int rs_read_new_strings(int inf, char **s, int count);
+extern int rs_write_coord(FILE *savef, coord *c);
+extern int rs_read_coord(int inf, coord *c);
+extern int rs_write_daemons(FILE *savef, struct delayed_action *d_list, int count);
+extern int rs_read_daemons(int inf, struct delayed_action *d_list, int count);
+extern int rs_write_rooms(FILE *savef, struct room r[], int count);
+extern int rs_read_rooms(int inf, struct room *r, int count);
+extern int rs_write_object(FILE *savef, struct object *o);
+extern int rs_read_object(int inf, struct object *o);
+extern int rs_write_stats(FILE *savef, struct stats *s);
+extern int rs_read_stats(int inf, struct stats *s);
+extern int rs_write_mstats(FILE *savef, struct mstats *s);
+extern int rs_read_mstats(int inf, struct mstats *s);
+extern int rs_write_init_weps(FILE *savef, struct init_weps *w, int count);
+extern int rs_read_init_weps(int inf, struct init_weps *w, int count);
+extern int rs_write_init_armor(FILE *savef, struct init_armor *a, int count);
+extern int rs_read_init_armor(int inf, struct init_armor *a, int count);
+extern int rs_write_spells(FILE *savef, struct spells *s, int count);
+extern int rs_read_spells(int inf, struct spells *s, int count);
+extern int rs_write_item_list(FILE *savef, struct item_list *i);
+extern int rs_read_item_list(int inf, struct item_list *i);
+extern int rs_write_h_list(FILE *savef, struct h_list *h);
+extern int rs_read_h_list(int inf, struct h_list *h);
+extern int rs_write_death_types(FILE *savef, struct death_type *d, int count);
+extern int rs_read_death_types(int inf, struct death_type *d, int count);
+extern int rs_write_character_types(FILE *savef, struct character_types *c, int count);
+extern int rs_read_character_types(int inf, struct character_types *c, int count);
+extern int rs_write_traps(FILE *savef, struct trap *trap, int count);
+extern int rs_read_traps(int inf, struct trap *trap, int count);
+extern int rs_write_monsters(FILE *savef, struct monster *m, int count);
+extern int rs_read_monsters(int inf, struct monster *m, int count);
+extern int rs_write_coord_list(FILE *savef, struct linked_list *l);
+extern int rs_read_coord_list(int inf, struct linked_list **list);
+extern int rs_write_object_list(FILE *savef, struct linked_list *l);
+extern int rs_read_object_list(int inf, struct linked_list **list);
+extern int find_thing_coord(struct linked_list *monlist, coord *c);
+extern int find_object_coord(struct linked_list *objlist, coord *c);
+extern int rs_write_thing(FILE *savef, struct thing *t);
+extern int rs_fix_thing(struct thing *t);
+extern int rs_read_thing(int inf, struct thing *t);
+extern int find_list_ptr(struct linked_list *l, void *ptr);
+extern int list_size(struct linked_list *l);
+extern int rs_write_monster_list(FILE *savef, struct linked_list *l);
+extern void rs_fix_monster_list(struct linked_list *list);
+extern int rs_read_monster_list(int inf, struct linked_list **list);
+extern int rs_write_magic_items(FILE *savef, struct magic_item *i, int count);
+extern int rs_read_magic_items(int inf, struct magic_item *mi, int count);
+extern int rs_write_window(FILE *savef, WINDOW *win);
+extern int rs_read_window(int inf, WINDOW *win);
+extern int rs_save_file(int savefd);
+extern int rs_restore_file(int savefd);
+extern void rs_print_thing(FILE *outf, struct thing *thing, char *prefix, int list, int index);
+extern void rs_print_game_state(FILE *outf);
 /* sticks.c */
 extern void do_zap(struct thing *zapper, struct object *obj, coord *direction, int which, int flags);
 extern void drain(int ymin, int ymax, int xmin, int xmax);

@@ -164,7 +164,7 @@ m_use_relic(register struct thing *monster)
     if (obj->o_type == RELIC) switch (obj->o_which) {
         case MING_STAFF: {
             static struct object missile = {
-              MISSILE, {0,0}, "", 0, 0, "0d4 " , NULL, 0, WS_MISSILE, 100, 1
+              MISSILE, {0,0}, 0, "", "0d4 " , NULL, 0, WS_MISSILE, 100, 1
             };
 
             debug("Firing Ming's staff");

@@ -573,7 +573,8 @@ new_thing(int thing_type, bool allow_curse)
     item = new_item(sizeof *cur);
     cur = OBJPTR(item);
     cur->o_hplus = cur->o_dplus = 0;
-    cur->o_damage = cur->o_hurldmg = "0d0";
+    strcpy(cur->o_damage,"0d0");
+    strcpy(cur->o_hurldmg,"0d0");
     cur->o_ac = 0;
     cur->o_count = 1;
     cur->o_group = 0;
@@ -790,12 +791,12 @@ spec_item(int type, int which, int hit, int damage)
     obj->contents = NULL;
     obj->o_type = type;
     obj->o_which = which;
-    obj->o_damage = obj->o_hurldmg = "0d0";
+    strcpy(obj->o_damage,"0d0");
+    strcpy(obj->o_hurldmg,"0d0");
     obj->o_hplus = 0;
     obj->o_dplus = 0;
     obj->o_flags = 0;
     obj->o_mark[0] = '\0';
-    obj->o_text = NULL;
     obj->o_launch = 0;
     obj->o_weight = 0;
 

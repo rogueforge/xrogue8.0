@@ -133,12 +133,15 @@ auto_save(int sig)
  */
 
 bool
-save_file(int savefd)
+save_file(register int savefd)
 {
 #ifdef MSDOS
     extern unsigned int _asegr, _asegn; /* for MSDOS access to end of prog */
+    register unsigned long num_to_write;
 #endif
-    register unsigned long num_to_write, num_written;
+    int slines = LINES;
+    int scols = COLS;
+    int ret = FALSE;
 
     wmove(cw, lines-1, 0);
     draw(cw);
@@ -152,13 +155,19 @@ save_file(int savefd)
     num_to_write = (((unsigned long)_asegr+0x100L)<<4L) -
                    (((unsigned long)FP_SEG(version) << 4L) + FP_OFF(version));
     msg("num to write = %lx\n", num_to_write);
-#else
-    num_to_write = (char *)sbrk(0L) - version;
 #endif
-    num_written = ENCWRITE((char *)((long)version), num_to_write, savefd);
+    encwrite(version,(unsigned int)strlen(version)+1,savefd);
+    encwrite((char *)&sbuf.st_ino,sizeof(sbuf.st_ino),savefd);
+    encwrite((char *)&sbuf.st_dev,sizeof(sbuf.st_dev),savefd);
+    encwrite((char *)&sbuf.st_ctime,sizeof(sbuf.st_ctime),savefd);
+    encwrite((char *)&sbuf.st_mtime,sizeof(sbuf.st_mtime),savefd);
+    encwrite((char *)&slines,sizeof(slines),savefd);
+    encwrite((char *)&scols,sizeof(scols),savefd);
+
+    ret = rs_save_file(savefd);
+
     close(savefd);
-    if (num_to_write == num_written) return(TRUE);
-    else return(FALSE);
+    return(ret);
 }
 
 int
@@ -202,8 +211,14 @@ restore(register char *file, char **envp)
     typeahead(-1);
 #endif
 
+    initscr();
     lseek(inf, 0L, 0);
-    ENCREAD((char *)((long)version), (long)sbuf2.st_size, inf);
+    encread((char *)&sbuf.st_ino,sizeof(sbuf.st_ino), inf);
+    encread((char *)&sbuf.st_dev,sizeof(sbuf.st_dev), inf);
+    encread((char *)&sbuf.st_ctime,sizeof(sbuf.st_ctime), inf);
+    encread((char *)&sbuf.st_mtime,sizeof(sbuf.st_mtime), inf);
+    encread((char *)&lines,sizeof(lines),inf);
+    encread((char *)&cols,sizeof(cols),inf);
 
     /*
      * Get the lines and columns from the previous game
@@ -292,6 +307,22 @@ restore(register char *file, char **envp)
         }
     }
 
+    typeahead(-1);
+    cw = newwin(LINES, COLS, 0, 0);
+    mw = newwin(LINES, COLS, 0, 0);
+    hw = newwin(LINES, COLS, 0, 0);
+    msgw = newwin(4, cols, 0, 0);
+
+    keypad(cw, TRUE);
+    keypad(hw, TRUE);
+
+    if (rs_restore_file(inf) == FALSE)
+    {
+        endwin();
+        printf("Cannot restore file\n");
+        close(inf);
+        return(FALSE);
+    }
     mpos = 0;
     environ = envp;
     strcpy(file_name, file);

@@ -582,7 +582,7 @@ struct h_list helpstr[] = {
     {CTRL('R'),    "	Repeat last message"},
     {CTRL('T'),    "<dir>	Take (steal) from (direction)"},
     {CTRL('U'),    "	Use a magic item"},
-    {0, 0}
+    {0, ""}
 } ;
 
 /* wizard help list */
@@ -604,7 +604,7 @@ struct h_list wiz_help[] = {
     {CTRL('P'),    "	Toggle wizard status"},
     {CTRL('X'),    "	Detect monsters"},
     {CTRL('Y'),    "	Display food levels"},
-    {0, 0}
+    {0, ""}
 };
 
 /* item help list */
@@ -646,6 +646,6 @@ struct item_list item_help[] = {
     {'\\',   "   Forest"},
     {HORZWALL,   "   Horizontal wall of a room"},
     {VERTWALL,   "   Vertical wall of a room"},
-    {0, 0}
+    {0, ""}
 };
 

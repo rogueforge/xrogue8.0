@@ -206,6 +206,7 @@ command()
                     when CTL_END        : do_run('b');
                     when CTL_PGDN       : do_run('n'); break;
 #endif
+#endif
                     case 'h' : do_move(0, -1);
                     when 'j' : do_move(1, 0);
                     when 'k' : do_move(-1, 0);
