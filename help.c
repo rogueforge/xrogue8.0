@@ -119,7 +119,9 @@ new experience level.  The default attribute values of  the Cleric are: Int=7, \
 Str=10, Wis=14, Dxt=16, Con=15, and Chr=12.  The default gold amount is 2000 \
 pieces and default hit-points are 21.";
 
+/*
 static char *game_monst ="To be updated.";
+*/
 
 static char *game_food ="There are three types of food, regular food rations, \
 various fruits, and slime- molds.  Eating regular food will add 750 points to \
@@ -133,6 +135,7 @@ will faint and might die if they drop to 0 or    below.  At the other extreme, \
 if your food level points reach 2000 (and above)  you will become satiated.  \
 Risk eating more and you could choke to death.";
 
+/*
 static char *game_potion ="To be updated...";
 static char *game_scroll ="To be updated...";
 static char *game_ring ="To be updated...";
@@ -146,7 +149,9 @@ static char *game_traps ="To be updated...";
 static char *game_mazes ="To be updated...";
 static char *game_option ="To be updated...";
 static char *game_begin ="To be updated...";
+*/
 
+void
 ident_hero()
 {
     bool doit = TRUE;
@@ -170,7 +175,7 @@ ident_hero()
     draw(hw);
     while (doit) {
 	switch (wgetch(cw)) {
-	   when EOF:
+	   case EOF:
 	   case ESC:
 		doit = FALSE;
 	   when 'a':
@@ -323,6 +328,7 @@ ident_hero()
  * Real Help
  */
 
+void
 help()
 {
     register struct h_list *strp = helpstr;
@@ -441,12 +447,12 @@ help()
  *      Tell the player what a certain thing is.
  */
 
-identify(ch)
-register char ch;
+void
+identify(register unsigned char ch)
 {
     register char *str;
 
-    if (ch == NULL) {
+    if (ch == 0) {
         msg("What do you want identified? ");
         ch = wgetch(cw);
         mpos = 0;
@@ -456,11 +462,11 @@ register char ch;
             return;
         }
     }
-    if (isalpha(ch))
+    if (isalpha((unsigned char)ch))
         msg("Use the \"=\" command to identify monsters. ");
     else switch(ch)
     {
-        when VPLAYER:   str = "You (visibly)";
+        case VPLAYER:   str = "You (visibly)";
         when IPLAYER:   str = "You (invisibly)";
         when GOLD:      str = "Gold";
         when STAIRS:    str = (levtype == OUTSIDE) ? "Entrance to the dungeon"
@@ -498,148 +504,148 @@ register char ch;
         when RELIC:     str = "Artifact";
         otherwise:      str = "Unknown character";
     }
-    if (!isalpha(ch))
+    if (!isalpha((unsigned char)ch))
         msg("%s     %s", unctrl(ch), str);
 }
 
 /* help list */
 struct h_list helpstr[] = {
-    '?',	"    Print help",
-    '/',        "    Identify object",
-    '=',	"    Identify a screen character",
-    ' ',        "",
-    'h',        "    Move left",
-    'j',        "    Move down",
-    'k',        "    Move up",
-    'l',        "    Move right",
-    'y',        "    Move up and left",
-    'u',        "    Move up and right",
-    'b',        "    Move down and left",
-    'n',        "    Move down and right",
-    'H',        "    Run left",
-    'J',        "    Run down",
-    'K',        "    Run up",
-    'L',        "    Run right",
-    'Y',        "    Run up & left",
-    'U',        "    Run up & right",
-    'B',        "    Run down & left",
-    'N',        "    Run down & right",
-    ' ',        "",
-    '>',        "    Go down a staircase",
-    '<',        "    Go up a staircase",
-    '\\',        "	Game descriptions",
-    '.',        "	Rest for a while",
-    '*',        "	Count gold pieces",
-    'a',        "	Affect the undead",
-    'A',        "	Choose artifact (equipage)",
-    'c',        "	Chant a mantra",
-    'C',        "	Cast a spell",
-    'd',        "	Drop something",
-    'D',        "	Dip something (into a pool)",
-    'e',        "	Eat food or fruit",
-    'f',        "<dir>	Forward until find something",
-    'F',        "	Frighten a monster",
-    'g',        "	Give food to monster",
-    'G',        "	Sense for gold",
-    'i',        "	Inventory",
-    'I',        "	Inventory (single item)",
-    'm',        "	Mark an object (specific)",
-    'o',        "	Examine and/or set options",
-    'O',        "	Character type and quest item",
-    'p',        "	Pray to the powers that be",
-    'P',        "	Pick up object(s)",
-    'q',        "	Quaff a potion",
-    'Q',        "	Quit the game",
-    'r',        "	Read a scroll",
-    's',        "	Search for a trap/secret door",
-    'S',        "	Save your game",
-    't',        "<dir>	Throw something",
-    'T',        "	Take off something",
-    'v',        "	Print program version",
-    'w',        "	Wield a weapon",
-    'W',        "	Wear something",
-    'X',        "	Sense for traps",
-    'z',        "<dir>	Zap a wand or staff",
-    ' ',        "",
-    '^',        "	Set a trap",
-    '$',        "	Price an item (trading post)",
-    '#',        "	Buy an item   (trading post)",
-    '%',        "	Sell an item  (trading post)",
-    '!',        "	Shell escape",
-    ESC,        "	Cancel command (Esc)",
-    ' ',        "",
-    CTRL('B'),    "	Current score (if you win)",
-    CTRL('E'),    "	Current food level",
-    CTRL('L'),    "	Redraw the screen",
-    CTRL('N'),    "	Name an object or a monster",
-    CTRL('O'),    "	Character affect status",
-    CTRL('R'),    "	Repeat last message",
-    CTRL('T'),    "<dir>	Take (steal) from (direction)",
-    CTRL('U'),    "	Use a magic item",
-    0, 0
+    {'?',	"    Print help" },
+    {'/',        "    Identify object"},
+    {'=',	"    Identify a screen character"},
+    {' ',        ""},
+    {'h',        "    Move left"},
+    {'j',        "    Move down"},
+    {'k',        "    Move up"},
+    {'l',        "    Move right"},
+    {'y',        "    Move up and left"},
+    {'u',        "    Move up and right"},
+    {'b',        "    Move down and left"},
+    {'n',        "    Move down and right"},
+    {'H',        "    Run left"},
+    {'J',        "    Run down"},
+    {'K',        "    Run up"},
+    {'L',        "    Run right"},
+    {'Y',        "    Run up & left"},
+    {'U',        "    Run up & right"},
+    {'B',        "    Run down & left"},
+    {'N',        "    Run down & right"},
+    {' ',        ""},
+    {'>',        "    Go down a staircase"},
+    {'<',        "    Go up a staircase"},
+    {'\\',        "	Game descriptions"},
+    {'.',        "	Rest for a while"},
+    {'*',        "	Count gold pieces"},
+    {'a',        "	Affect the undead"},
+    {'A',        "	Choose artifact (equipage)"},
+    {'c',        "	Chant a mantra"},
+    {'C',        "	Cast a spell"},
+    {'d',        "	Drop something"},
+    {'D',        "	Dip something (into a pool)"},
+    {'e',        "	Eat food or fruit"},
+    {'f',        "<dir>	Forward until find something"},
+    {'F',        "	Frighten a monster"},
+    {'g',        "	Give food to monster"},
+    {'G',        "	Sense for gold"},
+    {'i',        "	Inventory"},
+    {'I',        "	Inventory (single item)"},
+    {'m',        "	Mark an object (specific)"},
+    {'o',        "	Examine and/or set options"},
+    {'O',        "	Character type and quest item"},
+    {'p',        "	Pray to the powers that be"},
+    {'P',        "	Pick up object(s)"},
+    {'q',        "	Quaff a potion"},
+    {'Q',        "	Quit the game"},
+    {'r',        "	Read a scroll"},
+    {'s',        "	Search for a trap/secret door"},
+    {'S',        "	Save your game"},
+    {'t',        "<dir>	Throw something"},
+    {'T',        "	Take off something"},
+    {'v',        "	Print program version"},
+    {'w',        "	Wield a weapon"},
+    {'W',        "	Wear something"},
+    {'X',        "	Sense for traps"},
+    {'z',        "<dir>	Zap a wand or staff"},
+    {' ',        ""},
+    {'^',        "	Set a trap"},
+    {'$',        "	Price an item (trading post)"},
+    {'#',        "	Buy an item   (trading post)"},
+    {'%',        "	Sell an item  (trading post)"},
+    {'!',        "	Shell escape"},
+    {ESC,        "	Cancel command (Esc)"},
+    {' ',        ""},
+    {CTRL('B'),    "	Current score (if you win)"},
+    {CTRL('E'),    "	Current food level"},
+    {CTRL('L'),    "	Redraw the screen"},
+    {CTRL('N'),    "	Name an object or a monster"},
+    {CTRL('O'),    "	Character affect status"},
+    {CTRL('R'),    "	Repeat last message"},
+    {CTRL('T'),    "<dir>	Take (steal) from (direction)"},
+    {CTRL('U'),    "	Use a magic item"},
+    {0, 0}
 } ;
 
 /* wizard help list */
 struct h_list wiz_help[] = {
-    ' ',        "",
-    '+',        "	Random fortunes",
-    'M',        "	Make an object",
-    'V',        "	Display vlevel and turns",
-    CTRL('A'),    "	System activity",
-    CTRL('C'),    "	Move to another dungeon level",
-    CTRL('D'),    "	Go down 1 dungeon level",
-    CTRL('F'),    "	Display the entire level",
-    CTRL('G'),    "	Charge wands and staffs",
-    CTRL('H'),    "	Jump 9 experience levels",
-    CTRL('I'),    "	Inventory of level",
-    CTRL('J'),    "	Teleport somewhere",
-    CTRL('K'),    "	Identify an object",
-    CTRL('M'),    "	Recharge wand or staff",
-    CTRL('P'),    "	Toggle wizard status",
-    CTRL('X'),    "	Detect monsters",
-    CTRL('Y'),    "	Display food levels",
-    0, 0
+    {' ',        ""},
+    {'+',        "	Random fortunes"},
+    {'M',        "	Make an object"},
+    {'V',        "	Display vlevel and turns"},
+    {CTRL('A'),    "	System activity"},
+    {CTRL('C'),    "	Move to another dungeon level"},
+    {CTRL('D'),    "	Go down 1 dungeon level"},
+    {CTRL('F'),    "	Display the entire level"},
+    {CTRL('G'),    "	Charge wands and staffs"},
+    {CTRL('H'),    "	Jump 9 experience levels"},
+    {CTRL('I'),    "	Inventory of level"},
+    {CTRL('J'),    "	Teleport somewhere"},
+    {CTRL('K'),    "	Identify an object"},
+    {CTRL('M'),    "	Recharge wand or staff"},
+    {CTRL('P'),    "	Toggle wizard status"},
+    {CTRL('X'),    "	Detect monsters"},
+    {CTRL('Y'),    "	Display food levels"},
+    {0, 0}
 };
 
 /* item help list */
 struct item_list item_help[] = {
-    '@',   "   You (visible)",
-    '_',   "   You (invisible)",
-    ' ',   "",
-    ':',   "   Food ration or fruit (eat)",
-    '!',   "   Potion (quaff)",
-    '?',   "   Scroll (read)",
-    '=',   "   Ring (wear)",
-    ')',   "   Weapon (wield)",
-    ']',   "   Armor (wear)",
-    '/',   "   Wand or staff (zap)",
-    ';',   "   Magic item (use)",
-    ',',   "   Artifact (quest item)",
-    '*',   "   Gold or zapped missile",
-    ' ',   "",
-    '$',   "   Magical item in room",
-    '>',   "   Blessed magical item",
-    '<',   "   Cursed magical item",
-    ' ',   " ",
-    '`',   "   Dart trap",
-    '{',   "   Arrow trap",
-    '}',   "   Bear trap",
-    '~',   "   Teleport trap",
-    '$',   "   Sleeping gas trap",
-    '>',   "   Trap door",
-    '<',   "   Outer region entrance",
-    '\'',   "   Maze entrance",
-    '^',   "   Trading post entrance",
-    '"',   "   Magic pool or lake",
-    ' ',   "   Solid rock or mountain",
-    '.',   "   Floor of a room or meadow",
-    '%',   "   Stairs (up or down)",
-    '+',   "   Doorway",
-    '&',   "   Secret doorway",
-    '#',   "   Passage between rooms",
-    '\\',   "   Forest",
-    HORZWALL,   "   Horizontal wall of a room",
-    VERTWALL,   "   Vertical wall of a room",
-    0, 0
+    {'@',   "   You (visible)"},
+    {'_',   "   You (invisible)"},
+    {' ',   ""},
+    {':',   "   Food ration or fruit (eat)"},
+    {'!',   "   Potion (quaff)"},
+    {'?',   "   Scroll (read)"},
+    {'=',   "   Ring (wear)"},
+    {')',   "   Weapon (wield)"},
+    {']',   "   Armor (wear)"},
+    {'/',   "   Wand or staff (zap)"},
+    {';',   "   Magic item (use)"},
+    {',',   "   Artifact (quest item)"},
+    {'*',   "   Gold or zapped missile"},
+    {' ',   ""},
+    {'$',   "   Magical item in room"},
+    {'>',   "   Blessed magical item"},
+    {'<',   "   Cursed magical item"},
+    {' ',   " "},
+    {'`',   "   Dart trap"},
+    {'{',   "   Arrow trap"},
+    {'}',   "   Bear trap"},
+    {'~',   "   Teleport trap"},
+    {'$',   "   Sleeping gas trap"},
+    {'>',   "   Trap door"},
+    {'<',   "   Outer region entrance"},
+    {'\'',   "   Maze entrance"},
+    {'^',   "   Trading post entrance"},
+    {'"',   "   Magic pool or lake"},
+    {' ',   "   Solid rock or mountain"},
+    {'.',   "   Floor of a room or meadow"},
+    {'%',   "   Stairs (up or down)"},
+    {'+',   "   Doorway"},
+    {'&',   "   Secret doorway"},
+    {'#',   "   Passage between rooms"},
+    {'\\',   "   Forest"},
+    {HORZWALL,   "   Horizontal wall of a room"},
+    {VERTWALL,   "   Vertical wall of a room"},
+    {0, 0}
 };
 

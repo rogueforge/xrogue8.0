@@ -4,6 +4,7 @@
  */
 
 #include <curses.h>
+#include <string.h>
 #include <ctype.h>
 #include "rogue.h"
 
@@ -13,15 +14,10 @@
  *            given direction
  */
 
-shoot_bolt(shooter, start, dir, get_points, reason, name, damage)
-struct thing *shooter;
-coord start, dir;
-bool get_points;
-short reason;
-char *name;
-int damage;
+void
+shoot_bolt(struct thing *shooter, coord start, coord dir, bool get_points, short reason, char *name, int damage)
 {
-    char dirch, ch;
+    char dirch = 0, ch;
     bool used, change, see_him;
     short y, x, bounces;
     coord pos;
@@ -32,7 +28,7 @@ int damage;
     } spotpos[BOLT_LENGTH];
 
     switch (dir.y + dir.x) {
-        when 0: dirch = '/';
+        case 0: dirch = '/';
         when 1: case -1: dirch = (dir.y == 0 ? '-' : '|');
         when 2: case -2: dirch = '\\';
     }
@@ -99,7 +95,7 @@ int damage;
                 msg("The %s bounces", name);
                 break;
             default:
-                if (isalpha(ch)) {
+                if (isalpha((unsigned char)ch)) {
                     register struct linked_list *item;
                     struct thing *tp;
                     register char *mname;

@@ -3,6 +3,8 @@
  */
 
 #include <curses.h>
+#include <string.h>
+#include <stdlib.h>
 #include <ctype.h>
 #include "rogue.h"
 
@@ -10,8 +12,8 @@
  * Check_residue takes care of any effect of the monster 
  */
 
-check_residue(tp)
-register struct thing *tp;
+void
+check_residue(register struct thing *tp)
 {
     /*
      * Take care of special abilities
@@ -57,11 +59,9 @@ register struct thing *tp;
  * Creat_mons creates the specified monster -- any if 0 
  */
 
-bool
-creat_mons(person, monster, report)
-struct thing *person;   /* Where to create next to */
-short monster;
-bool report;
+int
+creat_mons(struct thing *person, short monster, bool report)
+/* person - Where to create next to */
 {
     struct linked_list *nitem;
     register struct thing *tp;
@@ -116,9 +116,7 @@ bool report;
  */
 
 void
-genmonsters(least, treas)
-register int least;
-bool treas;
+genmonsters(register int least, bool treas)
 {
     reg int i;
     reg struct room *rp = &rooms[0];
@@ -165,8 +163,7 @@ bool treas;
  */
 
 short
-id_monst(monster)
-register char monster;
+id_monst(register char monster)
 {
     register short result;
 
@@ -200,18 +197,14 @@ register char monster;
  *      Pick a new monster and add it to the list
  */
 
-new_monster(item, type, cp, max_monster)
-struct linked_list *item;
-short type;
-coord *cp;
-bool max_monster;
+void
+new_monster(struct linked_list *item, short type, coord *cp, bool max_monster)
 {
     register struct thing *tp;
     register struct monster *mp;
     register char *ip, *hitp;
     register int i, min_intel, max_intel;
     register int num_dice, num_sides=8, num_extra=0;
-    char *strchr();
 
     attach(mlist, item);
     tp = THINGPTR(item);
@@ -384,13 +377,13 @@ bool max_monster;
 
     if (on(*tp, ISDISGUISE))
     {
-        char mch;
+        char mch = 0;
 
         if (tp->t_pack != NULL)
             mch = (OBJPTR(tp->t_pack))->o_type;
         else
             switch (rnd(10)) {
-                when 0: mch = GOLD;
+                case 0: mch = GOLD;
                 when 1: mch = POTION;
                 when 2: mch = SCROLL;
                 when 3: mch = FOOD;
@@ -412,8 +405,7 @@ bool max_monster;
  */
 
 short
-randmonster(wander, no_unique)
-register bool wander, no_unique;
+randmonster(register bool wander, register bool no_unique)
 {
     register int d, cur_level, range, i; 
 
@@ -475,8 +467,8 @@ register bool wander, no_unique;
  * to purchase something.
  */
 
-sell(tp)
-register struct thing *tp;
+void
+sell(register struct thing *tp)
 {
     register struct linked_list *item, *seller;
     register struct linked_list *sellpack;
@@ -550,7 +542,7 @@ register struct thing *tp;
 
     /* If a stick or ring, let player know the type */
     switch (obj->o_type) {
-        when RING:   r_know[obj->o_which]  = TRUE;
+        case RING:   r_know[obj->o_which]  = TRUE;
         when POTION: p_know[obj->o_which]  = TRUE;
         when SCROLL: s_know[obj->o_which]  = TRUE;
         when STICK:  ws_know[obj->o_which] = TRUE;
@@ -575,8 +567,7 @@ register struct thing *tp;
  */
 
 struct linked_list *
-wake_monster(y, x)
-int y, x;
+wake_monster(int y, int x)
 {
     register struct thing *tp;
     register struct linked_list *it;
@@ -626,12 +617,12 @@ int y, x;
     /*
      * Every time he sees mean monster, it might start chasing him
      */
-    if (on(*tp, ISMEAN)  && 
+    if ((on(*tp, ISMEAN)  && 
         off(*tp, ISHELD) && 
         off(*tp, ISRUN)  && 
         rnd(100) > 35    && 
         (!is_stealth(&player) || (on(*tp, ISUNIQUE) && rnd(100) > 35)) &&
-        (off(player, ISINVIS) || on(*tp, CANSEE)) ||
+        (off(player, ISINVIS) || on(*tp, CANSEE))) ||
         (trp != NULL && (trp->r_flags & ISTREAS))) {
         runto(tp, &hero);
     }
@@ -773,6 +764,7 @@ int y, x;
  *      A wandering monster has awakened and is headed for the player
  */
 
+void
 wanderer()
 {
     register int i;

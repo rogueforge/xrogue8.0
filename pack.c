@@ -1,4 +1,5 @@
 #include <curses.h>
+#include <string.h>
 #include <ctype.h>
 #include "rogue.h"
 #ifdef PC7300
@@ -16,14 +17,12 @@
  */
 
 bool
-add_pack(item, silent)
-register struct linked_list *item;
-bool silent;
+add_pack(register struct linked_list *item, bool silent)
 {
-    register struct linked_list *ip, *lp, *ap;
+    register struct linked_list *ip, *lp = NULL, *ap;
     register struct object *obj, *op;
     register bool exact, from_floor;
-    bool giveflag;
+    bool giveflag = 0;
     static long	cleric	 = C_CLERIC,
 		monk	 = C_MONK,
 		magician = C_MAGICIAN,
@@ -244,7 +243,7 @@ picked_up:
     if (obj->o_type == RELIC) {
         switch (obj->o_which) {
             /* the ankh of Heil gives you prayers */
-            when HEIL_ANKH:
+            case HEIL_ANKH:
                 msg("The ankh welds itself into your hand. ");
                 if (player.t_ctype != C_CLERIC && player.t_ctype != C_PALADIN)
                     fuse(prayer_recovery, (VOID *)NULL, SPELLTIME, AFTER);
@@ -343,7 +342,7 @@ picked_up:
                     else purse = 1; /* fudge to get right msg from eat_gold() */
 
                     eat_gold(obj);
-                    daemon(eat_gold, obj, AFTER);
+                    start_daemon(eat_gold, obj, AFTER);
                 }
 		/* start a fuse to change player into a thief */
 		if (quest_item != MUSTY_DAGGER) {
@@ -423,7 +422,7 @@ picked_up:
                         else purse = 1; /* fudge to get right msg */
 
                         eat_gold(obj);
-                        daemon(eat_gold, obj, AFTER);
+                        start_daemon(eat_gold, obj, AFTER);
 		    }
 		}
 		else {
@@ -432,7 +431,7 @@ picked_up:
                     else purse = 1; /* fudge to get right msg */
 
                     eat_gold(obj);
-                    daemon(eat_gold, obj, AFTER);
+                    start_daemon(eat_gold, obj, AFTER);
                 }
 
         otherwise:
@@ -456,13 +455,12 @@ static char Displines[MAXPACK+1][LINELEN+1];    /* The lines themselves */
  *      list what is in the pack
  */
 
-inventory(list, type)
-register struct linked_list *list;
-register int type;
+int
+inventory(register struct linked_list *list, register int type)
 {
     register struct object *obj;
     register char ch;
-    register int n_objs, cnt, maxx, curx;
+    register int n_objs, cnt, maxx = 0, curx;
     char inv_temp[2*LINELEN+1];
 
     cnt = 0;
@@ -492,7 +490,7 @@ register int type;
                     waddstr(hw, inv_temp);
                     waddch(hw, '\n');
 
-                    maxx = strlen(inv_temp);    /* Length of the listing */
+                    maxx = (int) strlen(inv_temp);    /* Length of the listing */
 
 #ifdef PC7300
                     /* Put it into the PC menu display */
@@ -517,7 +515,7 @@ register int type;
                         wclear(hw);
                     }
                     sprintf(inv_temp, "%c) %s\n", ch, inv_name(obj, FALSE));
-                    curx = strlen(inv_temp) - 1; /* Don't count new-line */
+                    curx = (int) strlen(inv_temp) - 1; /* Don't count new-line */
                     if (curx > maxx) maxx = curx;
                     waddstr(hw, inv_temp);
 #ifdef PC7300
@@ -569,7 +567,7 @@ register int type;
         if (menu(&Display) >= 0) return TRUE;
 #endif
         waddstr(hw, spacemsg);
-        curx = strlen(spacemsg);
+        curx = (int) strlen(spacemsg);
         if (curx > maxx) maxx = curx;
 
         /*
@@ -651,11 +649,8 @@ picky_inven()
  */
 
 struct linked_list *
-get_item(list, purpose, type, askfirst, showcost)
-reg struct linked_list *list;
-char *purpose;  /* NULL if we should be silent (no prompts) */
-int type;
-bool askfirst, showcost;
+get_item(reg struct linked_list *list, char *purpose, int type, bool askfirst, bool showcost)
+/* purpose - NULL if we should be silent (no prompts) */
 {
     reg struct linked_list *item;
     reg struct object *obj;
@@ -674,7 +669,7 @@ bool askfirst, showcost;
     /* Get a capitalized purpose for starting sentences */
     if (purpose) {
             strcpy(cap_purpose, purpose);
-            cap_purpose[0] = toupper(cap_purpose[0]);
+            cap_purpose[0] = toupper((unsigned char)cap_purpose[0]);
     }
 
     /*
@@ -772,7 +767,7 @@ bool askfirst, showcost;
                 }
                 sprintf(description,"%c) %s%s\n\r",ch,cost,inv_name(obj,FALSE));
                 waddstr(hw, description);
-                curx = strlen(description) - 2; /* Don't count \n or \r */
+                curx = (int) strlen(description) - 2; /* Don't count \n or \r */
                 if (maxx < curx) maxx = curx;
 #ifdef PC7300
                 if (usemenu) {
@@ -796,7 +791,7 @@ bool askfirst, showcost;
             if (purpose) sprintf(description, "%s what? ", cap_purpose);
             else strcpy(description, spacemsg);
             waddstr(hw, description);
-            curx = strlen(description);
+            curx = (int) strlen(description);
             if (maxx < curx) maxx = curx;
 
 #ifdef PC7300
@@ -847,7 +842,7 @@ bool askfirst, showcost;
 #endif
             /* Write the screen */
             if ((menu_overlay && cnt < lines - 3) || cnt == 1) {
-                over_win(cw, hw, cnt + 2, maxx + 3, cnt, curx, NULL);
+                over_win(cw, hw, cnt + 2, maxx + 3, cnt, curx, 0);
                 cnt = -1;       /* Indicate we used over_win */
             }
             else draw(hw);
@@ -906,9 +901,8 @@ bool askfirst, showcost;
     }
 }
 
-pack_char(list, obj)
-register struct object *obj;
-struct linked_list *list;
+char
+pack_char(struct linked_list *list, register struct object *obj)
 {
     register struct linked_list *item;
     register char c;
@@ -930,8 +924,8 @@ struct linked_list *list;
  *      This updates cur_weapon etc for dropping things
  */
 
-cur_null(op)
-reg struct object *op;
+void
+cur_null(reg struct object *op)
 {
         if (op == cur_weapon)             cur_weapon = NULL;
         else if (op == cur_armor)         cur_armor = NULL;
@@ -956,6 +950,7 @@ reg struct object *op;
  *      Identify all the items in the pack
  */
 
+void
 idenpack()
 {
         reg struct linked_list *pc;
@@ -964,9 +959,8 @@ idenpack()
                 whatis(pc);
 }
 
-is_type (obj, type)
-register struct object *obj;
-register int type;
+int
+is_type (register struct object *obj, register int type)
 {
     register bool current;
 
@@ -974,7 +968,7 @@ register int type;
         return (TRUE);
 
     switch (type) {
-        when ALL:
+        case ALL:
             return (TRUE);
         when READABLE:
             if (obj->o_type == SCROLL ||
@@ -988,7 +982,7 @@ register int type;
             if (obj->o_type == STICK) return (TRUE);
             if (obj->o_type == RELIC)
                 switch (obj->o_which) {
-                    when MING_STAFF:
+                    case MING_STAFF:
                     case ASMO_ROD:
                     case ORCUS_WAND:
                     case EMORI_CLOAK:
@@ -1006,15 +1000,15 @@ register int type;
             else if (type == REMOVABLE && !current) return (FALSE);
 
             switch (obj->o_type) {
-                when RELIC:
+                case RELIC:
                     switch (obj->o_which) {
-                        when HEIL_ANKH:
+                        case HEIL_ANKH:
                         case EMORI_CLOAK:
                             return (TRUE);
                     }
                 when MM:
                     switch (obj->o_which) {
-                        when MM_ELF_BOOTS:
+                        case MM_ELF_BOOTS:
                         case MM_DANCE:
                         case MM_BRACERS:
                         case MM_DISP:
@@ -1034,7 +1028,7 @@ register int type;
             }
         when CALLABLE:
             switch (obj->o_type) {
-            when RING:          if (!r_know[obj->o_which]) return(TRUE);
+            case RING:          if (!r_know[obj->o_which]) return(TRUE);
             when POTION:        if (!p_know[obj->o_which]) return(TRUE);
             when STICK:         if (!ws_know[obj->o_which]) return(TRUE);
             when SCROLL:        if (!s_know[obj->o_which]) return(TRUE);
@@ -1042,12 +1036,12 @@ register int type;
             }
         when WIELDABLE:
             switch (obj->o_type) {
-                when STICK:
+                case STICK:
                 case WEAPON:
                     return(TRUE);
                 when RELIC:
                     switch (obj->o_which) {
-                        when MUSTY_DAGGER:
+                        case MUSTY_DAGGER:
                         case HRUGGEK_MSTAR:
                         case YEENOGHU_FLAIL:
                         case AXE_AKLAD:
@@ -1062,7 +1056,7 @@ register int type;
                 return (TRUE);
             if (obj->o_type == MM) {
               switch (obj->o_which) {
-                when MM_JUG:
+                case MM_JUG:
                     /* Can still identify a jug if we don't know the potion */
                     if (obj->o_ac != JUG_EMPTY && !p_know[obj->o_ac])
                         return (TRUE);
@@ -1071,7 +1065,7 @@ register int type;
         when USEABLE:
             if (obj->o_type == MM) {
                 switch(obj->o_which) {
-                when MM_BEAKER:
+                case MM_BEAKER:
                 case MM_BOOK:
                 case MM_OPEN:
                 case MM_HUNGER:
@@ -1085,7 +1079,7 @@ register int type;
             }
             else if (obj->o_type == RELIC) {
                 switch (obj->o_which) {
-                    when EMORI_CLOAK:
+                    case EMORI_CLOAK:
                     case BRIAN_MANDOLIN:
                     case HEIL_ANKH:
                     case YENDOR_AMULET:
@@ -1107,7 +1101,7 @@ register int type;
             }
         when PROTECTABLE:
             switch (obj->o_type) {
-                when WEAPON:
+                case WEAPON:
                     if ((obj->o_flags & ISMETAL) == 0) return (FALSE);
 
                     /* Fall through */
@@ -1121,8 +1115,8 @@ register int type;
     return(FALSE);
 }
 
-del_pack(item)
-register struct linked_list *item;
+void
+del_pack(register struct linked_list *item)
 {
     register struct object *obj;
 
@@ -1144,9 +1138,8 @@ register struct linked_list *item;
  * it to him.
  */
 
-carry_obj(mp, chance)
-register struct thing *mp;
-int chance;
+void
+carry_obj(register struct thing *mp, int chance)
 {
     reg struct linked_list *item;
     reg struct object *obj;
@@ -1169,75 +1162,75 @@ int chance;
      */
     if (on(*mp, ISUNIQUE)) {
         if (on(*mp, CARRYMDAGGER)) {
-            item = spec_item(RELIC, MUSTY_DAGGER, NULL, NULL);
+            item = spec_item(RELIC, MUSTY_DAGGER, 0, 0);
             obj = OBJPTR(item);
             obj->o_pos = mp->t_pos;
             attach(mp->t_pack, item);
         }
 
         if (on(*mp, CARRYCLOAK)) {
-            item = spec_item(RELIC, EMORI_CLOAK, NULL, NULL);
+            item = spec_item(RELIC, EMORI_CLOAK, 0, 0);
             obj = OBJPTR(item);
             obj->o_pos = mp->t_pos;
             attach(mp->t_pack, item);
         }
 
         if (on(*mp, CARRYANKH)) {
-            item = spec_item(RELIC, HEIL_ANKH, NULL, NULL);
+            item = spec_item(RELIC, HEIL_ANKH, 0, 0);
             obj = OBJPTR(item);
             obj->o_pos = mp->t_pos;
             attach(mp->t_pack, item);
         }
 
         if (on(*mp, CARRYSTAFF)) {
-            item = spec_item(RELIC, MING_STAFF, NULL, NULL);
+            item = spec_item(RELIC, MING_STAFF, 0, 0);
             obj = OBJPTR(item);
             obj->o_pos = mp->t_pos;
             attach(mp->t_pack, item);
         }
 
         if (on(*mp, CARRYWAND)) {
-            item = spec_item(RELIC, ORCUS_WAND, NULL, NULL);
+            item = spec_item(RELIC, ORCUS_WAND, 0, 0);
             obj = OBJPTR(item);
             obj->o_pos = mp->t_pos;
             attach(mp->t_pack, item);
         }
 
         if (on(*mp, CARRYROD)) {
-            item = spec_item(RELIC, ASMO_ROD, NULL, NULL);
+            item = spec_item(RELIC, ASMO_ROD, 0, 0);
             obj = OBJPTR(item);
             obj->o_pos = mp->t_pos;
             attach(mp->t_pack, item);
         }
 
         if (on(*mp, CARRYYAMULET)) {
-            item = spec_item(RELIC, YENDOR_AMULET, NULL, NULL);
+            item = spec_item(RELIC, YENDOR_AMULET, 0, 0);
             obj = OBJPTR(item);
             obj->o_pos = mp->t_pos;
             attach(mp->t_pack, item);
         }
 
         if (on(*mp, CARRYBAMULET)) {
-            item = spec_item(RELIC, STONEBONES_AMULET, NULL, NULL);
+            item = spec_item(RELIC, STONEBONES_AMULET, 0, 0);
             obj = OBJPTR(item);
             obj->o_pos = mp->t_pos;
             attach(mp->t_pack, item);
         }
 
         if (on(*mp, CARRYMANDOLIN)) {
-            item = spec_item(RELIC, BRIAN_MANDOLIN, NULL, NULL);
+            item = spec_item(RELIC, BRIAN_MANDOLIN, 0, 0);
             obj = OBJPTR(item);
             obj->o_pos = mp->t_pos;
             attach(mp->t_pack, item);
         }
         if (on(*mp, CARRYEYE)) {
-            item = spec_item(RELIC, EYE_VECNA, NULL, NULL);
+            item = spec_item(RELIC, EYE_VECNA, 0, 0);
             obj = OBJPTR(item);
             obj->o_pos = mp->t_pos;
             attach(mp->t_pack, item);
         }
         if (on(*mp, CARRYAXE)) {
-            item = spec_item(RELIC, AXE_AKLAD, NULL, NULL);
+            item = spec_item(RELIC, AXE_AKLAD, 0, 0);
             obj = OBJPTR(item);
             obj->o_pos = mp->t_pos;
             attach(mp->t_pack, item);
@@ -1245,7 +1238,7 @@ int chance;
         if (on(*mp, CARRYQUILL)) {
             register int i, howmany;
 
-            item = spec_item(RELIC, QUILL_NAGROM, NULL, NULL);
+            item = spec_item(RELIC, QUILL_NAGROM, 0, 0);
             obj = OBJPTR(item);
             obj->o_pos = mp->t_pos;
             obj->o_charges = rnd(QUILLCHARGES);
@@ -1262,31 +1255,31 @@ int chance;
             }
         }
         if (on(*mp, CARRYMSTAR)) {
-            item = spec_item(RELIC, HRUGGEK_MSTAR, NULL, NULL);
+            item = spec_item(RELIC, HRUGGEK_MSTAR, 0, 0);
             obj = OBJPTR(item);
             obj->o_pos = mp->t_pos;
             attach(mp->t_pack, item);
         }
         if (on(*mp, CARRYFLAIL)) {
-            item = spec_item(RELIC, YEENOGHU_FLAIL, NULL, NULL);
+            item = spec_item(RELIC, YEENOGHU_FLAIL, 0, 0);
             obj = OBJPTR(item);
             obj->o_pos = mp->t_pos;
             attach(mp->t_pack, item);
         }
         if (on(*mp, CARRYHORN)) {
-            item = spec_item(RELIC, GERYON_HORN, NULL, NULL);
+            item = spec_item(RELIC, GERYON_HORN, 0, 0);
             obj = OBJPTR(item);
             obj->o_pos = mp->t_pos;
             attach(mp->t_pack, item);
         }
         if (on(*mp, CARRYSURTURRING)) {
-            item = spec_item(RELIC, SURTUR_RING, NULL, NULL);
+            item = spec_item(RELIC, SURTUR_RING, 0, 0);
             obj = OBJPTR(item);
             obj->o_pos = mp->t_pos;
             attach(mp->t_pack, item);
         }
         if (on(*mp, CARRYCARD)) {
-            item = spec_item(RELIC, ALTERAN_CARD, NULL, NULL);
+            item = spec_item(RELIC, ALTERAN_CARD, 0, 0);
             obj = OBJPTR(item);
             obj->o_pos = mp->t_pos;
             attach(mp->t_pack, item);
@@ -1296,7 +1289,7 @@ int chance;
      * If it carries gold, give it some
      */
     if (on(*mp, CARRYGOLD) && rnd(100) < chance) {
-            item = spec_item(GOLD, NULL, NULL, NULL);
+            item = spec_item(GOLD, 0, 0, 0);
             obj = OBJPTR(item);
             obj->o_count = GOLDCALC + GOLDCALC;
             obj->o_pos = mp->t_pos;
@@ -1309,7 +1302,7 @@ int chance;
     if (on(*mp, CARRYFOOD) && rnd(100) < chance) {
         int type;
         switch (rnd(41)) {
-            when 3:  type = E_APPLE;
+            case 3:  type = E_APPLE;
             when 6:  type = E_HAGBERRY;
             when 9:  type = E_SOURSOP;
             when 12: type = E_RAMBUTAN;
@@ -1324,7 +1317,7 @@ int chance;
             when 40: type = E_SLIMEMOLD;  /* monster food */
             otherwise: type = E_RATION;
         }
-        item = spec_item(FOOD, type, NULL, NULL);
+        item = spec_item(FOOD, type, 0, 0);
         obj = OBJPTR(item);
         obj->o_weight = things[TYP_FOOD].mi_wght;
         obj->o_pos = mp->t_pos;
@@ -1343,7 +1336,7 @@ int chance;
 
         /* Only choose an appropriate type of weapon */
         switch (rnd(12)) {
-            when 0: type = DAGGER;
+            case 0: type = DAGGER;
             when 1: type = BATTLEAXE;
             when 2: type = MACE;
             when 3: type = SWORD;
@@ -1448,8 +1441,8 @@ int chance;
  *      he wants (* means everything).
  */
 
-grab(y, x)
-register y, x;
+int
+grab(register int y, register int x)
 {
     register struct linked_list *next_item, *item;
     register struct object *obj;
@@ -1488,7 +1481,7 @@ register y, x;
             sprintf(linebuf, "%c) %s\n\r", ch, inv_name(obj,FALSE));
 
             /* See how long it is */
-            curlen = strlen(linebuf) - 2; /* Don't count \n or \r */
+            curlen = (int) strlen(linebuf) - 2; /* Don't count \n or \r */
             if (maxlen < curlen) maxlen = curlen;
 
             /* Draw it in the window */
@@ -1506,7 +1499,7 @@ register y, x;
         strcpy(linebuf, "Pick up what? (* for all): ");
 
         /* See how long it is */
-        curlen = strlen(linebuf); /* Don't count \n or \r */
+        curlen = (int) strlen(linebuf); /* Don't count \n or \r */
         if (maxlen < curlen) maxlen = curlen;
 
         /* Draw it in the window */
@@ -1517,7 +1510,7 @@ register y, x;
          * Leave 3 blank lines at the bottom and 3 blank columns to he right.
          */
         if (menu_overlay && num_there < lines - 3) {
-          over_win(cw, hw, num_there + 2, maxlen + 3, num_there, curlen, NULL);
+          over_win(cw, hw, num_there + 2, maxlen + 3, num_there, curlen, 0);
           pagecnt = -1; /* Indicate we used over_win */
         }
         else draw(hw);          /* write screen */
@@ -1566,7 +1559,7 @@ register y, x;
                  */
                 if (menu_overlay && num_there < lines - 3) {
                     over_win(cw, hw, num_there + 2, maxlen + 3,
-                                num_there, 49, NULL);
+                                num_there, 49, 0);
                     cnt = -1;   /* Indicate we used over_win */
                 }
                 else draw(hw);          /* write screen */
@@ -1605,19 +1598,19 @@ register y, x;
  *      Create a pack for sellers (a la quartermaster)
  */
 
-make_sell_pack(tp)
-struct thing *tp;
+void
+make_sell_pack(struct thing *tp)
 {
     reg struct linked_list *item;
     reg struct object *obj;
-    reg int sell_type, nitems, i;
+    reg int sell_type = 0, nitems, i;
 
     /* Select the items */
     nitems = rnd(5) + 7;
 
     switch (rnd(14)) {
         /* Armor */
-        when 0:
+        case 0:
         case 1:
             turn_on(*tp, CARRYARMOR);
             sell_type = TYP_ARMOR;

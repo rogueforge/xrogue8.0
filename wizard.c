@@ -4,7 +4,9 @@
  */
 
 #include <curses.h>
+#include <stdlib.h>
 #include <ctype.h>
+#include <crypt.h>
 #ifdef BSD
 #include <strings.h>
 #else
@@ -21,9 +23,8 @@
  *      Create any object for wizard, scroll, magician, or cleric
  */
 
-create_obj(prompt, which_item, which_type)
-bool prompt;
-int which_item, which_type;
+void
+create_obj(bool prompt, int which_item, int which_type)
 {
     reg struct linked_list *item;
     reg struct object *obj;
@@ -208,7 +209,7 @@ int which_item, which_type;
     if (whc < 0)
         obj->o_flags |= ISCURSED;
     switch (obj->o_type) {
-        when WEAPON:
+        case WEAPON:
         case ARMOR:
             if (obj->o_type == WEAPON) {
                 init_weapon(obj, wh);
@@ -241,9 +242,9 @@ int which_item, which_type;
                 obj->o_flags |= ISBLESSED;
             m_know[wh] = TRUE;
             switch(wh) {
-                when MM_JUG:
+                case MM_JUG:
                     switch(rnd(11)) {
-                        when 0: obj->o_ac = P_PHASE;
+                        case 0: obj->o_ac = P_PHASE;
                         when 1: obj->o_ac = P_CLEAR;
                         when 2: obj->o_ac = P_SEEINVIS;
                         when 3: obj->o_ac = P_HEALING;
@@ -305,7 +306,7 @@ int which_item, which_type;
         when RELIC:
             obj->o_weight = things[TYP_RELIC].mi_wght;
             switch (obj->o_which) {
-                when QUILL_NAGROM: obj->o_charges = QUILLCHARGES;
+                case QUILL_NAGROM: obj->o_charges = QUILLCHARGES;
                 when EMORI_CLOAK:  obj->o_charges = 1;
                 otherwise: break;
             }
@@ -344,6 +345,7 @@ getbless()
  * get a non-monster death type
  */
 
+int
 getdeath()
 {
     register int i;
@@ -381,9 +383,9 @@ static char Displines[NUMMONST+1][LINELEN+1];   /* The lines themselves */
  * make a monster for the wizard
  */
 
-makemonster(showall, label, action) 
-bool showall;   /* showall -> show uniques and genocided creatures */
-char *label, *action;
+int
+makemonster(bool showall, char *label, char *action) 
+/* showall -> show uniques and genocided creatures */
 {
     register int i;
     register short which_monst;
@@ -441,7 +443,7 @@ char *label, *action;
     }
 
     while (num_monst > 0) {
-        register left_limit;
+        register int left_limit;
 
         if (num_monst < num_lines) left_limit = (num_monst+1)/2;
         else left_limit = num_lines/2;
@@ -521,7 +523,7 @@ bool
 passwd()
 {
     register char *sp, c;
-    char buf[LINELEN], *crypt();
+    char buf[LINELEN];
 
     msg("Wizard's Password:");
     mpos = 0;
@@ -578,10 +580,11 @@ passwd()
  *      Bamf the hero someplace else
  */
 
+int
 teleport()
 {
     register struct room *new_rp, *old_rp = roomin(&hero);
-    register int rm, which;
+    register int rm = 0, which;
     coord old;
     bool got_position = FALSE;
 
@@ -679,8 +682,8 @@ teleport()
  *      What a certin object is
  */
 
-whatis(what)
-struct linked_list *what;
+void
+whatis(struct linked_list *what)
 {
     register struct object *obj;
     register struct linked_list *item;
@@ -693,7 +696,7 @@ struct linked_list *what;
         item = what;
     obj = OBJPTR(item);
     switch (obj->o_type) {
-        when SCROLL:
+        case SCROLL:
             s_know[obj->o_which] = TRUE;
             if (s_guess[obj->o_which]) {
                 free(s_guess[obj->o_which]);
@@ -743,6 +746,7 @@ struct linked_list *what;
  *      (if on STARTLEV equipage level = 0)
  */
 
+void
 choose_qst()
 {
     bool doit = TRUE;
@@ -775,7 +779,7 @@ choose_qst()
         if (menu_overlay)  /* Print the selections.  The longest line is
 			    * Hruggek (26 characters).  The prompt is 21.
 			    */
-            over_win(cw, hw, 20, 29, 0, 21, NULL);
+            over_win(cw, hw, 20, 29, 0, 21, 0);
         else
     	    draw(hw);
 

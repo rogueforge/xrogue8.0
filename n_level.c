@@ -7,17 +7,18 @@
  *      Dig and draw a new level
  */
 
-new_level(ltype)
-LEVTYPE ltype;          /* designates type of level to create */
+void
+new_level(LEVTYPE ltype)
+/* ltype - designates type of level to create */
 {
-    register int rm, i, cnt;
+    register int rm = 0, i, cnt;
     register char ch;
     register struct linked_list *item;
     register struct thing *tp;
     register struct object *obj;
     int waslit = 0;     /* Was the previous outside level lit? */
     int starty, startx, deltay, deltax;
-    bool fresh=TRUE, vert, top;
+    bool fresh=TRUE, vert=0, top;
     struct room *rp;
     struct linked_list *nitem, *savmonst=NULL, *savitems=NULL;
     coord stairs;
@@ -367,7 +368,7 @@ LEVTYPE ltype;          /* designates type of level to create */
                 else ch = (char) rnd(9);
 
                 switch((int) ch) {
-                    when 0: ch = TRAPDOOR;
+                    case 0: ch = TRAPDOOR;
                     when 1: ch = BEARTRAP;
                     when 2: ch = SLEEPTRAP;
                     when 3: ch = ARROWTRAP;
@@ -438,18 +439,20 @@ LEVTYPE ltype;          /* designates type of level to create */
 
     if (level > cur_max)
         cur_max = level;
-        draw(cw);
+
+    draw(cw);
 
     status(TRUE);
 
     /* Do we sense any food on this level? */
-    if (cur_relic[SURTUR_RING]) quaff(P_FFIND, NULL, NULL, FALSE);
+    if (cur_relic[SURTUR_RING]) quaff(P_FFIND, 0, 0, FALSE);
 }
 
 /*
  * Pick a room that is really there
  */
 
+int
 rnd_room()
 {
     register int rm;
@@ -468,8 +471,9 @@ rnd_room()
  *      put potions and scrolls on this level
  */
 
-put_things(ltype)
-LEVTYPE ltype;          /* designates type of level to create */
+void
+put_things(LEVTYPE ltype)
+/* ltype - designates type of level to create */
 {
     register int i, rm, cnt;
     register struct object *cur;
@@ -492,7 +496,7 @@ LEVTYPE ltype;          /* designates type of level to create */
      * There is a chance that there is a Treasure Room on this level 
      */
     if (ltype == NORMLEV && rnd(150) < level) {
-        register  j;
+        register int j;
         register struct room *rp;
 
         /* Count the number of free spaces */

@@ -17,7 +17,6 @@
 #define SCOREFILE       "\\rogue\\score"
 #endif
 
-#define SCOREFILE       "/usr/games/lib/xrogue_roll"
 #ifndef SCOREFILE
 #define SCOREFILE       "/usr/games/lib/xrogue_roll"
 #endif

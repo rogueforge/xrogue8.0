@@ -3,8 +3,12 @@
  */
 
 #include <curses.h>
+#include <string.h>
+#include <stdlib.h>
 #include <ctype.h>
 #include <signal.h>
+#include <unistd.h>
+#include <wait.h>
 #include "mach_dep.h"
 #include "rogue.h"
 #ifdef PC7300
@@ -16,14 +20,14 @@ extern struct uwdata wdata;
  *      Process the user commands
  */
 
+void
 command()
 {
     unsigned int ch;
     struct linked_list *item;
-    unsigned int countch, direction, newcount = FALSE;
+    unsigned int countch = 0, direction = 0, newcount = FALSE;
     int segment = 1;
     int monst_limit, monst_current;
-
     monst_limit = monst_current = 1;
     while (playing) {
         /*
@@ -149,7 +153,7 @@ command()
 
                 /* Perform the action */
                 switch (ch) {
-                    when 'f':
+                    case 'f':
                         if (!on(player, ISBLIND))
                         {
                             door_stop = TRUE;
@@ -176,19 +180,30 @@ command()
                     count--;
                 switch (ch) {
 #if !MSDOS
-                    when '!' : shell();
+                    case '!' : shell(); break;
 #endif
 #if USG5_2 || MSDOS
-                    when KEY_LEFT       : do_move(0, -1);
+                    case KEY_LEFT       : do_move(0, -1);
                     when KEY_DOWN       : do_move(1, 0);
                     when KEY_UP         : do_move(-1, 0);
                     when KEY_RIGHT      : do_move(0, 1);
                     when KEY_A1         : do_move(-1, -1);
                     when KEY_A3         : do_move(-1, 1);
                     when KEY_C1         : do_move(1, -1);
-                    when KEY_C3         : do_move(1, 1);
+                    when KEY_NPAGE      : do_move(1, 1);
+                    when KEY_C3         : do_move(1, 1); break;
+#ifdef CTL_RIGHT
+                    case CTL_RIGHT      : do_run('l');
+                    when CTL_LEFT       : do_run('h');
+                    when CTL_UP         : do_run('k');
+                    when CTL_DOWN       : do_run('j');
+                    when CTL_HOME       : do_run('y');
+                    when CTL_PGUP       : do_run('u');
+                    when CTL_END        : do_run('b');
+                    when CTL_PGDN       : do_run('n'); break;
 #endif
-                    when 'h' : do_move(0, -1);
+#endif
+                    case 'h' : do_move(0, -1);
                     when 'j' : do_move(1, 0);
                     when 'k' : do_move(-1, 0);
                     when 'l' : do_move(0, 1);
@@ -301,7 +316,7 @@ command()
                             buy_it();
                             after = FALSE;
                         }
-                    when 'Q' : after = FALSE; quit();
+                    when 'Q' : after = FALSE; quit(0);
                     when 'S' : 
                         after = FALSE;
                         if (save_game())
@@ -339,14 +354,14 @@ command()
 		    /* when '\\' : after = FALSE; ident_hero(); */
 		    when '\\' : msg("Charon (the Boatman) looks at you... ");
 
-                    when '/' : after = FALSE; identify(NULL);
+                    when '/' : after = FALSE; identify('\0');
                     when C_COUNT : count_gold();
                     when C_DIP : dip_it();
                     when C_DROP : player.t_action = C_DROP; 
                                   drop((struct linked_list *)NULL);
                     when C_EAT : eat();
-                    when C_QUAFF : quaff(-1, NULL, NULL, TRUE);
-                    when C_READ : read_scroll(-1, NULL, TRUE);
+                    when C_QUAFF : quaff(-1, 0, 0, TRUE);
+                    when C_READ : read_scroll(-1, 0, TRUE);
                     when C_SETTRAP : set_trap(&player, hero.y, hero.x);
                     when C_SEARCH :
                         if (player.t_action == A_NIL) {
@@ -361,7 +376,7 @@ command()
                     when C_USE : use_mm(-1);
                     when C_WEAR : wear();
                     when C_WIELD : wield();
-                    when C_ZAP : if (!player_zap(NULL, FALSE)) after=FALSE;
+                    when C_ZAP : if (!player_zap(0, FALSE)) after=FALSE;
                     when C_CAST : cast();
                     when C_CHANT : chant();
                     when C_PRAY : pray();
@@ -405,7 +420,7 @@ command()
                         after = FALSE;
 		    when '+':	/* instant karma! */
 			switch (rnd(100)) {
-			    when 0:  msg("You waste some time. ");
+			    case 0:  msg("You waste some time. ");
 			    when 5:  msg("An oak tree in the garden. ");
 			    when 10: msg("Character is what you become in the dark. ");
 			    when 15: msg("May you live all the days of your life. ");
@@ -452,7 +467,7 @@ command()
                         after = FALSE;
 #ifdef WIZARD
                         if (wizard) switch (ch) {
-                            when 'M' : create_obj(TRUE, 0, 0);
+                            case 'M' : create_obj(TRUE, 0, 0);
                             when 'V' : msg("vlevel = %d  turns = %d",
                                            vlevel, turns);
                             when CTRL('A') : activity();
@@ -620,6 +635,7 @@ command()
  *      tell the player what is at a certain coordinates assuming
  *      it can be seen.
  */
+void
 display()
 {
     coord c;
@@ -655,8 +671,7 @@ display()
 
 /*UNUSED*/
 void
-quit(a)
-int a;
+quit(int a)
 {
     register int oy, ox;
 
@@ -667,7 +682,7 @@ int a;
 #ifdef BSD
     if (signal(SIGINT, quit) != quit)
 #else
-    if ((VOID(*)())signal(SIGINT, quit) != (VOID(*)())quit)
+    if ((VOID(*)(int))signal(SIGINT, quit) != (VOID(*)(int))quit)
 #endif
         mpos = 0;
 
@@ -718,8 +733,8 @@ int a;
  *      killed by a program bug instead of voluntarily.
  */
 
-bugkill(sig)
-int sig;
+void
+bugkill(int sig)
 {
     signal(sig, quit);		/* If we get it again, give up */
     if (levtype == OUTSIDE) {
@@ -739,8 +754,8 @@ int sig;
  *      Player gropes about him to find hidden things.
  */
 
-search(is_thief, door_chime)
-register bool is_thief, door_chime;
+void
+search(register bool is_thief, register bool door_chime)
 {
     register int x, y;
     register char ch,   /* The trap or door character */
@@ -794,7 +809,7 @@ register bool is_thief, door_chime;
                     tp->tr_flags |= ISFOUND;
 
                     /* Let's update the screen */
-                    if (mp != NULL && mvwinch(cw, y, x) == mch)
+                    if (mp != NULL && mvwinch(cw, y, x) == (unsigned int) mch)
                         mp->t_oldch = ch; /* Will change when monst moves */
                     else mvwaddch(cw, y, x, ch);
 
@@ -852,6 +867,7 @@ register bool is_thief, door_chime;
  *      He wants to go down a level
  */
 
+void
 d_level()
 {
     bool no_phase=FALSE;
@@ -886,7 +902,7 @@ d_level()
 
     /* Going down traps is hazardous */
     switch (position) {
-    when WORMHOLE:
+    case WORMHOLE:
     case TRAPDOOR:
     case MAZETRAP:
     case DARTTRAP:
@@ -922,7 +938,7 @@ d_level()
             level++;
             take_with();
             new_level(NORMLEV);
-            if (no_phase) unphase();
+            if (no_phase) unphase(NULL);
             return;
         }
 
@@ -945,7 +961,7 @@ d_level()
     level++;
     take_with();
     new_level(NORMLEV);
-    if (no_phase) unphase();
+    if (no_phase) unphase(NULL);
 }
 
 /*
@@ -953,6 +969,7 @@ d_level()
  *      He wants to go up a level
  */
 
+void
 u_level()
 {
     bool no_phase = FALSE;
@@ -1037,13 +1054,14 @@ u_level()
 	return;
     }
 
-    if (no_phase) unphase();
+    if (no_phase) unphase(NULL);
 }
 
 /*
  * Let him escape for a while
  */
 #if !MSDOS
+void
 shell()
 {
     register int pid;
@@ -1070,21 +1088,20 @@ shell()
         /*
          * Set back to original user, just in case
          */
-        setuid(getuid());
-        setgid(getgid());
-        execl(sh == NULL ? "/bin/sh" : sh, "shell", "-i", 0);
+        if (setuid(getuid()) == 0)
+            if (setgid(getgid()) == 0)
+                execl(sh == NULL ? "/bin/sh" : sh, "shell", "-i", NULL);
         perror("No shell");
         _exit(-1);
     }
     else
     {
-        void endit();
-        void (*int_value)(),
-             (*quit_value)();
+        void (*int_value)(int),
+             (*quit_value)(int);
 
-        int_value = (void (*)())signal(SIGINT, SIG_IGN);
+        int_value = (void (*)(int))signal(SIGINT, SIG_IGN);
 #ifndef MSDOS
-        quit_value = (void (*)())signal(SIGQUIT, SIG_IGN);
+        quit_value = (void (*)(int))signal(SIGQUIT, SIG_IGN);
 #endif
         while (wait(&ret_status) != pid)
             continue;
@@ -1093,7 +1110,7 @@ shell()
         signal(SIGQUIT, quit_value);
 #endif
 
-        printf(retstr);
+        printf("%s", retstr);
         fflush(stdout);
         wait_for('\n');
         noecho();
@@ -1107,6 +1124,7 @@ shell()
 /*
  * see what we want to name -- an item or a monster.
  */
+void
 nameit()
 {
     char answer;
@@ -1122,7 +1140,7 @@ nameit()
     }
 
     switch (answer) {
-        when 'm': namemonst();
+        case 'm': namemonst();
         when 'i': nameitem((struct linked_list *)NULL, FALSE);
     }
 }
@@ -1131,12 +1149,11 @@ nameit()
  * allow a user to call a potion, scroll, or ring something
  */
 
-nameitem(item, mark)
-struct linked_list *item;
-bool mark;
+void
+nameitem(struct linked_list *item, bool mark)
 {
     register struct object *obj;
-    register char **guess, *elsewise;
+    register char **guess = NULL, *elsewise;
     register bool *know;
 
     if (item == NULL) {
@@ -1150,7 +1167,7 @@ bool mark;
     obj = OBJPTR(item);
     switch (obj->o_type)
     {
-        when RING:
+        case RING:
             guess = r_guess;
             know = r_know;
             elsewise = (r_guess[obj->o_which] != NULL ?
@@ -1182,7 +1199,7 @@ bool mark;
             }
             else know = (bool *) 0;
     }
-    if ((obj->o_flags & ISPOST) || (know && know[obj->o_which]) && !mark) {
+    if ( ((obj->o_flags & ISPOST) || (know && know[obj->o_which])) && !mark) {
         msg("That has already been identified.");
         return;
     }
@@ -1219,6 +1236,7 @@ bool mark;
 
 /* Name a monster */
 
+void
 namemonst()
 {
     register struct thing *tp;
@@ -1264,6 +1282,7 @@ namemonst()
     msg("There is no monster there to name.");
 }
 
+void
 count_gold()
 {
         if (player.t_action != C_COUNT) {
@@ -1287,6 +1306,7 @@ count_gold()
  * Teleport somewhere, anywhere...
  */
 
+void
 do_teleport()
 {
     int tlev;

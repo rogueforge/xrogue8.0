@@ -1,4 +1,5 @@
 #include <curses.h>
+#include <string.h>
 #include "rogue.h"
 
 /*
@@ -7,11 +8,8 @@
  *      the reason code if the defender is killed.  Otherwise return 0.
  */
 
-effect(att, def, weap, thrown, see_att, see_def)
-register struct thing *att, *def;
-struct object *weap;
-bool thrown;
-register bool see_att, see_def;
+int
+effect(register struct thing *att, register struct thing *def, struct object *weap, bool thrown, bool see_att, bool see_def)
 {
     register bool att_player, def_player;
     char attname[LINELEN+1], defname[LINELEN+1];

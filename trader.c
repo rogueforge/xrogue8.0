@@ -3,6 +3,7 @@
  */
 
 #include <curses.h>
+#include <string.h>
 #include "rogue.h"
 
 /*
@@ -10,6 +11,7 @@
  *      Buy the item on which the hero stands
  */
 
+void
 buy_it()
 {
         reg int wh;
@@ -52,7 +54,7 @@ buy_it()
             ++trader;                   /* another transaction */
             trans_line();               /* show remaining deals */
             curprice = -1;              /* reset stuff */
-            curpurch[0] = NULL;
+            curpurch[0] = 0;
             whatis (item);              /* identify it */
             (OBJPTR(item))->o_flags &= ~ISPOST; /* turn off ISPOST */
             (OBJPTR(item))->o_flags |= ISKNOW;  /* he knows the item */
@@ -65,11 +67,12 @@ buy_it()
  *      Put a trading post room and stuff on the screen
  */
 
-do_post(startup)
-bool startup;   /* True if equipping the player at the beginning of the game */
+void
+do_post(bool startup)
+/* startup - True if equipping the player at the beginning of the game */
 {
         coord tp;
-        reg int i, j, k;
+        reg int i, j = 0, k;
         reg struct room *rp;
         reg struct object *op;
         reg struct linked_list *ll;
@@ -131,7 +134,7 @@ bool startup;   /* True if equipping the player at the beginning of the game */
 				    player.t_ctype == C_PALADIN ||
 				    player.t_ctype == C_MONK)) j = WS_FEAR;
                 else switch (rnd(8)) {
-                    when 0: j = WS_SLOW_M;
+                    case 0: j = WS_SLOW_M;
                     when 1: j = WS_TELMON;
                     when 2: j = WS_CONFMON;
                     when 3: j = WS_PARALYZE;
@@ -146,7 +149,7 @@ bool startup;   /* True if equipping the player at the beginning of the game */
 
                 /* Let clerics and MU'S know what kind they are */
                 switch (player.t_ctype) {
-                    when C_MAGICIAN:
+                    case C_MAGICIAN:
                     case C_CLERIC:
                     case C_DRUID:
                         op->o_flags |= (ISPOST | ISKNOW);
@@ -167,7 +170,7 @@ bool startup;   /* True if equipping the player at the beginning of the game */
                 if (i == 6 && player.t_ctype != C_MONK) j = R_HEALTH;
                 else if (i == 7) j = R_HEROISM;
                 else switch (rnd(21)) {
-                    when 0:  j = R_ADDINTEL;   k = roll(1,3);
+                    case 0:  j = R_ADDINTEL;   k = roll(1,3);
                     when 1:  j = R_ADDSTR;     k = roll(1,3);
                     when 2:  j = R_ADDWISDOM;  k = roll(1,3);
                     when 3:  j = R_ADDHIT;     k = roll(1,3);
@@ -198,7 +201,7 @@ bool startup;   /* True if equipping the player at the beginning of the game */
                  * of rings these are.
                  */
                 switch (player.t_ctype) {
-                    when C_FIGHTER:
+                    case C_FIGHTER:
                     case C_THIEF:
                     case C_MONK:
                         op->o_flags |= (ISPOST | ISKNOW);
@@ -217,7 +220,7 @@ bool startup;   /* True if equipping the player at the beginning of the game */
                 if (i == 1 && player.t_ctype == C_ASSASSIN) j = P_POISON;
                 else if (i == 6) j = P_PHASE;
                 else switch (rnd(11)) {
-                    when 0:   j = P_CLEAR;
+                    case 0:   j = P_CLEAR;
                     when 1:   j = P_HEALING;
                     when 2:   j = P_MFIND;
                     when 3:   j = P_HASTE;
@@ -249,7 +252,7 @@ bool startup;   /* True if equipping the player at the beginning of the game */
                 if (i == 1 && player.t_ctype != C_MONK) j = S_CURING;
                 else if (i == 6 && player.t_ctype != C_THIEF) j = S_FINDTRAPS;
                 else switch (rnd(11)) {
-                    when 0:   j = S_CONFUSE;
+                    case 0:   j = S_CONFUSE;
                     when 1:   j = S_MAP;
                     when 2:   j = S_LIGHT;
                     when 3:   j = S_SLEEP;
@@ -327,6 +330,7 @@ bool startup;   /* True if equipping the player at the beginning of the game */
  *      Retruns TRUE when ok do to transacting
  */
  
+int
 open_market()
 {
         if (trader >= MAXPURCH && !wizard && level != 0) {
@@ -343,6 +347,7 @@ open_market()
  *      Price the object that the hero stands on
  */
  
+int
 price_it()
 {
         reg struct linked_list *item;
@@ -383,6 +388,7 @@ price_it()
  *      Sell an item to the trading post
  */
  
+void
 sell_it()
 {
         reg struct linked_list *item;
@@ -417,7 +423,7 @@ sell_it()
             purse += wo;                        /* give him his money */
             ++trader;                           /* another transaction */
             wo = obj->o_count;
-            if (obj->o_group == NULL)           /* dropped one at a time */
+            if (obj->o_group == 0)           /* dropped one at a time */
                 obj->o_count = 1;
             msg("Sold %s",inv_name(obj,TRUE));
             obj->o_count = wo;
@@ -430,6 +436,7 @@ sell_it()
  *      Show how many transactions the hero has left
  */
  
+void
 trans_line()
 {
         if (level == 0)
@@ -451,8 +458,7 @@ trans_line()
  */
  
 char *
-typ_name(obj)
-reg struct object *obj;
+typ_name(reg struct object *obj)
 {
         static char buff[20];
         reg int wh;

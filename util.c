@@ -1,4 +1,5 @@
 #include <curses.h>
+#include <string.h>
 #include <ctype.h>
 #include "rogue.h"
 #ifdef PC7300
@@ -18,8 +19,7 @@ extern struct uwdata wdata;
  */
 
 int 
-ac_compute(ignoremetal)
-bool ignoremetal;
+ac_compute(bool ignoremetal)
 {
     register int ac;
 
@@ -52,8 +52,8 @@ bool ignoremetal;
  *      aggravate all the monsters on this level
  */
 
-aggravate(do_uniques, do_good)
-bool do_uniques, do_good;
+void
+aggravate(bool do_uniques, bool do_good)
 {
     register struct linked_list *mi;
     register struct thing *thingptr;
@@ -70,8 +70,8 @@ bool do_uniques, do_good;
  *      returns true if the hero can see a certain coordinate.
  */
 
-cansee(y, x)
-register int y, x;
+int
+cansee(register int y, register int x)
 {
     register struct room *rer;
     register int radius;
@@ -162,8 +162,8 @@ check_level()
  * it keeps track of the highest it has been, just in case
  */
 
-chg_str(amt)
-register int amt;
+void
+chg_str(register int amt)
 {
     register int ring_str;              /* ring strengths */
     register struct stats *ptr;         /* for speed */
@@ -187,6 +187,7 @@ register int amt;
  * let's confuse the player
  */
 
+void
 confus_player()
 {
     if (off(player, ISCLEAR))
@@ -205,6 +206,7 @@ confus_player()
  * this routine computes the players current dexterity
  */
 
+int
 dex_compute()
 {
     if (cur_misc[WEAR_GAUNTLET] != NULL         &&
@@ -223,9 +225,8 @@ dex_compute()
  *      Check to see if the move is legal if it is diagonal
  */
 
-diag_ok(sp, ep, flgptr)
-register coord *sp, *ep;
-struct thing *flgptr;
+int
+diag_ok(register coord *sp, register coord *ep, struct thing *flgptr)
 {
     register int numpaths = 0;
 
@@ -246,10 +247,7 @@ struct thing *flgptr;
  */
 
 coord *
-fallpos(pos, be_clear, range)
-register coord *pos;
-bool be_clear;
-int range;
+fallpos(register coord *pos, bool be_clear, int range)
 {
         register int tried, i, j;
         register char ch;
@@ -325,13 +323,13 @@ int range;
  *      Find the index into the monster table of a monster given its name.
  */
 
-findmindex(name)
-char *name;
+int
+findmindex(char *name)
 {
     int which;
 
     for (which=1; which<NUMMONST; which++) {
-         if (strcmp(name, monsters[which].m_name) == NULL)
+         if (strcmp(name, monsters[which].m_name) == 0)
              break;
     }
     if (which >= NUMMONST) {
@@ -347,9 +345,7 @@ char *name;
  */
 
 struct linked_list *
-find_mons(y, x)
-register int y;
-register int x;
+find_mons(register int y, register int x)
 {
     register struct linked_list *item;
     register struct thing *th;
@@ -369,9 +365,7 @@ register int x;
  */
 
 struct linked_list *
-find_obj(y, x)
-register int y;
-register int x;
+find_obj(register int y, register int x)
 {
     register struct linked_list *obj;
     register struct object *op;
@@ -420,7 +414,7 @@ get_coordinates()
 #endif
         switch(which) {
 #ifdef PC7300
-            when Home:
+            case Home:
                 c.x = 0; c.y = 1;
             when Beg:
                 c.x = 0;
@@ -488,8 +482,9 @@ get_coordinates()
             when '*':
                 msg("Select location via mouse, or");
                 msg("Use cursor keys,h,j,k,l,y,u,b,or n, then press enter.");
+                break;
 #else
-            when ESC:
+            case ESC:
                 c = hero;
                 wmove(cw, c.y, c.x);
                 draw(cw);
@@ -539,8 +534,7 @@ get_coordinates()
  */
 
 bool
-get_dir(direction)
-coord *direction;
+get_dir(coord *direction)
 {
     register char *prompt;
     register bool gotit;
@@ -553,7 +547,7 @@ coord *direction;
         gotit = TRUE;
         switch (wgetch(msgw))
         {
-            when 'h': case'H': direction->y =  0; direction->x = -1;
+            case 'h': case'H': direction->y =  0; direction->x = -1;
             when 'j': case'J': direction->y =  1; direction->x =  0;
             when 'k': case'K': direction->y = -1; direction->x =  0;
             when 'l': case'L': direction->y =  0; direction->x =  1;
@@ -600,8 +594,7 @@ coord *direction;
  */
 
 long
-get_worth(obj)
-reg struct object *obj;
+get_worth(reg struct object *obj)
 {
         reg long worth, wh;
 
@@ -642,7 +635,7 @@ reg struct object *obj;
                 if (wh < MAXMM) {
                     worth = m_magic[wh].mi_worth;
                     switch (wh) {
-                        when MM_BRACERS:        worth += 40  * obj->o_ac;
+                        case MM_BRACERS:        worth += 40  * obj->o_ac;
                         when MM_PROTECT:        worth += 60  * obj->o_ac;
                         when MM_DISP:           /* ac already figured in price*/
                         otherwise:              worth += 20  * obj->o_ac;
@@ -672,8 +665,7 @@ reg struct object *obj;
  */
 
 bool
-invisible(monst)
-register struct thing *monst;
+invisible(register struct thing *monst)
 {
         register bool   ret_code;
 
@@ -689,8 +681,8 @@ register struct thing *monst;
  * see if the object is one of the currently used items
  */
 
-is_current(obj)
-register struct object *obj;
+int
+is_current(register struct object *obj)
 {
     if (obj == NULL)
         return FALSE;
@@ -709,7 +701,7 @@ register struct object *obj;
     /* Is it a "current" relic? */
     if (obj->o_type == RELIC) {
         switch (obj->o_which) {
-            when MUSTY_DAGGER:
+            case MUSTY_DAGGER:
             case EMORI_CLOAK:
             case HEIL_ANKH:
             case YENDOR_AMULET:
@@ -731,12 +723,14 @@ register struct object *obj;
  *      A quick glance all around the player
  */
 
-look(wakeup, runend)
-bool wakeup;    /* Should we wake up monsters */
-bool runend;    /* At end of a run -- for mazes */
+void
+look(bool wakeup, bool runend)
+/* wakeup - Should we wake up monsters */
+/* runend - At end of a run -- for mazes */
 {
     register int x, y, radius;
-    register char ch, och;
+    register unsigned char ch;
+    register char och;
     register int oldx, oldy;
     register bool inpass, horiz, vert, do_light = FALSE, do_blank = FALSE;
     register int passcount = 0, curfloorcount = 0, nextfloorcount = 0;
@@ -806,7 +800,7 @@ bool runend;    /* At end of a run -- for mazes */
 
             if ((do_blank || !in_room) && (y != hero.y || x != hero.x))
                 switch (ch) {
-                    when DOOR:
+                    case DOOR:
                     case SECRETDOOR:
                     case PASSAGE:
                     case STAIRS:
@@ -908,7 +902,7 @@ bool runend;    /* At end of a run -- for mazes */
              */
             if (off(player, ISBLIND))
             {
-                if (y == hero.y && x == hero.x
+                if ( (y == hero.y && x == hero.x)
                     || (inpass && (ch == HORZWALL || ch == VERTWALL)))
                         continue;
 
@@ -930,7 +924,7 @@ bool runend;    /* At end of a run -- for mazes */
             {
                 switch (runch)
                 {
-                    when 'h':
+                    case 'h':
                         if (x == hero.x + 1)
                             continue;
                     when 'j':
@@ -1018,10 +1012,11 @@ bool runend;    /* At end of a run -- for mazes */
  * Lower a level of experience 
  */
 
-lower_level(who)
-short who;
+void
+lower_level(short who)
 {
-    int fewer, nsides, exp;
+    int fewer, nsides;
+    unsigned int exp;
 
     msg("You suddenly feel less skillful.");
     if (--pstats.s_lvl == 0) {
@@ -1055,8 +1050,7 @@ short who;
  */
 
 char *
-monster_name(tp)
-register struct thing *tp;
+monster_name(register struct thing *tp)
 {
     prbuf[0] = '\0';
     if (on(*tp, ISFLEE) || on(*tp, WASTURNED))
@@ -1087,15 +1081,14 @@ register struct thing *tp;
  */
 
 bool
-move_hero(why)
-int why;
+move_hero(int why)
 {
     char *action;
     char which;
     coord c;
 
     switch (why) {
-        when H_TELEPORT:
+        case H_TELEPORT:
             action = "teleport";
     }
 
@@ -1133,9 +1126,10 @@ int why;
  *      The guy just magically went up a level.
  */
 
+void
 raise_level()
 {
-    long test;  /* Next level -- be sure it is not an overflow */
+    unsigned long test;  /* Next level -- be sure it is not an overflow */
 
     test = check_level();       /* Get next boundary */
 
@@ -1145,7 +1139,7 @@ raise_level()
 
     /* Give him a bonus */
     switch (player.t_ctype) {
-        when C_FIGHTER:
+        case C_FIGHTER:
             (*add_abil[A_STRENGTH])(1);
         when C_RANGER:
         case C_PALADIN:
@@ -1187,10 +1181,11 @@ static char st_matrix[NUM_CHARTYPES][5] = {
  *      See if a creature saves against something
  */
 
-save(which, who, adj)
-int which;              /* which type of save */
-struct thing *who;      /* who is saving */
-int adj;                /* saving throw adjustment */
+int
+save(int which, struct thing *who, int adj)
+/* which - which type of save */
+/* who - who is saving */
+/* adj - saving throw adjustment */
 {
     register int need, level, protect;
 
@@ -1198,7 +1193,7 @@ int adj;                /* saving throw adjustment */
     level = who->t_stats.s_lvl;
     need = st_matrix[who->t_ctype][which];
     switch (who->t_ctype) {
-    when C_FIGHTER:
+    case C_FIGHTER:
     case C_RANGER:
     case C_PALADIN:
         need -= (2 * (level-1) / 5) - 1;        /* for level 61; -= 25 */
@@ -1247,8 +1242,8 @@ int adj;                /* saving throw adjustment */
  *      Figure out what a secret door looks like.
  */
 
-secretdoor(y, x)
-register int y, x;
+int
+secretdoor(register int y, register int x)
 {
     register int i;
     register struct room *rp;
@@ -1260,11 +1255,12 @@ register int y, x;
     cpp = &cp;
     for (rp = rooms, i = 0; i < MAXROOMS; rp++, i++)
         if (inroom(rp, cpp))
+        {
             if (y == rp->r_pos.y || y == rp->r_pos.y + rp->r_max.y - 1)
                 return(HORZWALL);
             else
                 return(VERTWALL);
-
+        }
     return('p');
 }
 
@@ -1272,6 +1268,7 @@ register int y, x;
  * this routine computes the players current strength
  */
 
+int
 str_compute()
 {
     if (cur_misc[WEAR_GAUNTLET] != NULL         &&
@@ -1289,9 +1286,8 @@ str_compute()
  * copy string using unctrl for things
  */
 
-strucpy(s1, s2, len)
-register char *s1, *s2;
-register int len;
+void
+strucpy(register char *s1, register char *s2, register size_t len)
 {
     register char *sp;
 #if USG5_0 
@@ -1300,10 +1296,29 @@ register int len;
 
     while (len--)
     {
-        strcpy(s1, (sp = unctrl(*s2++)));
+        strcpy(s1, (sp = (char *)unctrl(*s2)));
         s1 += strlen(sp);
+	s2++;
     }
     *s1 = '\0';
+}
+
+size_t
+strxcpy(register char *s1, register char *s2, register size_t len)
+{
+    register size_t s2len = strlen(s2);
+
+    if (s2len + 1 < len) 
+    {
+        memcpy(s1, s2, s2len + 1);
+    } 
+    else if (len != 0) 
+    {
+        memcpy(s1, s2, len - 1);
+        s1[len-1] = '\0';
+    }
+
+    return s2len;
 }
 
 /*
@@ -1312,14 +1327,13 @@ register int len;
  */
 
 char *
-tr_name(ch)
-char ch;
+tr_name(char ch)
 {
-    register char *s;
+    register char *s = "";
 
     switch (ch)
     {
-        when TRAPDOOR:
+        case TRAPDOOR:
             s = terse ? "A trapdoor." : "You found a trapdoor.";
         when BEARTRAP:
             s = terse ? "A beartrap." : "You found a beartrap.";
@@ -1346,8 +1360,7 @@ char ch;
  */
 
 char *
-vowelstr(str)
-register char *str;
+vowelstr(register char *str)
 {
     switch (*str)
     {
@@ -1366,8 +1379,8 @@ register char *str;
  * wake up a room full (hopefully) of creatures
  */
 
-wake_room(rp)
-register struct room *rp;
+void
+wake_room(register struct room *rp)
 {
         register struct linked_list *item;
         register struct thing *tp;
@@ -1385,6 +1398,7 @@ register struct room *rp;
  *      Do nothing but let other things happen
  */
 
+void
 waste_time()
 {
     if (inwhgt)                 /* if from wghtchk then done */

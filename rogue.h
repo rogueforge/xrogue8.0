@@ -6,7 +6,7 @@
  * some compiler don't handle void pointers well so
  */
 
-#define VOID long
+#define VOID void
 #define reg register
 
 #undef SCROLL   /* UNIX/370 defines SCROLL for some bizarre reason */
@@ -91,7 +91,7 @@ extern char toupper();
 
 #define NORMENCB        1400    /* normal encumberance */
 #define F_SATIATED       0      /* player's stomach is very full */
-#define F_OK             1      /* have plenty of food in stomach */
+#define F_OKAY           1      /* have plenty of food in stomach */
 #define F_HUNGRY         2      /* player is hungry */
 #define F_WEAK           3      /* weak from lack of food */
 #define F_FAINT          4      /* fainting from lack of food */
@@ -260,8 +260,12 @@ extern char toupper();
 #define o_free_list(a) _o_free_list(&a)
 #define r_free_list(a) _r_free_list(&a)
 #define t_free_list(a) _t_free_list(&a)
+#ifndef max
 #define max(a, b) ((a) > (b) ? (a) : (b))
+#endif
+#ifndef min
 #define min(a, b) ((a) < (b) ? (a) : (b))
+#endif
 #define on(thing, flag) \
     (((thing).t_flags[(flag >> FLAGSHIFT) & FLAGINDEX] & flag) != 0)
 #define off(thing, flag) \
@@ -468,182 +472,182 @@ extern char toupper();
  * 1st set of creature flags (this might include player)
  */
 
-#define ISBLIND         0x00000001
-#define ISINWALL        0x00000002
-#define ISRUN           0x00000004
-#define ISFLEE          0x00000008
-#define ISINVIS         0x00000010
-#define ISMEAN          0x00000020
-#define ISGREED         0x00000040
-#define CANSHOOT        0x00000080
-#define ISHELD          0x00000100
-#define ISHUH           0x00000200
-#define ISREGEN         0x00000400
-#define CANHUH          0x00000800
-#define CANSEE          0x00001000
-#define HASFIRE         0x00002000
-#define ISSLOW          0x00004000
-#define ISHASTE         0x00008000
-#define ISCLEAR         0x00010000
-#define CANINWALL       0x00020000
-#define ISDISGUISE      0x00040000
-#define CANBLINK        0x00080000
-#define CANSNORE        0x00100000
-#define HALFDAMAGE      0x00200000
-#define CANSUCK         0x00400000
-#define CANRUST         0x00800000
-#define CANPOISON       0x01000000
-#define CANDRAIN        0x02000000
-#define ISUNIQUE        0x04000000
-#define STEALGOLD       0x08000000
+#define ISBLIND         0x00000001UL
+#define ISINWALL        0x00000002UL
+#define ISRUN           0x00000004UL
+#define ISFLEE          0x00000008UL
+#define ISINVIS         0x00000010UL
+#define ISMEAN          0x00000020UL
+#define ISGREED         0x00000040UL
+#define CANSHOOT        0x00000080UL
+#define ISHELD          0x00000100UL
+#define ISHUH           0x00000200UL
+#define ISREGEN         0x00000400UL
+#define CANHUH          0x00000800UL
+#define CANSEE          0x00001000UL
+#define HASFIRE         0x00002000UL
+#define ISSLOW          0x00004000UL
+#define ISHASTE         0x00008000UL
+#define ISCLEAR         0x00010000UL
+#define CANINWALL       0x00020000UL
+#define ISDISGUISE      0x00040000UL
+#define CANBLINK        0x00080000UL
+#define CANSNORE        0x00100000UL
+#define HALFDAMAGE      0x00200000UL
+#define CANSUCK         0x00400000UL
+#define CANRUST         0x00800000UL
+#define CANPOISON       0x01000000UL
+#define CANDRAIN        0x02000000UL
+#define ISUNIQUE        0x04000000UL
+#define STEALGOLD       0x08000000UL
 
 /* 
  * Second set of flags 
  */
 
-#define STEALMAGIC      0x10000001
-#define CANDISEASE      0x10000002
-#define HASDISEASE      0x10000004
-#define CANSUFFOCATE    0x10000008
-#define DIDSUFFOCATE    0x10000010
-#define BOLTDIVIDE      0x10000020
-#define BLOWDIVIDE      0x10000040
-#define NOCOLD          0x10000080
-#define TOUCHFEAR       0x10000100
-#define BMAGICHIT       0x10000200
-#define NOFIRE          0x10000400
-#define NOBOLT          0x10000800
-#define CARRYGOLD       0x10001000
-#define CANITCH         0x10002000
-#define HASITCH         0x10004000
-#define DIDDRAIN        0x10008000
-#define WASTURNED       0x10010000
-#define CANSELL         0x10020000
-#define CANBLIND        0x10040000
-#define NOACID          0x10080000
-#define NOSLOW          0x10100000
-#define NOFEAR          0x10200000
-#define NOSLEEP         0x10400000
-#define NOPARALYZE      0x10800000
-#define NOGAS           0x11000000
-#define CANMISSILE      0x12000000
-#define CMAGICHIT       0x14000000
-#define CANPAIN         0x18000000
+#define STEALMAGIC      0x10000001UL
+#define CANDISEASE      0x10000002UL
+#define HASDISEASE      0x10000004UL
+#define CANSUFFOCATE    0x10000008UL
+#define DIDSUFFOCATE    0x10000010UL
+#define BOLTDIVIDE      0x10000020UL
+#define BLOWDIVIDE      0x10000040UL
+#define NOCOLD          0x10000080UL
+#define TOUCHFEAR       0x10000100UL
+#define BMAGICHIT       0x10000200UL
+#define NOFIRE          0x10000400UL
+#define NOBOLT          0x10000800UL
+#define CARRYGOLD       0x10001000UL
+#define CANITCH         0x10002000UL
+#define HASITCH         0x10004000UL
+#define DIDDRAIN        0x10008000UL
+#define WASTURNED       0x10010000UL
+#define CANSELL         0x10020000UL
+#define CANBLIND        0x10040000UL
+#define NOACID          0x10080000UL
+#define NOSLOW          0x10100000UL
+#define NOFEAR          0x10200000UL
+#define NOSLEEP         0x10400000UL
+#define NOPARALYZE      0x10800000UL
+#define NOGAS           0x11000000UL
+#define CANMISSILE      0x12000000UL
+#define CMAGICHIT       0x14000000UL
+#define CANPAIN         0x18000000UL
 
 /* 
  * Third set of flags 
  */
 
-#define CANSLOW         0x20000001
-#define CANTUNNEL       0x20000002
-#define TAKEWISDOM      0x20000004
-#define NOMETAL         0x20000008
-#define MAGICHIT        0x20000010
-#define CANINFEST       0x20000020
-#define HASINFEST       0x20000040
-#define NOMOVE          0x20000080
-#define CANSHRIEK       0x20000100
-#define CANDRAW         0x20000200
-#define CANSMELL        0x20000400
-#define CANPARALYZE     0x20000800
-#define CANROT          0x20001000
-#define ISSCAVENGE      0x20002000
-#define DOROT           0x20004000
-#define CANSTINK        0x20008000
-#define HASSTINK        0x20010000
-#define ISSHADOW        0x20020000
-#define CANCHILL        0x20040000
-#define CANHUG          0x20080000
-#define CANSURPRISE     0x20100000
-#define CANFRIGHTEN     0x20200000
-#define CANSUMMON       0x20400000
-#define TOUCHSTONE      0x20800000
-#define LOOKSTONE       0x21000000
-#define CANHOLD         0x22000000
-#define DIDHOLD         0x24000000
-#define DOUBLEDRAIN     0x28000000
+#define CANSLOW         0x20000001UL
+#define CANTUNNEL       0x20000002UL
+#define TAKEWISDOM      0x20000004UL
+#define NOMETAL         0x20000008UL
+#define MAGICHIT        0x20000010UL
+#define CANINFEST       0x20000020UL
+#define HASINFEST       0x20000040UL
+#define NOMOVE          0x20000080UL
+#define CANSHRIEK       0x20000100UL
+#define CANDRAW         0x20000200UL
+#define CANSMELL        0x20000400UL
+#define CANPARALYZE     0x20000800UL
+#define CANROT          0x20001000UL
+#define ISSCAVENGE      0x20002000UL
+#define DOROT           0x20004000UL
+#define CANSTINK        0x20008000UL
+#define HASSTINK        0x20010000UL
+#define ISSHADOW        0x20020000UL
+#define CANCHILL        0x20040000UL
+#define CANHUG          0x20080000UL
+#define CANSURPRISE     0x20100000UL
+#define CANFRIGHTEN     0x20200000UL
+#define CANSUMMON       0x20400000UL
+#define TOUCHSTONE      0x20800000UL
+#define LOOKSTONE       0x21000000UL
+#define CANHOLD         0x22000000UL
+#define DIDHOLD         0x24000000UL
+#define DOUBLEDRAIN     0x28000000UL
 
 /* 
  * Fourth set of flags 
  */
 
-#define CANBRANDOM      0x30000001      /* Types of breath */
-#define CANBACID        0x30000002      /* acid */
-#define CANBFIRE        0x30000004      /* Fire */
-#define CANBCGAS        0x30000008      /* confusion gas */
-#define CANBBOLT        0x30000010      /* lightning bolt */
-#define CANBGAS         0x30000020      /* chlorine gas */
-#define CANBICE         0x30000040      /* ice */
-#define CANBFGAS        0x30000080      /* Fear gas */
-#define CANBPGAS        0x30000100      /* Paralyze gas */
-#define CANBSGAS        0x30000200      /* Sleeping gas */
-#define CANBSLGAS       0x30000400      /* Slow gas */
-#define CANBREATHE      0x300007ff      /* Can it breathe at all? */
+#define CANBRANDOM      0x30000001UL      /* Types of breath */
+#define CANBACID        0x30000002UL      /* acid */
+#define CANBFIRE        0x30000004UL      /* Fire */
+#define CANBCGAS        0x30000008UL      /* confusion gas */
+#define CANBBOLT        0x30000010UL      /* lightning bolt */
+#define CANBGAS         0x30000020UL      /* chlorine gas */
+#define CANBICE         0x30000040UL      /* ice */
+#define CANBFGAS        0x30000080UL      /* Fear gas */
+#define CANBPGAS        0x30000100UL      /* Paralyze gas */
+#define CANBSGAS        0x30000200UL      /* Sleeping gas */
+#define CANBSLGAS       0x30000400UL      /* Slow gas */
+#define CANBREATHE      0x300007ffUL      /* Can it breathe at all? */
 
 /*
  * Fifth set of flags
  */
 
-#define ISUNDEAD        0x40000001
-#define CANSONIC        0x40000002
-#define TURNABLE        0x40000004
-#define TAKEINTEL       0x40000008
-#define NOSTAB          0x40000010
-#define CANDISSOLVE     0x40000020
-#define ISFLY           0x40000040      /* creature can fly */
-#define CANTELEPORT     0x40000080      /* creature can teleport */
-#define CANEXPLODE      0x40000100      /* creature explodes when hit */
-#define CANDANCE        0x40000200      /* creature can make hero "dance" */
-#define ISDANCE         0x40000400      /* creature (hero) is dancing */
-#define CARRYFOOD       0x40000800
-#define CARRYSCROLL     0x40001000
-#define CARRYPOTION     0x40002000
-#define CARRYRING       0x40004000
-#define CARRYSTICK      0x40008000
-#define CARRYMISC       0x40010000
-#define CARRYMDAGGER    0x40020000      /* Dagger of Musty */
-#define CARRYCLOAK      0x40040000      /* Cloak of Emori */
-#define CARRYANKH       0x40080000      /* Ankh of Heil */
-#define CARRYSTAFF      0x40100000      /* Staff of Ming */
-#define CARRYWAND       0x40200000      /* Wand of Orcus */
-#define CARRYROD        0x40400000      /* Rod of Asmodeus */
-#define CARRYYAMULET    0x40800000      /* Amulet of Yendor */
-#define CARRYMANDOLIN   0x41000000      /* Mandolin of Brian */
-#define MISSEDDISP      0x42000000      /* Missed Cloak of Displacement */
-#define CANBSTAB        0x44000000      /* Can backstab */
-#define ISGUARDIAN      0x48000000      /* Guardian of a treasure room */
+#define ISUNDEAD        0x40000001UL
+#define CANSONIC        0x40000002UL
+#define TURNABLE        0x40000004UL
+#define TAKEINTEL       0x40000008UL
+#define NOSTAB          0x40000010UL
+#define CANDISSOLVE     0x40000020UL
+#define ISFLY           0x40000040UL      /* creature can fly */
+#define CANTELEPORT     0x40000080UL      /* creature can teleport */
+#define CANEXPLODE      0x40000100UL      /* creature explodes when hit */
+#define CANDANCE        0x40000200UL      /* creature can make hero "dance" */
+#define ISDANCE         0x40000400UL      /* creature (hero) is dancing */
+#define CARRYFOOD       0x40000800UL
+#define CARRYSCROLL     0x40001000UL
+#define CARRYPOTION     0x40002000UL
+#define CARRYRING       0x40004000UL
+#define CARRYSTICK      0x40008000UL
+#define CARRYMISC       0x40010000UL
+#define CARRYMDAGGER    0x40020000UL      /* Dagger of Musty */
+#define CARRYCLOAK      0x40040000UL      /* Cloak of Emori */
+#define CARRYANKH       0x40080000UL      /* Ankh of Heil */
+#define CARRYSTAFF      0x40100000UL      /* Staff of Ming */
+#define CARRYWAND       0x40200000UL      /* Wand of Orcus */
+#define CARRYROD        0x40400000UL      /* Rod of Asmodeus */
+#define CARRYYAMULET    0x40800000UL      /* Amulet of Yendor */
+#define CARRYMANDOLIN   0x41000000UL      /* Mandolin of Brian */
+#define MISSEDDISP      0x42000000UL      /* Missed Cloak of Displacement */
+#define CANBSTAB        0x44000000UL      /* Can backstab */
+#define ISGUARDIAN      0x48000000UL      /* Guardian of a treasure room */
 
 /*
  * Sixth set of flags
  */
 
-#define CARRYHORN       0x50000001      /* Horn of Geryon */
-#define CARRYMSTAR      0x50000002      /* Morning Star of Hruggek */
-#define CARRYFLAIL      0x50000004      /* Flail of Yeenoghu */
-#define CARRYWEAPON     0x50000008      /* A generic weapon */
-#define CANAGE          0x50000010      /* can age you */
-#define CARRYDAGGER     0x50000020      /* carry's a dumb old dagger */
-#define AREMANY         0x50000040      /* they come in droves */
-#define CARRYEYE        0x50000080      /* has the eye of Vecna */
-#define HASSUMMONED     0x50000100      /* has already summoned */
-#define ISSTONE         0x50000200      /* has been turned to stone */
-#define NODETECT        0x50000400      /* detect monster will not show him */
-#define NOSTONE         0x50000800      /* creature made its save vrs stone */
-#define CARRYQUILL      0x50001000      /* has the quill of Nagrom */
-#define CARRYAXE        0x50002000      /* has the axe of Aklad */
-#define TOUCHSLOW       0x50004000      /* touch will slow hero */
-#define WASDISRUPTED    0x50008000      /* creature was disrupted by player */
-#define CARRYARMOR      0x50010000      /* creature will pick up armor */
-#define CARRYBAMULET    0x50020000      /* amulet of skoraus stonebones */
-#define CARRYSURTURRING 0x50040000      /* ring of Surtur */
-#define CARRYCARD       0x50080000      /* carry the card of Alteran */
-#define ISCHARMED       0x50100000      /* is the monster charmed? */
-#define ISFRIENDLY      0x50100000      /* monster friendly for any reason? */
+#define CARRYHORN       0x50000001UL      /* Horn of Geryon */
+#define CARRYMSTAR      0x50000002UL      /* Morning Star of Hruggek */
+#define CARRYFLAIL      0x50000004UL      /* Flail of Yeenoghu */
+#define CARRYWEAPON     0x50000008UL      /* A generic weapon */
+#define CANAGE          0x50000010UL      /* can age you */
+#define CARRYDAGGER     0x50000020UL      /* carry's a dumb old dagger */
+#define AREMANY         0x50000040UL      /* they come in droves */
+#define CARRYEYE        0x50000080UL      /* has the eye of Vecna */
+#define HASSUMMONED     0x50000100UL      /* has already summoned */
+#define ISSTONE         0x50000200UL      /* has been turned to stone */
+#define NODETECT        0x50000400UL      /* detect monster will not show him */
+#define NOSTONE         0x50000800UL      /* creature made its save vrs stone */
+#define CARRYQUILL      0x50001000UL      /* has the quill of Nagrom */
+#define CARRYAXE        0x50002000UL      /* has the axe of Aklad */
+#define TOUCHSLOW       0x50004000UL      /* touch will slow hero */
+#define WASDISRUPTED    0x50008000UL      /* creature was disrupted by player */
+#define CARRYARMOR      0x50010000UL      /* creature will pick up armor */
+#define CARRYBAMULET    0x50020000UL      /* amulet of skoraus stonebones */
+#define CARRYSURTURRING 0x50040000UL      /* ring of Surtur */
+#define CARRYCARD       0x50080000UL      /* carry the card of Alteran */
+#define ISCHARMED       0x50100000UL      /* is the monster charmed? */
+#define ISFRIENDLY      0x50100000UL      /* monster friendly for any reason? */
 
 /* Masks for choosing the right flag */
 
-#define FLAGMASK     0xf0000000
-#define FLAGINDEX    0x0000000f
+#define FLAGMASK     0xf0000000UL
+#define FLAGINDEX    0x0000000fUL
 #define FLAGSHIFT    28
 #define MAXFLAGS     25                 /* max initial flags per creature */
 
@@ -932,6 +936,13 @@ extern char toupper();
 
 /* Now define the structures and types */
 
+struct delayed_action {
+        int d_type;
+        void (*d_func)(void *arg);
+        VOID *d_arg;
+        int d_time;
+} ;
+
 /*
  * character types
  */
@@ -970,7 +981,7 @@ struct h_list {
 };
 
 struct item_list {
-    char item_ch;
+    unsigned char item_ch;
     char *item_desc;
 };
 
@@ -1081,7 +1092,7 @@ struct thing {
     bool t_wasshot;                     /* Was character shot last round? */
     char t_type;                        /* What it is */
     char t_disguise;                    /* What mimic looks like */
-    char t_oldch;                       /* Character that was where it was */
+    unsigned char t_oldch;              /* Character that was where it was */
     short t_ctype;                      /* Character type */
     short t_index;                      /* Index into monster table */
     short t_no_move;                    /* How long the thing can't move */
@@ -1185,44 +1196,6 @@ struct spells {
  * Other structures
  */
  
-struct linked_list  *find_mons(), *find_obj(), *get_item(), *new_item(),
-                    *new_thing(), *wake_monster(), *get_hurl(), *spec_item(),
-                    *creat_item(), *wield_weap();
-
-struct room         *roomin();
-struct trap         *trap_at();
-
-char	*malloc(), *getenv(), *tr_name(), *new(), *misc_name(), *vowelstr(),
-	*inv_name(), *strcpy(), *strcat(), *sbrk(), *ctime(), *num(),
-	*ring_num(), *misc_num(), *blesscurse(), *p_kind(), *typ_name(),
-	*prname(), *monster_name(), *weap_name();
-
-coord	*rndmove(), *can_shoot(), *fallpos(), *doorway(), get_coordinates();
-
-short	randmonster(), id_monst(), movement();
-
-int	bugkill(), nohaste(), spell_recovery(), doctor(), runners(), swander(),
-	unconfuse(), unsee(), fumble(), unclrhead(), unphase(), noslow(),
-	rollwand(), stomach(), sight(), unstink(), suffocate(), cure_disease(),
-	shoot_bolt(), changeclass(), appear(), dust_appear(), unchoke(),
-	alchemy(), trap_look(), strangle(), ring_teleport(), ring_search(),
-	grab(), dsrpt_player(), quill_charge(), make_sell_pack(), unskill(),
-	findmindex(), nobolt(), nofire(), nocold(), usage_time(), eat_gold(),
-	chant_recovery(), prayer_recovery(), dsrpt_monster(), opt_player();
-
-bool	blue_light(), can_blink(), creat_mons(), add_pack(), invisible(),
-	straight_shot(), maze_view(), lit_room(), get_delta(), save_file(),
-	save_game(), m_use_it(), m_use_pack(), get_dir(), need_dir(),passwd();
-
-long	lseek(), check_level(), encread(), get_worth(), encwrite();
-
-void	byebye(), genmonsters(), land(), undance(), cloak_charge(), quit(),
-	auto_save(), endit(), tstp();
-
-VOID	add_intelligence(), add_strength(), add_wisdom(), add_dexterity(),
-	add_constitution(), add_charisma(), res_intelligence(), res_strength(),
-	res_wisdom(), res_dexterity(), res_constitution(), res_charisma();
-
 #ifdef CHECKTIME
 int checkout();
 #endif
@@ -1360,6 +1333,418 @@ extern char *spacemsg;
 extern char *morestr;
 extern char *retstr;
 extern LEVTYPE levtype;
-extern VOID (*add_abil[NUMABILITIES])(); /* Functions to change abilities */
-extern VOID (*res_abil[NUMABILITIES])(); /* Functions to change abilities */
+extern void (*add_abil[NUMABILITIES])(int change); /* Functions to change abilities */
+extern void (*res_abil[NUMABILITIES])(void *arg); /* Functions to change abilities */
+extern int mf_count;       /* move_free counter - see actions.c(m_act()) */
+extern int mf_jmpcnt;      /* move_free counter for # of jumps 		  */
+extern int killed_chance;  /* cumulative chance for goodies to loose it, fight.c */
+extern coord move_nh;        /* move.c */
 
+#if u370 || uts || i386
+#define ENCREAD(b,n,fd) read(fd,b,n)
+#define ENCWRITE(b,n,fd) write(fd,b,n)
+#endif
+#ifndef ENCREAD
+#define ENCREAD encread
+#define ENCWRITE encwrite
+#endif
+
+#define MAXDAEMONS      10
+#define MAXFUSES        20
+ 
+extern struct delayed_action d_list[MAXDAEMONS];
+extern struct delayed_action f_list[MAXFUSES];
+
+/* actions.c */
+extern void dsrpt_monster(register struct thing *tp, bool always, bool see_him);
+extern void dsrpt_player(void);
+extern void m_act(register struct thing *tp);
+extern void m_breathe(register struct thing *tp);
+extern void m_select(register struct thing *th, register bool flee);
+extern void m_sonic(register struct thing *tp);
+extern void m_spell(register struct thing *tp);
+extern void m_summon(register struct thing *tp);
+extern bool m_use_it(register struct thing *tp, bool flee, register struct room *rer, register struct room *ree);
+extern int runners(int segments);
+extern bool m_use_pack(register struct thing *monster, coord *monst_pos, coord *defend_pos, register int dist, register coord *shoot_dir);
+/* bolt.c */
+extern void shoot_bolt(struct thing *shooter, coord start, coord dir, bool get_points, short reason, char *name, int damage);
+/* chase.c */
+extern bool can_blink(register struct thing *tp);
+extern coord *can_shoot(register coord *er, register coord *ee);
+extern void chase(register struct thing *tp, coord *ee, register struct room *rer, register struct room *ree, bool flee);
+extern void do_chase(register struct thing *th);
+extern struct linked_list *get_hurl(register struct thing *tp);
+extern void runto(register struct thing *runner, coord *spot);
+extern bool straight_shot(register int ery, register int erx, register int eey, register int eex, register coord *shooting);
+/* command.c */
+extern void command(void);
+extern void display(void);
+extern void quit(int a);
+extern void bugkill(int sig);
+extern void search(register bool is_thief, register bool door_chime);
+extern void d_level(void);
+extern void u_level(void);
+extern void shell(void);
+extern void nameit(void);
+extern void nameitem(struct linked_list *item, bool mark);
+extern void namemonst(void);
+extern void count_gold(void);
+extern void do_teleport(void);
+/* daemon.c */
+extern struct delayed_action *d_slot(void);
+extern struct delayed_action *f_slot(void);
+extern struct delayed_action *find_slot(register void (*func)(void *));
+extern void start_daemon(register void (*func)(void *), register void *arg, register int type);
+extern void kill_daemon(register void (*func)(void *));
+extern void do_daemons(register int flag);
+extern void fuse(register void (*func)(void *), void *arg, register int time, register int type);
+extern void lengthen(register void (*func)(void *), register int xtime);
+extern void extinguish(register void (*func)(void *));
+extern void do_fuses(register int flag);
+extern void activity(void);
+/* daemons.c */
+extern void doctor(void *arg);
+extern void swander(void *arg);
+extern void rollwand(void *arg);
+extern void trap_look(void *arg);
+extern void unconfuse(void *arg);
+extern void unsee(void *arg);
+extern void unstink(void *arg);
+extern void unclrhead(void *arg);
+extern void unphase(void *arg);
+extern void land(void *arg);
+extern void sight(void *arg);
+extern void res_strength(void *howmuch);
+extern void nohaste(void *arg);
+extern void noslow(void *arg);
+extern void suffocate(void *arg);
+extern void stomach(void *arg);
+extern void cure_disease(void *arg);
+extern void appear(void *arg);
+extern void dust_appear(void *arg);
+extern void unchoke(void *arg);
+extern void alchemy(void *obj);
+extern void undance(void *arg);
+extern void strangle(void *arg);
+extern void fumble(void *arg);
+extern void ring_search(void *arg);
+extern void ring_teleport(void *arg);
+extern void quill_charge(void *arg);
+extern void unskill(void *arg);
+extern void cloak_charge(void *arg);
+extern void nofire(void *arg);
+extern void nocold(void *arg);
+extern void nobolt(void *arg);
+extern void eat_gold(void *obj);
+extern void spell_recovery(void *arg);
+extern void prayer_recovery(void *arg);
+extern void chant_recovery(void *arg);
+/* eat.c */
+extern void eat(void);
+/* effects.c */
+extern int effect(register struct thing *att, register struct thing *def, struct object *weap, bool thrown, bool see_att, bool see_def);
+/* encumb.c */
+extern void updpack(int getmax, struct thing *tp);
+extern int packweight(register struct thing *tp);
+extern int itemweight(register struct object *wh);
+extern int playenc(register struct thing *tp);
+extern int totalenc(register struct thing *tp);
+extern void wghtchk(void *arg);
+extern int hitweight(void);
+/* fight.c */
+extern int player_can_hit(register struct thing *tp, register struct object *weap);
+extern int fight(register coord *mp, struct object *weap, bool thrown);
+extern int attack(register struct thing *mp, register struct object *weapon, bool thrown);
+extern int swing(short class, int at_lvl, int op_arm, int wplus);
+extern int roll_em(struct thing *att_er, struct thing *def_er, struct object *weap, bool hurl, struct object *cur_weapon, bool back_stab);
+extern char *prname(register char *who, bool upper);
+extern void hit(register struct object *weapon, bool see_att, bool see_def, register char *er, register char *ee, bool back_stab, bool thrown, bool short_msg);
+extern void miss(register struct object *weapon, bool see_att, bool see_def, register char *er, register char *ee, bool thrown, bool short_msg);
+extern int dext_plus(register int dexterity);
+extern int dext_prot(register int dexterity);
+extern int str_plus(register short str);
+extern int add_dam(register short str);
+extern int hung_dam(void);
+extern int is_magic(register struct object *obj);
+extern void killed(register struct linked_list *item, bool pr, bool points, bool treasure);
+extern struct linked_list *wield_weap(struct object *thrown, struct thing *mp);
+extern void explode(register struct thing *tp);
+extern int skirmish(register struct thing *attacker, register coord *mp, struct object *weap, bool thrown);
+/* help.c */
+extern void ident_hero(void);
+extern void help(void);
+extern void identify(register unsigned char ch);
+/* init.c */
+extern void badcheck(char *name, register struct magic_item *magic, register int bound);
+extern void init_colors(void);
+extern void init_foods(void);
+extern void init_materials(void);
+extern void init_misc(void);
+extern void init_names(void);
+extern void init_player(void);
+extern void init_stones(void);
+extern void init_things(void);
+/* io.c */
+extern void msg(char *fmt, ...);
+extern void addmsg(char *fmt, ...);
+extern void rmmsg(void);
+extern void endmsg(void);
+extern void doadd(char *fmt, va_list args);
+extern int step_ok(register int y, register int x, register int can_on_monst, register struct thing *flgptr);
+extern int shoot_ok(int ch);
+extern void status(bool display);
+extern void wait_for(register char ch);
+extern void over_win(WINDOW *oldwin, WINDOW *newin, int maxy, int maxx, int cursory, int cursorx, char redraw);
+extern void show_win(register WINDOW *scr, char *message);
+extern void dbotline(WINDOW *scr, char *message);
+extern void restscr(WINDOW *scr);
+/* list.c */
+extern void _detach(register struct linked_list **list, register struct linked_list *item);
+extern void _attach(register struct linked_list **list, register struct linked_list *item);
+extern void _o_free_list(register struct linked_list **ptr);
+extern void o_discard(register struct linked_list *item);
+extern void _r_free_list(register struct linked_list **ptr);
+extern void r_discard(register struct linked_list *item);
+extern void _t_free_list(register struct linked_list **ptr);
+extern void t_discard(register struct linked_list *item);
+extern void destroy_item(register struct linked_list *item);
+extern struct linked_list *new_item(int size);
+extern struct linked_list *creat_item(void);
+extern char *new(int size);
+/* main.c */
+extern int main(int argc, char **argv, char **envp);
+extern void endit(int a);
+extern void fatal(char *s);
+extern int rnd(register int range);
+extern int roll(register int number, register int sides);
+extern void tstp(int a);
+extern void setup(void);
+extern void playit(void);
+extern int too_much(void);
+extern int author(void);
+extern int holiday(void);
+/* maze.c */
+extern void do_maze(void);
+extern bool maze_view(int y, int x);
+/* misc.c */
+extern void changeclass(void *arg);
+extern void m_use_relic(register struct thing *monster);
+extern void put_contents(register struct object *bag, register struct linked_list *item);
+extern void take_contents(register struct object *bag, register struct linked_list *item);
+extern void do_bag(register struct linked_list *item);
+extern void do_panic(int who);
+extern char *misc_name(register struct object *obj);
+extern void use_emori(void);
+extern void use_quill(register struct object *obj);
+extern void use_mm(int which);
+extern int usage_time(struct linked_list *item);
+/* mons_def.c */
+/* monsters.c */
+extern void check_residue(register struct thing *tp);
+extern int creat_mons(struct thing *person, short monster, bool report);
+extern void genmonsters(register int least, bool treas);
+extern short id_monst(register char monster);
+extern void new_monster(struct linked_list *item, short type, coord *cp, bool max_monster);
+extern short randmonster(register bool wander, register bool no_unique);
+extern void sell(register struct thing *tp);
+extern struct linked_list *wake_monster(int y, int x);
+extern void wanderer(void);
+/* move.c */
+extern int be_trapped(register struct thing *th, register coord *tc);
+extern bool blue_light(bool blessed, bool cursed);
+extern void corr_move(int dy, int dx);
+extern void dip_it(void);
+extern void do_move(int dy, int dx);
+extern void do_run(char ch);
+extern bool getdelta(char match, int *dy, int *dx);
+extern int isatrap(register char ch);
+extern void light(coord *cp);
+extern bool lit_room(register struct room *rp);
+extern short movement(register struct thing *tp);
+extern coord *rndmove(struct thing *who);
+extern void set_trap(register struct thing *tp, register int y, register int x);
+extern int show(register int y, register int x);
+extern struct trap *trap_at(register int y, register int x);
+extern int weap_move(register struct thing *wielder, register struct object *weap);
+/* n_level.c */
+extern void new_level(LEVTYPE ltype);
+extern int rnd_room(void);
+extern void put_things(LEVTYPE ltype);
+/* options.c */
+extern int get_default(void *arg, WINDOW *win);
+extern int get_abil(void *arg, WINDOW *win);
+extern int get_quest(void *arg, WINDOW *win);
+extern int get_ro(WINDOW *win, register int oy, register int ox);
+extern int get_bool(void *arg, WINDOW *win);
+extern int get_str(void *arg, WINDOW *win);
+extern void option(void);
+extern void parse_opts(register char *str);
+extern void put_abil(void *arg, WINDOW *win);
+extern void put_quest(void *arg, WINDOW *win);
+extern void put_bool(void *arg, WINDOW *win);
+extern void put_str(void *arg, WINDOW *win);
+/* outside.c */
+extern void init_terrain(void);
+extern void do_terrain(int basey, int basex, int deltay, int deltax, bool fresh);
+extern char rnd_terrain(void);
+extern char get_terrain(char one, char two, char three, char four);
+/* pack.c */
+extern bool add_pack(register struct linked_list *item, bool silent);
+extern int inventory(register struct linked_list *list, register int type);
+extern void picky_inven(void);
+extern struct linked_list *get_item(register struct linked_list *list, char *purpose, int type, bool askfirst, bool showcost);
+extern char pack_char(struct linked_list *list, register struct object *obj);
+extern void cur_null(register struct object *op);
+extern void idenpack(void);
+extern int is_type(register struct object *obj, register int type);
+extern void del_pack(register struct linked_list *item);
+extern void carry_obj(register struct thing *mp, int chance);
+extern int grab(register int y, register int x);
+extern void make_sell_pack(struct thing *tp);
+/* passages.c */
+extern void do_passages(void);
+extern void conn(int r1, int r2);
+extern void door(register struct room *rm, register coord *cp);
+/* player.c */
+extern void affect(void);
+extern void pray(void);
+extern void cast(void);
+extern void chant(void);
+extern int const_bonus(void);
+extern void give(void);
+extern void fright(void);
+extern void gsense(void);
+extern void xsense(void);
+extern void steal(void);
+extern void take_with(void);
+extern int pick_spell(struct spells spells[], int ability, int num_spells, int power, char *prompt, char *type);
+extern void opt_player(void);
+/* potions.c */
+extern void add_constitution(int change);
+extern void add_charisma(int change);
+extern void add_dexterity(int change);
+extern void add_haste(bool blessed);
+extern void add_intelligence(int change);
+extern void add_slow(void);
+extern void add_strength(int change);
+extern void add_wisdom(int change);
+extern void quaff(int which, int kind, int flags, bool is_potion);
+extern void res_dexterity(void *howmuch);
+extern void res_intelligence(void *howmuch);
+extern void res_wisdom(void *howmuch);
+extern void res_constitution(void *howmuch);
+extern void res_charisma(void *howmuch);
+/* rings.c */
+extern int ring_eat(register int hand);
+extern void ring_on(register struct linked_list *item);
+extern char *ring_num(register struct object *obj);
+extern int ring_value(int type);
+/* rip.c */
+extern void byebye(int n);
+extern void death(register short monst);
+extern char *killname(register short monst);
+extern void score(unsigned long amount, int flags, short monst);
+extern void showpack(char *howso);
+extern void total_winner(void);
+/* rogue.c */
+/* rooms.c */
+extern void do_rooms(void);
+extern coord *doorway(register struct room *rp, register coord *door);
+extern void draw_room(register struct room *rp);
+extern void horiz(register int cnt);
+extern void rnd_pos(register struct room *rp, register coord *cp);
+extern struct room *roomin(register coord *cp);
+extern void vert(register int cnt);
+/* save.c */
+extern bool save_game(void);
+extern void auto_save(int sig);
+extern bool save_file(int savefd);
+extern int restore(register char *file, char **envp);
+extern long encwrite(register char *start, register unsigned long size, register int outf);
+extern long encread(register char *start, register unsigned long size, int inf);
+/* scrolls.c */
+extern void genocide(void);
+extern void read_scroll(register int which, int flag, bool is_scroll);
+/* sticks.c */
+extern void do_zap(struct thing *zapper, struct object *obj, coord *direction, int which, int flags);
+extern void drain(int ymin, int ymax, int xmin, int xmax);
+extern void fix_stick(register struct object *cur);
+extern void m_use_wand(register struct thing *monster);
+extern bool need_dir(int type, int which);
+extern int player_zap(int which, int flag);
+/* things.c */
+extern char *charge_str(register struct object *obj);
+extern char *inv_name(register struct object *obj, bool drop);
+extern char *weap_name(register struct object *obj);
+extern int drop(struct linked_list *item);
+extern int dropcheck(register struct object *op);
+extern struct linked_list *new_thing(int thing_type, bool allow_curse);
+extern struct linked_list *spec_item(int type, int which, int hit, int damage);
+extern int pick_one(register struct magic_item *magic, int nitems);
+extern char *blesscurse(int flags);
+extern char *p_kind(struct object *obj);
+extern int extras(void);
+/* trader.c */
+extern void buy_it(void);
+extern void do_post(bool startup);
+extern int open_market(void);
+extern int price_it(void);
+extern void sell_it(void);
+extern void trans_line(void);
+extern char *typ_name(register struct object *obj);
+/* util.c */
+extern int ac_compute(bool ignoremetal);
+extern void aggravate(bool do_uniques, bool do_good);
+extern int cansee(register int y, register int x);
+extern long check_level(void);
+extern void chg_str(register int amt);
+extern void confus_player(void);
+extern int dex_compute(void);
+extern int diag_ok(register coord *sp, register coord *ep, struct thing *flgptr);
+extern coord *fallpos(register coord *pos, bool be_clear, int range);
+extern int findmindex(char *name);
+extern struct linked_list *find_mons(register int y, register int x);
+extern struct linked_list *find_obj(register int y, register int x);
+extern coord get_coordinates(void);
+extern bool get_dir(coord *direction);
+extern long get_worth(register struct object *obj);
+extern bool invisible(register struct thing *monst);
+extern int is_current(register struct object *obj);
+extern void look(bool wakeup, bool runend);
+extern void lower_level(short who);
+extern char *monster_name(register struct thing *tp);
+extern bool move_hero(int why);
+extern void raise_level(void);
+extern int save(int which, struct thing *who, int adj);
+extern int secretdoor(register int y, register int x);
+extern int str_compute(void);
+extern void strucpy(register char *s1, register char *s2, register size_t len);
+extern size_t strxcpy(register char *s1, register char *s2, register size_t len);
+extern char *tr_name(char ch);
+extern char *vowelstr(register char *str);
+extern void wake_room(register struct room *rp);
+extern void waste_time(void);
+/* vers.c */
+/* weapons.c */
+extern void boomerang(int ydelta, int xdelta, register struct linked_list *item, register struct thing *tp);
+extern void do_motion(register struct object *obj, register int ydelta, register int xdelta, register struct thing *tp);
+extern void fall(register struct linked_list *item, bool pr);
+extern int hit_monster(register int y, register int x, struct object *obj, register struct thing *tp);
+extern void init_weapon(register struct object *weap, char type);
+extern void missile(int ydelta, int xdelta, register struct linked_list *item, register struct thing *tp);
+extern char *num(register int n1, register int n2);
+extern void wield(void);
+/* wear.c */
+extern void take_off(void);
+extern void wear(void);
+extern int dress_units(struct linked_list *item);
+/* wizard.c */
+extern void create_obj(bool prompt, int which_item, int which_type);
+extern int getbless(void);
+extern int getdeath(void);
+extern int makemonster(bool showall, char *label, char *action);
+extern bool passwd(void);
+extern int teleport(void);
+extern void whatis(struct linked_list *what);
+extern void choose_qst(void);

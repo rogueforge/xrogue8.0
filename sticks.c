@@ -4,6 +4,7 @@
  */
 
 #include <curses.h>
+#include <string.h>
 #include <ctype.h>
 #include "rogue.h"
 
@@ -11,20 +12,16 @@
  * zap a stick and see what happens
  */
 
-do_zap(zapper, obj, direction, which, flags)
-struct thing *zapper;
-struct object *obj;
-coord *direction;
-int which;
-int flags;
+void
+do_zap(struct thing *zapper, struct object *obj, coord *direction, int which, int flags)
 {
-    register struct linked_list *item;
+    register struct linked_list *item = NULL;
     register struct thing *tp;
-    register int y, x, bonus;
+    register int y = 0, x = 0, bonus;
     struct linked_list *nitem;
     struct object *nobj;
-    bool cursed, blessed, is_player;
-    char *mname;
+    bool cursed, blessed, is_player = 0;
+    char *mname = "";
 
     cursed = flags & ISCURSED;
     blessed = flags & ISBLESSED;
@@ -38,7 +35,7 @@ int flags;
     }
     if (which == WS_WONDER) {
         switch (rnd(19)) {
-            when  0: which = WS_ELECT;
+            case  0: which = WS_ELECT;
             when  1: which = WS_FIRE;
             when  2: which = WS_COLD;
             when  3: which = WS_POLYMORPH;
@@ -115,7 +112,7 @@ int flags;
             }
     }
     switch (which) {
-        when WS_LIGHT:
+        case WS_LIGHT:
             /*
              * Reddy Kilowat wand.  Light up the room
              */
@@ -500,7 +497,7 @@ int flags;
 		    pstats.s_hpt = -1;
                     msg("Your life has been sucked out from you!  --More--");
                     wait_for(' ');
-                    death(zapper);
+                    death(zapper->t_index);
                 }
                 else
                     msg("You feel a great drain on your system.");
@@ -610,7 +607,7 @@ int flags;
                     extinguish(cure_disease);
                     turn_off(player, HASINFEST);
                     infest_dam = 0;
-                    cure_disease(); /* this prints message */
+                    cure_disease(NULL); /* this prints message */
                 }
                 if (on(player, DOROT)) {
                     msg("You feel your skin returning to normal.");
@@ -633,8 +630,8 @@ int flags;
  *      Do drain hit points from player shtick
  */
 
-drain(ymin, ymax, xmin, xmax)
-int ymin, ymax, xmin, xmax;
+void
+drain(int ymin, int ymax, int xmin, int xmax)
 {
     register int i, j, count;
     register struct thing *ick;
@@ -713,8 +710,8 @@ int ymin, ymax, xmin, xmax;
  * initialize a stick
  */
 
-fix_stick(cur)
-register struct object *cur;
+void
+fix_stick(register struct object *cur)
 {
     if (EQUAL(ws_type[cur->o_which], "staff")) {
         cur->o_weight = 100;
@@ -723,7 +720,7 @@ register struct object *cur;
         cur->o_hplus = 1;
         cur->o_dplus = 0;
         switch (cur->o_which) {
-            when WS_HIT:
+            case WS_HIT:
                 cur->o_hplus = 3;
                 cur->o_dplus = 3;
                 cur->o_damage = "2d8";
@@ -738,7 +735,7 @@ register struct object *cur;
         cur->o_dplus = 0;
         cur->o_charges = 5 + rnd(11);
         switch (cur->o_which) {
-            when WS_HIT:
+            case WS_HIT:
                 cur->o_hplus = 3;
                 cur->o_dplus = 3;
                 cur->o_damage = "2d8";
@@ -754,8 +751,8 @@ register struct object *cur;
  * Use the wand that our monster is wielding.
  */
 
-m_use_wand(monster)
-register struct thing *monster;
+void
+m_use_wand(register struct thing *monster)
 {
     register struct object *obj;
 
@@ -780,16 +777,16 @@ register struct thing *monster;
      */
     msg("%s points a %s at you!", prname(monster_name(monster), TRUE),
         ws_type[obj->o_which]);
-    do_zap(monster, obj, &monster->t_newpos, obj->o_which, NULL);
+    do_zap(monster, obj, &monster->t_newpos, obj->o_which, 0);
     monster->t_wand /= 2; /* chance lowers with each use */
 }
 
 bool
-need_dir(type, which)
-int     type,           /* type of item, NULL means stick */
-        which;          /* which item                     */
+need_dir(int type, int which)
+/* type - type of item, NULL means stick */
+/* which - which item                     */
 {
-    if (type == STICK || type == NULL) {
+    if (type == STICK || type == 0) {
         switch (which) {
             case WS_LIGHT:
             case WS_DRAIN: 
@@ -817,15 +814,14 @@ return (FALSE); /* hope we don't get here */
  * let the player zap a stick and see what happens
  */
 
-player_zap(which, flag)
-int which;
-int flag;
+int
+player_zap(int which, int flag)
 {
     register struct linked_list *item;
     register struct object *obj;
 
     obj = NULL;
-    if (which == NULL) {
+    if (which == 0) {
         /* This is a stick.  It takes 2 movement periods to zap it */
         if (player.t_action != C_ZAP) {
             if ((item = get_item(pack,"zap with",ZAPPABLE,FALSE,FALSE)) == NULL)
@@ -853,9 +849,9 @@ int flag;
         /* Handle relics specially here */
         if (obj->o_type == RELIC) {
             switch (obj->o_which) {
-                when ORCUS_WAND:
+                case ORCUS_WAND:
 		    /* msg(nothing); */
-		    read_scroll(S_PETRIFY, NULL, FALSE);
+		    read_scroll(S_PETRIFY, 0, FALSE);
 		    return(TRUE);
                 when MING_STAFF:
                     which = WS_MISSILE;
@@ -865,7 +861,7 @@ int flag;
                     fuse(cloak_charge, obj, CLOAK_TIME, AFTER);
                 when ASMO_ROD:
                     switch (rnd(3)) {
-                        when 0:         which = WS_ELECT;
+                        case 0:         which = WS_ELECT;
                         when 1:         which = WS_COLD;
                         otherwise:      which = WS_FIRE;
                     }

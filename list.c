@@ -3,6 +3,9 @@
  */
 
 #include <curses.h>
+#include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include "rogue.h"
 
 /*
@@ -10,8 +13,8 @@
  *      Takes an item out of whatever linked list it might be in
  */
 
-_detach(list, item)
-register struct linked_list **list, *item;
+void
+_detach(register struct linked_list **list, register struct linked_list *item)
 {
     if (*list == item)
         *list = next(item);
@@ -26,8 +29,8 @@ register struct linked_list **list, *item;
  *      add an item to the head of a list
  */
 
-_attach(list, item)
-register struct linked_list **list, *item;
+void
+_attach(register struct linked_list **list, register struct linked_list *item)
 {
     if (*list != NULL)
     {
@@ -49,8 +52,8 @@ register struct linked_list **list, *item;
  *      Throw the whole object list away
  */
 
-_o_free_list(ptr)
-register struct linked_list **ptr;
+void
+_o_free_list(register struct linked_list **ptr)
 {
     register struct linked_list *item;
 
@@ -67,8 +70,8 @@ register struct linked_list **ptr;
  *      free up an item and its object(and maybe contents)
  */
 
-o_discard(item)
-register struct linked_list *item;
+void
+o_discard(register struct linked_list *item)
 {
     register struct object *obj;
 
@@ -85,8 +88,8 @@ register struct linked_list *item;
  *      Throw the whole list of room exits away
  */
 
-_r_free_list(ptr)
-register struct linked_list **ptr;
+void
+_r_free_list(register struct linked_list **ptr)
 {
     register struct linked_list *item;
 
@@ -103,8 +106,8 @@ register struct linked_list **ptr;
  *      free up an item and its room
  */
 
-r_discard(item)
-register struct linked_list *item;
+void
+r_discard(register struct linked_list *item)
 {
     total -= 2;
     FREE(DOORPTR(item));
@@ -116,8 +119,8 @@ register struct linked_list *item;
  *      Throw the whole thing list away
  */
 
-_t_free_list(ptr)
-register struct linked_list **ptr;
+void
+_t_free_list(register struct linked_list **ptr)
 {
     register struct linked_list *item;
 
@@ -134,8 +137,8 @@ register struct linked_list **ptr;
  *      free up an item and its thing
  */
 
-t_discard(item)
-register struct linked_list *item;
+void
+t_discard(register struct linked_list *item)
 {
     register struct thing *tp;
 
@@ -151,8 +154,8 @@ register struct linked_list *item;
  *      get rid of an item structure -- don't worry about contents
  */
 
-destroy_item(item)
-register struct linked_list *item;
+void
+destroy_item(register struct linked_list *item)
 {
     total--;
     FREE(item);
@@ -164,8 +167,7 @@ register struct linked_list *item;
  */
 
 struct linked_list *
-new_item(size)
-int size;
+new_item(int size)
 {
     register struct linked_list *item;
 
@@ -194,14 +196,13 @@ creat_item()
 }
 
 char *
-new(size)
-int size;
+new(int size)
 {
     register char *space = ALLOC(size);
 
     if (space == NULL) {
-        sprintf(prbuf,"Rogue ran out of memory (used = %d, wanted = %d).",
-                sbrk(0), size);
+        sprintf(prbuf,"Rogue ran out of memory (used = %ld, wanted = %d).",
+                (long)sbrk(0), size);
         fatal(prbuf);
     }
     total++;

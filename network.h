@@ -7,12 +7,13 @@
 
 /* #undef  NETCOMMAND "uux - -n '%s!%s -u' >/dev/null 2>&1" */
 /* #define NETCOMMAND "usend -s -d%s -uNoLogin -!'%s -u' - 2>/dev/null" */
-#undef NETCOMMAND ""
+#undef NETCOMMAND /* "" */
 
 /* Networking information -- should not vary among networking machines */
 #define SYSLEN 9
 #define LOGLEN 8
-#if !MSDOS
+#define NUMNET 6
+#if MSDOS
 #undef  NUMNET
 #endif
 struct network {

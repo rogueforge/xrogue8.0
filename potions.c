@@ -3,6 +3,7 @@
  */
 
 #include <curses.h>
+#include <stdlib.h>
 #include "rogue.h"
 
 /*
@@ -10,7 +11,7 @@
  * ordered according to the attribute definitions in rogue.h.
  */
 
-VOID (*add_abil[NUMABILITIES])() = {
+void (*add_abil[NUMABILITIES])(int change) = {
     add_intelligence, add_strength, add_wisdom, add_dexterity,
     add_constitution, add_charisma
 };
@@ -20,7 +21,7 @@ VOID (*add_abil[NUMABILITIES])() = {
  * ordered according to the attribute definitions in rogue.h.
  */
 
-VOID (*res_abil[NUMABILITIES])() = {
+void (*res_abil[NUMABILITIES])(void * arg) = {
     res_intelligence, res_strength, res_wisdom, res_dexterity,
     res_constitution, res_charisma
 };
@@ -29,9 +30,8 @@ VOID (*res_abil[NUMABILITIES])() = {
  * Increase player's constitution
  */
 
-VOID
-add_constitution(change)
-int change;
+void
+add_constitution(int change)
 {
     /* Do the potion */
     if (change < 0) {
@@ -58,9 +58,8 @@ int change;
  * Increase player's charisma
  */
 
-VOID
-add_charisma(change)
-int change;
+void
+add_charisma(int change)
 {
     /* Do the potion */
     if (change < 0) msg("You feel less attractive now.");
@@ -79,9 +78,8 @@ int change;
  * Increase player's dexterity
  */
 
-VOID
-add_dexterity(change)
-int change;
+void
+add_dexterity(int change)
 {
     int ring_str;       /* Value of ring strengths */
 
@@ -111,8 +109,8 @@ int change;
  *      add a haste to the player
  */
 
-add_haste(blessed)
-bool blessed;
+void
+add_haste(bool blessed)
 {
     int hasttime;
 
@@ -126,7 +124,7 @@ bool blessed;
 
     if (on(player, ISSLOW)) { /* Is person slow? */
         extinguish(noslow);
-        noslow();
+        noslow(NULL);
 
         if (blessed) hasttime = HASTETIME/2;
         else return;
@@ -149,9 +147,8 @@ bool blessed;
  * Increase player's intelligence
  */
 
-VOID
-add_intelligence(change)
-int change;
+void
+add_intelligence(int change)
 {
     int ring_str;       /* Value of ring strengths */
 
@@ -180,6 +177,7 @@ int change;
  * this routine makes the hero move slower 
  */
 
+void
 add_slow()
 {
     /* monks cannot be slowed or hasted */
@@ -190,7 +188,7 @@ add_slow()
 
     if (on(player, ISHASTE)) { /* Already sped up */
         extinguish(nohaste);
-        nohaste();
+        nohaste(NULL);
     }
     else {
         msg("You feel yourself moving %sslower.",
@@ -208,9 +206,8 @@ add_slow()
  * Increase player's strength
  */
 
-VOID
-add_strength(change)
-int change;
+void
+add_strength(int change)
 {
 
     if (change < 0) {
@@ -227,9 +224,8 @@ int change;
  * Increase player's wisdom
  */
 
-VOID
-add_wisdom(change)
-int change;
+void
+add_wisdom(int change)
 {
     int ring_str;       /* Value of ring strengths */
 
@@ -254,11 +250,8 @@ int change;
         pstats.s_wisdom += ring_str;
 }
 
-quaff(which, kind, flags, is_potion)
-int which;
-int kind;
-int flags;
-bool is_potion;
+void
+quaff(int which, int kind, int flags, bool is_potion)
 {
     register struct object *obj;
     register struct linked_list *item, *titem;
@@ -311,7 +304,7 @@ bool is_potion;
     blessed = flags & ISBLESSED;
 
     switch(which) {
-        when P_CLEAR:
+        case P_CLEAR:
             if (cursed) {
                 confus_player();
             }
@@ -340,7 +333,7 @@ bool is_potion;
                 /* If player is confused, unconfuse him */
                 if (on(player, ISHUH)) {
                     extinguish(unconfuse);
-                    unconfuse();
+                    unconfuse(NULL);
                 }
             }
         when P_HEALING:
@@ -363,7 +356,7 @@ bool is_potion;
 		    }
                     if (on(player, ISHUH)) {
                         extinguish(unconfuse);
-                        unconfuse();
+                        unconfuse(NULL);
                     }
                 }
                 else {
@@ -373,7 +366,7 @@ bool is_potion;
                 }
                 msg("You begin to feel %sbetter.",
                         blessed ? "much " : "");
-                sight();
+                sight(NULL);
                 if (is_potion) p_know[P_HEALING] = TRUE;
             }
         when P_ABIL:
@@ -491,8 +484,10 @@ bool is_potion;
                     light(&hero);
                 }
                 else
+                {
                     msg("The darkness around you thickens. ");
                     lengthen(sight, SEEDURATION);
+                }
             }
             else {
                 if (off(player, CANSEE)) {
@@ -505,7 +500,7 @@ bool is_potion;
                     msg("You eyes continue to tingle.");
                     lengthen(unsee, blessed ? SEEDURATION*3 : SEEDURATION);
 		}
-                sight();
+                sight(NULL);
             }
         when P_PHASE:
             if (cursed) {
@@ -561,7 +556,7 @@ bool is_potion;
                         blessed ? "much " : "");
                 p_know[P_RAISE] = TRUE;
                 raise_level();
-                do_panic(NULL);         /* this startles them */
+                do_panic(0);         /* this startles them */
                 if (blessed) raise_level();
             }
         when P_HASTE:
@@ -573,7 +568,8 @@ bool is_potion;
                 if (is_potion) p_know[P_HASTE] = TRUE;
             }
         when P_RESTORE: {
-            register int i, howmuch, strength_tally;
+            register int i, strength_tally;
+            long int howmuch;
 
             msg("Hey, this tastes great.  It make you feel %swarm all over.",
                 blessed ? "really " : "");
@@ -592,18 +588,18 @@ bool is_potion;
                              */
                             strength_tally = lost_str;
                             lost_str = 0;
-                            res_strength(howmuch);
+                            res_strength(&howmuch);
                             lost_str = strength_tally;
                         }
                         else {
                         lost_str = 0;
                             extinguish(res_strength);
-                            res_strength(howmuch);
+                            res_strength(&howmuch);
                         }
                     }
-                    else res_strength(howmuch);
+                    else res_strength(&howmuch);
                 }
-                else (*res_abil[i])(howmuch);
+                else (*res_abil[i])(&howmuch);
             }
         }
         when P_INVIS:
@@ -898,8 +894,8 @@ bool is_potion;
              !p_know[which]             && 
              item                       &&
              askme                      &&
-             (flags & ISKNOW) == NULL   &&
-             (flags & ISPOST) == NULL   &&
+             (flags & ISKNOW) == 0   &&
+             (flags & ISPOST) == 0   &&
              p_guess[which] == NULL) {
         nameitem(item, FALSE);
     }
@@ -914,10 +910,10 @@ bool is_potion;
  *      if called with zero the restore fully
  */
 
-VOID
-res_dexterity(howmuch)
-int howmuch;
+void
+res_dexterity(void *arg)
 {
+    int howmuch = *(int *)arg;
     short save_max;
     int ring_str;
 
@@ -947,10 +943,10 @@ int howmuch;
  *      Restore player's intelligence
  */
 
-VOID
-res_intelligence(howmuch)
-int howmuch;
+void
+res_intelligence(void *arg)
 {
+    int howmuch = *(int*)arg;
     short save_max;
     int ring_str;
 
@@ -975,10 +971,10 @@ int howmuch;
  *      Restore player's wisdom
  */
 
-VOID
-res_wisdom(howmuch)
-int howmuch;
+void
+res_wisdom(void *arg)
 {
+    int howmuch = *(int*)arg;
     short save_max;
     int ring_str;
 
@@ -1003,10 +999,11 @@ int howmuch;
  *      Restore the players constitution.
  */
 
-VOID
-res_constitution(howmuch)
-int howmuch;
+void
+res_constitution(void *arg)
 {
+    int howmuch = *(int*)arg;
+
     if (howmuch > 0)
         pstats.s_const = min(pstats.s_const + howmuch, max_stats.s_const);
 }
@@ -1016,10 +1013,11 @@ int howmuch;
  *      Restore the players charisma.
  */
 
-VOID
-res_charisma(howmuch)
-int howmuch;
+void
+res_charisma(void *arg)
 {
+    int howmuch = *(int*)arg;
+
     if (howmuch > 0)
         pstats.s_charisma =
             min(pstats.s_charisma + howmuch, max_stats.s_charisma);

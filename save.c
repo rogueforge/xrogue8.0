@@ -3,6 +3,9 @@
  */
 
 #include <curses.h>
+#include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <ctype.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -33,8 +36,6 @@ typedef struct stat STAT;
 extern char version[];
 extern unsigned char encstr[];
 /* extern bool _endwin; */
-
-char *sbrk();
 
 static STAT sbuf;
 
@@ -101,7 +102,7 @@ gotfile:
  */
 
 void
-auto_save()
+auto_save(int sig)
 {
     register int savefd;
     register int i;
@@ -132,10 +133,11 @@ auto_save()
  */
 
 bool
-save_file(savefd)
-register int savefd;
+save_file(int savefd)
 {
+#ifdef MSDOS
     extern unsigned int _asegr, _asegn; /* for MSDOS access to end of prog */
+#endif
     register unsigned long num_to_write, num_written;
 
     wmove(cw, lines-1, 0);
@@ -151,7 +153,7 @@ register int savefd;
                    (((unsigned long)FP_SEG(version) << 4L) + FP_OFF(version));
     msg("num to write = %lx\n", num_to_write);
 #else
-    num_to_write = sbrk(0L) - version;
+    num_to_write = (char *)sbrk(0L) - version;
 #endif
     num_written = ENCWRITE((char *)((long)version), num_to_write, savefd);
     close(savefd);
@@ -159,17 +161,14 @@ register int savefd;
     else return(FALSE);
 }
 
-restore(file, envp)
-register char *file;
-char **envp;
+int
+restore(register char *file, char **envp)
 {
     register int inf;
     extern char **environ;
     char buf[LINELEN];
-    char *newterm;                   /* For new terminal type */
     STAT sbuf2;
     int oldcol, oldline;        /* Old number of columns and lines */
-    char *brk();
 
     if (strcmp(file, "-r") == 0)
         file = file_name;
@@ -191,7 +190,8 @@ char **envp;
     fstat(inf, &sbuf2);
     fflush(stdout);
 #if !MSDOS
-    brk(version + sbuf2.st_size);
+    if (brk(version + sbuf2.st_size))
+        return FALSE;
 #endif
     /*
      * Added the following #ifdef to re-initialize the screen
@@ -302,6 +302,7 @@ char **envp;
     wait_for(' ');
     playit();
     /*NOTREACHED*/
+    return FALSE;
 }
 
 #define ENCWBSIZ        1024
@@ -311,10 +312,7 @@ char **envp;
  */
 
 long
-encwrite(start, size, outf)
-register char *start;
-register unsigned long size;
-register int outf;
+encwrite(register char *start, register unsigned long size, register int outf)
 {
     register unsigned char *ep;
     register int i = 0;
@@ -348,14 +346,11 @@ register int outf;
  */
 
 long
-encread(start, size, inf)
-register char *start;
-register unsigned long size;
-int inf;
+encread(register char *start, register unsigned long size, int inf)
 {
     register unsigned char *ep;
     register int rd_siz;
-    register long total_read;
+    register unsigned long total_read;
 
     total_read = 0;
     while (total_read < size) {

@@ -6,10 +6,8 @@
 #include <ctype.h>
 #include "rogue.h"
 
-boomerang(ydelta, xdelta, item, tp)
-int ydelta, xdelta;
-register struct linked_list *item;
-register struct thing *tp;
+void
+boomerang(int ydelta, int xdelta, register struct linked_list *item, register struct thing *tp)
 {
         register struct object *obj;
         struct thing midpoint;
@@ -41,10 +39,8 @@ register struct thing *tp;
  * tp other than t_pos unless we change boomerang().
  */
 
-do_motion(obj, ydelta, xdelta, tp)
-register struct object *obj;
-register int ydelta, xdelta;
-register struct thing *tp;
+void
+do_motion(register struct object *obj, register int ydelta, register int xdelta, register struct thing *tp)
 {
 
     /*
@@ -102,9 +98,8 @@ register struct thing *tp;
  *      Drop an item someplace around here.
  */
 
-fall(item, pr)
-register struct linked_list *item;
-bool pr;
+void
+fall(register struct linked_list *item, bool pr)
 {
         register struct object *obj;
         register struct room *rp;
@@ -156,10 +151,8 @@ bool pr;
  * Does the missile hit the monster
  */
 
-hit_monster(y, x, obj, tp)
-register int y, x;
-struct object *obj;
-register struct thing *tp;
+int
+hit_monster(register int y, register int x, struct object *obj, register struct thing *tp)
 {
         static coord mp;
 
@@ -189,13 +182,12 @@ register struct thing *tp;
  *      Set up the initial goodies for a weapon
  */
 
-init_weapon(weap, type)
-register struct object *weap;
-char type;
+void
+init_weapon(register struct object *weap, char type)
 {
         register struct init_weps *iwp;
 
-        iwp = &weaps[type];
+        iwp = &weaps[(int)type];
         weap->o_damage = iwp->w_dam;
         weap->o_hurldmg = iwp->w_hrl;
         weap->o_launch = iwp->w_launch;
@@ -214,10 +206,8 @@ char type;
  *      Fire a missile in a given direction
  */
 
-missile(ydelta, xdelta, item, tp)
-int ydelta, xdelta;
-register struct linked_list *item;
-register struct thing *tp;
+void
+missile(int ydelta, int xdelta, register struct linked_list *item, register struct thing *tp)
 {
         register struct object *obj;
         register struct linked_list *nitem;
@@ -289,8 +279,7 @@ register struct thing *tp;
  */
 
 char *
-num(n1, n2)
-register int n1, n2;
+num(register int n1, register int n2)
 {
         static char numbuf[LINELEN/2];
 
@@ -310,6 +299,7 @@ register int n1, n2;
  *      Pull out a certain weapon
  */
 
+void
 wield()
 {
         register struct linked_list *item;
@@ -373,7 +363,7 @@ wield()
             obj->o_type == WEAPON       &&
             obj->o_which == TWOSWORD) {
                 switch (rnd(3)) {
-                when 0:
+                case 0:
                    msg("Only fighter types can wield the two-handed sword.");
                 when 1:
                    msg("Your hand does not fit the two-handed sword.");
@@ -389,7 +379,7 @@ wield()
             obj->o_type == WEAPON       &&
             obj->o_which == BASWORD) {
                 switch (rnd(3)) {
-                when 0:
+                case 0:
                    msg("Only thief types can wield the bastard sword.");
                 when 1:
                    msg("Your hand does not fit the bastard sword.");
