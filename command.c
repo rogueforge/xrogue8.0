@@ -180,7 +180,7 @@ command()
                 /*
                  * execute a command
                  */
-                if (count && !running)
+                if (count && !running && player.t_action == A_NIL)
                     count--;
 
                 switch (ch) {
