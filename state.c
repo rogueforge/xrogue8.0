@@ -1097,10 +1097,10 @@ rs_write_daemons(FILE *savef, struct delayed_action *d_list,int count)
             func = 36;
         else if (d_list[i].d_func == nobolt)
             func = 37;
-
-
-        else
+        else if (d_list[i].d_func == NULL)
             func = 0;
+        else
+            func = -1;
 
         rs_write_int(savef, d_list[i].d_type);
         rs_write_int(savef, func);
@@ -1246,6 +1246,8 @@ rs_read_daemons(int inf, struct delayed_action *d_list, int count)
                                  break;
                         case 37: d_list[i].d_func = nobolt;
                                  break;
+                        case 0:
+                        case -1:
                         default: d_list[i].d_func = NULL;
                                  break;
                     }
@@ -1277,6 +1279,14 @@ rs_read_daemons(int inf, struct delayed_action *d_list, int count)
                         rs_read_long(inf, (long *) &d_list[i].d_arg);
 
                     rs_read_int(inf, &d_list[i].d_time);
+
+                    if (d_list[i].d_func == NULL) 
+                    {
+                        d_list[i].d_time = 0;
+                        d_list[i].d_arg = NULL;
+                        d_list[i].d_type = 0;
+                    }
+
                 }
             }
         }

@@ -114,6 +114,10 @@ kill_daemon(reg void (*func)(void *))
          * Take it out of the list
          */
         dev->d_type = EMPTY;
+        dev->d_arg  = NULL;
+        dev->d_func = NULL;
+        dev->d_time = 0;
+
         demoncnt -= 1;                  /* update count */
 }
 
@@ -135,7 +139,7 @@ do_daemons(reg int flag)
         /*
          * Executing each one, giving it the proper arguments
          */
-                if (dev->d_type == flag && dev->d_time == DAEMON)
+                if ((dev->d_type == flag) && (dev->d_time == DAEMON) && (dev->d_func != NULL))
                         (*dev->d_func)(dev->d_arg);
 }
 
@@ -187,6 +191,9 @@ extinguish(reg void (*func)(void *))
         if ((wire = find_slot(func)) == NULL)
                 return;
         wire->d_type = EMPTY;
+        wire->d_func = NULL;
+        wire->d_arg = NULL;
+        wire->d_time = 0;
         fusecnt -= 1;
 }
 
@@ -211,7 +218,8 @@ do_fuses(reg int flag)
             if(flag == wire->d_type && wire->d_time > 0 &&
               --wire->d_time == 0) {
                 wire->d_type = EMPTY;
-                (*wire->d_func)(wire->d_arg);
+                if (wire->d_func != NULL)
+                    (*wire->d_func)(wire->d_arg);
                 fusecnt -= 1;
             }
         }
