@@ -1158,7 +1158,7 @@ killed(register struct linked_list *item, bool pr, bool points, bool treasure)
      */
     while (pitem != NULL)
     {
-        nexti = next(tp->t_pack);
+        nexti = next(pitem);
         (OBJPTR(pitem))->o_pos = tp->t_pos;
         detach(tp->t_pack, pitem);
         if (treasure) 
