@@ -1170,7 +1170,7 @@ nameitem(struct linked_list *item, bool mark)
             guess = m_guess;
             know = m_know;
             elsewise = (m_guess[obj->o_which] != NULL ?
-                        m_guess[obj->o_which] : NULL);
+                        m_guess[obj->o_which] : "nothing");
         otherwise:
             if (!mark) {
                 msg("You can't call that anything.");
