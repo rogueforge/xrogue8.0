@@ -502,7 +502,7 @@ give()
 				/* just let him roam around */
 				turn_on(*th, ISRUN);
 				if (on(*th, ISFLEE)) turn_off(*th, ISFLEE);
-				runto(th, &player);
+				runto(th, &hero);
 				th->t_action = A_NIL;
 				return;
 			    }
