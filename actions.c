@@ -50,7 +50,7 @@ dsrpt_player ()
     struct object *obj;
     
     action = player.t_action;
-    which = (long) player.t_using;
+    which = player.t_selection;
 
     switch (action) {
     case C_CAST: /* Did we disrupt a spell? */
@@ -101,7 +101,7 @@ dsrpt_player ()
     }
     player.t_no_move = movement(&player); /* disoriented for a while */
     player.t_action = A_NIL;
-    player.t_using = NULL;
+    player.t_selection = 0;
 }
 
 /*

@@ -192,8 +192,8 @@ pray()
     }
 
     /* We've waited our required praying time. */
-    which_prayer = (long) player.t_using;
-    player.t_using = NULL;
+    which_prayer = player.t_selection;
+    player.t_selection = 0;
     player.t_action = A_NIL;
 
     if (cleric_spells[which_prayer].s_cost + pray_time > prayer_ability) {
@@ -274,8 +274,8 @@ cast()
     }
 
     /* We've waited our required casting time. */
-    which_spell = (long) player.t_using;
-    player.t_using = NULL;
+    which_spell = player.t_selection;
+    player.t_selection = 0;
     player.t_action = A_NIL;
 
     if ((spell_power + magic_spells[which_spell].s_cost) > spell_ability) {
@@ -361,8 +361,8 @@ chant()
     }
 
     /* We've waited our required chanting time. */
-    which_chant = (long) player.t_using;
-    player.t_using = NULL;
+    which_chant = player.t_selection;
+    player.t_selection = 0;
     player.t_action = A_NIL;
 
     if (druid_spells[which_chant].s_cost + chant_time > chant_ability) {
@@ -1120,7 +1120,7 @@ got_spell:
                 return(FALSE);
             }
     }
-    player.t_using = (struct linked_list *) (long) which_spell;
+    player.t_selection = which_spell;
     player.t_no_move = (which_spell/3 + 1) * movement(&player);
     return(TRUE);
 }

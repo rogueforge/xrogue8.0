@@ -1611,8 +1611,8 @@ set_trap(register struct thing *tp, register int y, register int x)
             units;     /* Number of movement units for the given trap */
 
         if (player.t_action == C_SETTRAP) {
-            selection = (long) player.t_using;
-            player.t_using = NULL;
+            selection = player.t_selection;
+            player.t_selection = 0;
             player.t_action = A_NIL;
         }
         else {
@@ -1759,7 +1759,9 @@ set_trap(register struct thing *tp, register int y, register int x)
                 }
             } while (state != 2);
 
-            switch ((long)(player.t_using = (struct linked_list *) selection)) {
+            player.t_selection = selection;
+
+            switch (selection) {
                 case '1': units = 10;   /* Trap door */
                 when '2': units = 5;    /* Bear trap */
                 when '3': units = 7;    /* Sleeping gas trap */

@@ -1117,6 +1117,7 @@ struct thing {
     unsigned long t_flags[16];          /* State word */
     struct linked_list *t_pack;         /* What the thing is carrying */
     struct linked_list *t_using;        /* What the thing is using */
+	int t_selection;
     struct stats t_stats;               /* Physical description */
     struct stats maxstats;              /* maximum(or initial) stats */
     int    t_reserved;                  /* reserved for save/restore code */
