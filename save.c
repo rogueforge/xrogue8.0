@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <signal.h>
 #include <fcntl.h>
+#include <errno.h>
 #include "rogue.h"
 #include "mach_dep.h"
 #ifdef PC7300
@@ -29,10 +30,9 @@ extern struct uwdata wdata;
 
 typedef struct stat STAT;
 
-extern char *sys_errlist[], version[];
+extern char version[];
 extern unsigned char encstr[];
 /* extern bool _endwin; */
-extern int errno;
 
 char *sbrk();
 
@@ -82,7 +82,7 @@ gotfile:
 #else
         if ((savefd = open(file_name, O_WRONLY|O_CREAT|O_TRUNC,0666)) < 0)
 #endif
-            msg(sys_errlist[errno]);    /* fake perror() */
+            msg(strerror(errno));    /* fake perror() */
     } while (savefd < 0);
 
     /*

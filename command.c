@@ -365,19 +365,19 @@ command()
                     when C_CAST : cast();
                     when C_CHANT : chant();
                     when C_PRAY : pray();
-                    when CTRL(B) : msg("Current score: %d",
+                    when CTRL('B') : msg("Current score: %d",
 					pstats.s_exp + (long) purse);
-                    when CTRL(E) : msg("Current food level: %d(2000)",
+                    when CTRL('E') : msg("Current food level: %d(2000)",
 					food_left);
-                    when CTRL(L) : after = FALSE; clearok(curscr, TRUE);
+                    when CTRL('L') : after = FALSE; clearok(curscr, TRUE);
                                     touchwin(cw);
-                    when CTRL(N) : nameit();
-                    when CTRL(O) : after = FALSE; opt_player();
-                    when CTRL(R) : after = FALSE; msg(huh);
-                    when CTRL(T) :
+                    when CTRL('N') : nameit();
+                    when CTRL('O') : after = FALSE; opt_player();
+                    when CTRL('R') : after = FALSE; msg(huh);
+                    when CTRL('T') :
                         if (player.t_action == A_NIL) {
                             if (get_dir(&player.t_newpos)) {
-                                player.t_action = CTRL(T);
+                                player.t_action = CTRL('T');
                                 player.t_no_move = 2 * movement(&player);
                             }
                             else
@@ -428,7 +428,7 @@ command()
 			}
 			after = FALSE;
 #ifdef WIZARD
-                    when CTRL(P) :
+                    when CTRL('P') :
                         after = FALSE;
                         if (wizard)
                         {
@@ -455,20 +455,20 @@ command()
                             when 'M' : create_obj(TRUE, 0, 0);
                             when 'V' : msg("vlevel = %d  turns = %d",
                                            vlevel, turns);
-                            when CTRL(A) : activity();
-                            when CTRL(C) : do_teleport();
-                            when CTRL(D) : level++;
+                            when CTRL('A') : activity();
+                            when CTRL('C') : do_teleport();
+                            when CTRL('D') : level++;
                                            take_with();
                                            new_level(NORMLEV);
-                            when CTRL(F) : overlay(stdscr,cw);
-                            when CTRL(G) :
+                            when CTRL('F') : overlay(stdscr,cw);
+                            when CTRL('G') :
                             {
                                 item=get_item(pack,"charge",STICK,FALSE,FALSE);
                                 if (item != NULL) {
                                     (OBJPTR(item))->o_charges=10000;
                                 }
                             }
-                            when CTRL(H) :
+                            when CTRL('H') :
                             {
                                 register int i, j;
                                 register struct object *obj;
@@ -507,12 +507,12 @@ command()
                                 }
                                 purse += 20000;
                             }
-                            when CTRL(I) : inventory(lvl_obj, ALL);
-                            when CTRL(J) : teleport();
-                            when CTRL(K) : whatis((struct linked_list *)NULL);
-                            when CTRL(W) : wanderer();
-                            when CTRL(X) : overlay(mw,cw);
-                            when CTRL(Y) : msg("food left: %d\tfood level: %d", 
+                            when CTRL('I') : inventory(lvl_obj, ALL);
+                            when CTRL('J') : teleport();
+                            when CTRL('K') : whatis((struct linked_list *)NULL);
+                            when CTRL('W') : wanderer();
+                            when CTRL('X') : overlay(mw,cw);
+                            when CTRL('Y') : msg("food left: %d\tfood level: %d", 
                                                     food_left, foodlev);
                             otherwise :
                                 msg("Illegal wizard command '%s'.", unctrl(ch));

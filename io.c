@@ -2,7 +2,7 @@
  * Various input/output functions
  */
 
-#include <varargs.h>
+#include <stdarg.h>
 #include <curses.h>
 #include <ctype.h>
 #include "rogue.h"
@@ -17,14 +17,11 @@ static int newpos = 0;
 
 /* VARARGS */
 void
-msg(va_alist)
-va_dcl
+msg(char *fmt, ...)
 {
-    char *fmt;
     va_list args;
 
-    va_start(args);
-    fmt = va_arg(args, char *);
+    va_start(args, fmt);
     /*
      * if the string is "", just clear the line
      */
@@ -53,14 +50,11 @@ va_dcl
 
 /* VARARGS */
 void
-addmsg(va_alist)
-va_dcl
+addmsg(char *fmt, ...)
 {
     va_list args;
-    char *fmt;
 
-    va_start(args);
-    fmt = va_arg(args, char *);
+    va_start(args, fmt);
     doadd(fmt, args);
     va_end(args);
 }
@@ -137,7 +131,7 @@ endmsg()
 #ifdef USG5_2
 doadd(fmt, args)
 char *fmt;
-int **args;
+va_list args;
 {
     vsprintf((char *) &msgbuf[newpos], fmt, args);
     newpos = strlen(msgbuf);

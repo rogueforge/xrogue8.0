@@ -88,9 +88,12 @@ void
 byebye(n)
 int n;
 {
+#ifdef BSD
     extern bool _endwin;
 
-    if (!_endwin) {
+    if (!_endwin)
+#endif
+    {
         clear();
         endwin();
     }

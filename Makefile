@@ -57,7 +57,7 @@ LDFLAGS=
 # of including the curses and termcap libraries.
 
 #CURSESLIB=-lcurses
-CURSESLIB=
+CURSESLIB=-lcurses -lcrypt
 TERMLIB=
 
 # If you have fixes to the terminfo routines, define them in TERMOBJ.

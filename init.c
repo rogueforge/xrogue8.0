@@ -21,7 +21,7 @@ other time enter a '?' or a '='.";
 enter a '\\' on any other screen.";
 */
 
-static char *rainbow[] = {
+static char rainbow[][11] = {
 
 "Amber",                "Aquamarine",           "Beige",
 "Black",                "Blue",                 "Brown",
@@ -52,7 +52,7 @@ static char *sylls[] = {
     "yih", "zef", "zen", "zil", "zym", "-", 
 };
 
-static char *stones[] = {
+static char stones[][14] = {
         "Agate",                "Alexandrite",          "Amethyst",
         "Azurite",              "Bloodstone",           "Cairngorm",
         "Carnelian",            "Chalcedony",           "Chrysoberyl",
@@ -72,7 +72,7 @@ static char *stones[] = {
 };
 #define NSTONES (sizeof stones / sizeof (char *))
 
-static char *wood[] = {
+static char wood[][13] = {
         "Avocado wood", "Balsa",        "Banyan",       "Birch",
         "Cedar",        "Cherry",       "Cinnabar",     "Dogwood",
         "Driftwood",    "Ebony",        "Eucalyptus",   "Hemlock",
@@ -82,7 +82,7 @@ static char *wood[] = {
 };
 #define NWOOD (sizeof wood / sizeof (char *))
 
-static char *metal[] = {
+static char metal[][10] = {
         "Aluminium",    "Bone",         "Brass",        "Bronze",
         "Copper",       "Chromium",     "Iron",         "Lead",
         "Magnesium",    "Pewter",       "Platinum",     "Silver",

@@ -316,8 +316,8 @@ bool is_scroll;
                 msg("This scroll has a very detailed map on it!  --More--");
                 wait_for(' ');
                 overwrite(stdscr, hw);
-                overlay(stdscr, cw);    /* wizard CTRL(F) */
-                overlay(mw, cw);        /* wizard CTRL(X) */
+                overlay(stdscr, cw);    /* wizard CTRL('F') */
+                overlay(mw, cw);        /* wizard CTRL('X') */
                 draw(cw);
                 goto map_jump;          /* skip over regular mapping routine */
             }

@@ -1558,7 +1558,7 @@ struct thing *who;
 
 #define TRAPTYPES 9             /* 9 total trap types that can be set */
 #define WIZARDTRAPS 3           /* Only wizards can set the last 3 */
-				/* CTRL(C) to level 400 for POST level */
+				/* CTRL('C') to level 400 for POST level */
 static char *trap_types[TRAPTYPES] = {
     "Trap Door",
     "Bear Trap",

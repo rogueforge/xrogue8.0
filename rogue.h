@@ -7,6 +7,7 @@
  */
 
 #define VOID long
+#define reg register
 
 #undef SCROLL   /* UNIX/370 defines SCROLL for some bizarre reason */
 #ifdef BSD
@@ -126,7 +127,7 @@ extern char toupper();
 #define C_SEARCH        's'
 #define C_SETTRAP       '^'
 #define C_TAKEOFF       'T'
-#define C_USE           CTRL(U)
+#define C_USE           CTRL('U')
 #define C_WEAR          'W'
 #define C_WIELD         'w'
 #define C_ZAP           'z'
@@ -274,7 +275,7 @@ extern char toupper();
 
 #ifndef BSD
 #undef CTRL
-#define CTRL(ch) ('ch' & 037)
+#define CTRL(ch) (ch & 037)
 #endif
 
 #define ALLOC(x) malloc((unsigned int) x)

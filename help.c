@@ -123,7 +123,7 @@ static char *game_monst ="To be updated.";
 
 static char *game_food ="There are three types of food, regular food rations, \
 various fruits, and slime- molds.  Eating regular food will add 750 points to \
-your current food level      [see the CTRL(E) command].  Eating fruit adds \
+your current food level      [see the CTRL('E') command].  Eating fruit adds \
 300 points.  Certain fruits also  cure you, add an attribute point, add a \
 hit-point, increase your armor, give    you additional prayer, chant, or spell \
 casting abilities, or add experience     points.  Eating slime-mold (monster \
@@ -568,14 +568,14 @@ struct h_list helpstr[] = {
     '!',        "	Shell escape",
     ESC,        "	Cancel command (Esc)",
     ' ',        "",
-    CTRL(B),    "	Current score (if you win)",
-    CTRL(E),    "	Current food level",
-    CTRL(L),    "	Redraw the screen",
-    CTRL(N),    "	Name an object or a monster",
-    CTRL(O),    "	Character affect status",
-    CTRL(R),    "	Repeat last message",
-    CTRL(T),    "<dir>	Take (steal) from (direction)",
-    CTRL(U),    "	Use a magic item",
+    CTRL('B'),    "	Current score (if you win)",
+    CTRL('E'),    "	Current food level",
+    CTRL('L'),    "	Redraw the screen",
+    CTRL('N'),    "	Name an object or a monster",
+    CTRL('O'),    "	Character affect status",
+    CTRL('R'),    "	Repeat last message",
+    CTRL('T'),    "<dir>	Take (steal) from (direction)",
+    CTRL('U'),    "	Use a magic item",
     0, 0
 } ;
 
@@ -585,19 +585,19 @@ struct h_list wiz_help[] = {
     '+',        "	Random fortunes",
     'M',        "	Make an object",
     'V',        "	Display vlevel and turns",
-    CTRL(A),    "	System activity",
-    CTRL(C),    "	Move to another dungeon level",
-    CTRL(D),    "	Go down 1 dungeon level",
-    CTRL(F),    "	Display the entire level",
-    CTRL(G),    "	Charge wands and staffs",
-    CTRL(H),    "	Jump 9 experience levels",
-    CTRL(I),    "	Inventory of level",
-    CTRL(J),    "	Teleport somewhere",
-    CTRL(K),    "	Identify an object",
-    CTRL(M),    "	Recharge wand or staff",
-    CTRL(P),    "	Toggle wizard status",
-    CTRL(X),    "	Detect monsters",
-    CTRL(Y),    "	Display food levels",
+    CTRL('A'),    "	System activity",
+    CTRL('C'),    "	Move to another dungeon level",
+    CTRL('D'),    "	Go down 1 dungeon level",
+    CTRL('F'),    "	Display the entire level",
+    CTRL('G'),    "	Charge wands and staffs",
+    CTRL('H'),    "	Jump 9 experience levels",
+    CTRL('I'),    "	Inventory of level",
+    CTRL('J'),    "	Teleport somewhere",
+    CTRL('K'),    "	Identify an object",
+    CTRL('M'),    "	Recharge wand or staff",
+    CTRL('P'),    "	Toggle wizard status",
+    CTRL('X'),    "	Detect monsters",
+    CTRL('Y'),    "	Display food levels",
     0, 0
 };
 
