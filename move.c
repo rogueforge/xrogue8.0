@@ -850,8 +850,12 @@ do_move(int dy, int dx)
         ((on(player, ISHUH) && rnd(100) < 80)   || 
          (on(player, ISDANCE) && rnd(100) < 90) || 
          (ISWEARING(R_DELUSION) && rnd(100) < 70)))
+    {
         /* Get a random move */
         move_nh = *rndmove(&player);
+        dy = move_nh.y - hero.y;
+        dx = move_nh.x - hero.x;
+    }
     else {
         move_nh.y = hero.y + dy;
         move_nh.x = hero.x + dx;
