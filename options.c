@@ -219,15 +219,12 @@ get_str(void *arg, WINDOW *win)
             continue;
 #ifdef BSD
         else if (c == _tty.sg_erase) /* process erase character */
-#endif
-#ifdef USG5_0
+#elif USG5_0
         else if (c == _tty.c_cc[VERASE]) /* process erase character */
-#endif
-#ifdef USG5_2
-        else if (c == erasechar()) /* process erase character */
-#endif
-#ifdef MSDOS
+#elif MSDOS
         else if (c == '\b')     /* MSDOS doesn`t allow bs to change */
+#else
+        else if (c == erasechar()) /* process erase character */
 #endif
         {
             if (sp > buf)
@@ -242,15 +239,12 @@ get_str(void *arg, WINDOW *win)
         }
 #ifdef BSD
         else if (c == _tty.sg_kill)  /* process kill character */
-#endif
-#ifdef USG5_0
+#elif USG5_0
         else if (c == _tty.c_cc[VKILL])  /* process kill character */
-#endif
-#ifdef USG5_2
-        else if (c == killchar()) /* process kill character */
-#endif
-#ifdef MSDOS
+#elif MSDOS
         else if (c == '@') /* MSDOS doesn`t have kill, use this anyway */
+#else
+        else if (c == killchar()) /* process kill character */
 #endif
         {
             sp = buf;

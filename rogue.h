@@ -24,7 +24,7 @@ extern char toupper();
 #define exfork fork     /* Standard fork with no paging available */
 #endif
 
-#ifndef USG5_2
+#if defined USG5_0 || defined BSD
 #define flushinp()      flushout()
 #endif
 

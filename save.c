@@ -176,6 +176,9 @@ restore(register char *file, char **envp)
     register int inf;
     extern char **environ;
     char buf[LINELEN];
+#if USG5_0 || BSD
+    char *newterm;                   /* For new terminal type */
+#endif
     STAT sbuf2;
     int oldcol, oldline;        /* Old number of columns and lines */
 
@@ -198,7 +201,7 @@ restore(register char *file, char **envp)
 
     fstat(inf, &sbuf2);
     fflush(stdout);
-#if !MSDOS
+#if BSD || USG5_0 || USG5_2
     if (brk(version + sbuf2.st_size))
         return FALSE;
 #endif
@@ -229,7 +232,7 @@ restore(register char *file, char **envp)
     /*
      * Set the new terminal and make sure we aren't going to a smaller screen.
      */
-#if !(USG5_2 || MSDOS)
+#if USG5_0 || BSD
     /* Set columns and lines to 0 so that setterm() will reset the values */
     COLS = 0;
     LINES = 0;

@@ -530,28 +530,22 @@ passwd()
     while ((c = wgetch(cw)) != '\n' && c != '\r' && c != '\033') {
 #ifdef BSD
         if (c == _tty.sg_kill)
-#endif
-#ifdef USG5_0
+#elif USG5_0
         if (c == _tty.c_cc[VKILL])
-#endif
-#ifdef USG5_2
-        if (c == killchar())
-#endif
-#ifdef MSDOS
+#elif MSDOS
         if (c == '@') /* MSDOS doesn`t have kill, use this anyway */
+#else
+        if (c == killchar())
 #endif
             sp = buf;
 #ifdef BSD
         else if (c == _tty.sg_erase && sp > buf)
-#endif
-#ifdef USG5_0
+#elif USG5_0
         else if (c == _tty.c_cc[VERASE] && sp > buf)
-#endif
-#ifdef USG5_2
-        else if (c == erasechar() && sp > buf)
-#endif
-#ifdef MSDOS
+#elif MSDOS
         else if (c == '\b')     /* MSDOS doesn`t allow bs to change */
+#else
+        else if (c == erasechar() && sp > buf)
 #endif
             sp--;
         else

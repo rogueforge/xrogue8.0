@@ -133,7 +133,7 @@ endmsg()
     draw(msgw);
 }
 
-#ifdef USG5_2
+#if !defined USG5_0 && !defined BSD
 void
 doadd(char *fmt, va_list args)
 {
