@@ -36,3 +36,9 @@ dist.src:
 	tar cf $(DISTNAME)-src.tar $(CFILES) $(HDRS) $(MISC)
 	gzip -f $(DISTNAME)-src.tar
 
+dist.linux:
+	make clean
+	make CC=gcc CFLAGS="-O3 -Wall -pedantic" xrogue
+	tar cf $(DISTNAME)-linux.tar xrogue README.md LICENSE
+	gzip -f $(DISTNAME)-linux.tar
+
