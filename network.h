@@ -30,4 +30,7 @@ extern struct network Network[];
 #ifdef MSDOS
 #define SYSTEM "PC-DOS"
 #endif
+#ifdef _WIN32
+#define SYSTEM "Windows"
+#endif
 

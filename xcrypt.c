@@ -53,6 +53,8 @@
 #include <string.h>
 #ifdef __DJGPP__
 #include <netinet/in.h>
+#elseif _WIN32
+#include <winsock.h>
 #else
 #include <arpa/inet.h>
 #endif

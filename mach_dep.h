@@ -47,6 +47,31 @@
 #define FUDGE_TIME      200
 #endif
 
+#if defined(_WIN32)
+#define fstat _fstat
+#define stat _stat
+#define open _open
+#define popen _popen
+#define pclose _pclose
+#define ntoh md_ntoh
+#define rand48 rand
+#define srand48 srand
+#define lrand48 rand
+#define fileno _fileno
+#define fdopen _fdopen
+#define unlink _unlink
+#define getpid _getpid
+#define lseek _lseek
+#define close _close
+#define write _write
+#define read _read
+#if !defined(__MINGW32__)
+#define PATH_MAX _MAX_PATH
+#endif
+#endif
+
+#define NOOP(x) (x += 0)
+
 /* 
  * dump core rather than catch the signal     
  */

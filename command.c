@@ -7,7 +7,9 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <signal.h>
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 #ifndef __DJGPP__
 #include <wait.h>
 #endif
@@ -1077,60 +1079,24 @@ u_level()
 void
 shell()
 {
-    register int pid;
-    register char *sh;
-    int ret_status;
-
     /*
      * Set the terminal back to original mode
      */
-    sh = getenv("SHELL");
     wclear(hw);
     wmove(hw, lines-1, 0);
     draw(hw);
     endwin();
     in_shell = TRUE;
     fflush(stdout);
-    /*
-     * Fork and do a shell
-     */
-    while((pid = exfork()) < 0)
-        sleep(1);
-    if (pid == 0)
-    {
-        /*
-         * Set back to original user, just in case
-         */
-        if (setuid(getuid()) == 0)
-            if (setgid(getgid()) == 0)
-                execl(sh == NULL ? "/bin/sh" : sh, "shell", "-i", NULL);
-        perror("No shell");
-        _exit(-1);
-    }
-    else
-    {
-        void (*int_value)(int),
-             (*quit_value)(int);
 
-        int_value = (void (*)(int))signal(SIGINT, SIG_IGN);
-#ifndef MSDOS
-        quit_value = (void (*)(int))signal(SIGQUIT, SIG_IGN);
-#endif
-        while (wait(&ret_status) != pid)
-            continue;
-        signal(SIGINT, int_value);
-#ifndef MSDOS
-        signal(SIGQUIT, quit_value);
-#endif
-
-        printf("%s", retstr);
-        fflush(stdout);
-        wait_for('\n');
-        noecho();
-        crmode();
-        in_shell = FALSE;
-        restscr(cw);
-    }
+    md_shellescape();
+    printf("%s", retstr);
+    fflush(stdout);
+    wait_for('\n');
+    noecho();
+    crmode();
+    in_shell = FALSE;
+    restscr(cw);
 }
 #endif
 

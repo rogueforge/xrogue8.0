@@ -5,7 +5,9 @@
 #include <curses.h>
 #include <string.h>
 #include <stdlib.h>
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 #include "rogue.h"
 
 /*
@@ -223,7 +225,7 @@ new(int size)
 
     if (space == NULL) {
         sprintf(prbuf,"Rogue ran out of memory (used = %ld, wanted = %d).",
-                (long)sbrk(0), size);
+                md_memused(), size);
         fatal(prbuf);
     }
     total++;

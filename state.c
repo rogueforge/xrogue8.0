@@ -66,6 +66,8 @@
 #include <pwd.h>
 #include <sys/utsname.h>
 #include <unistd.h>
+#include <wait.h>
+#include <arpa/inet.h>
 #endif
 
 #include <curses.h>
@@ -3026,7 +3028,7 @@ md_getusername()
         if ( (l = getenv("USERNAME")) == NULL )
             if ( (l = getenv("LOGNAME")) == NULL )
                 if ( (l = getenv("USER")) == NULL )
-                    l = "nobody";
+                    l = "rogue fiend";
 
     strncpy(login,l,80);
     login[79] = 0;
@@ -3062,8 +3064,9 @@ md_gethomedir()
 		h = szPath;
 #endif
 
-	if ( (h == NULL) || (*h == '\0') )
-        if ( (h = getenv("HOME")) == NULL ) 
+    if ( (h == NULL) || (*h == '\0') )
+        if ( (h = getenv("HOME")) == NULL )
+        {
             if ( (h = getenv("HOMEDRIVE")) == NULL) 
                 h = "";
             else
@@ -3074,7 +3077,7 @@ md_gethomedir()
                 if ( (h = getenv("HOMEPATH")) == NULL)
                     h = "";
             }
-
+        }
 
     len = strlen(homedir);
     strncat(homedir,h,PATH_MAX-len-1);
@@ -3109,7 +3112,7 @@ md_getroguedir()
     {
         if (*home)
         {
-            strncpy(path, home, PATH_MAX - 20);
+            strncpy(path, home, 1023);
 
             end = &path[strlen(path)-1];
 
@@ -3167,19 +3170,26 @@ char *
 md_gethostname()
 {
     static char nodename[80];
-    char *n = NULL;
+    char *thissys = NULL;      /* Holds the name of this system */
+
+#ifndef SYSTEM
 #if !defined(_WIN32) && !defined(__DJGPP__)
     struct utsname ourname;
 
-    if (uname(&ourname) == 0)
-        n = ourname.nodename;
+    /* Get this system's name */
+    if (uname(&ourname) < 0) ourname.nodename[0] = '\0'; /* Couldn't get it */
+    thissys = ourname.nodename;
+#else
+    if (thissys == NULL)
+        if ( (thissys = getenv("COMPUTERNAME")) == NULL)
+            if ( (thissys = getenv("HOSTNAME")) == NULL)
+                thissys = "localhost";
 #endif
-    if ((n == NULL) || (*n == '\0'))
-        if ( (n = getenv("COMPUTERNAME")) == NULL)
-            if ( (n = getenv("HOSTNAME")) == NULL)
-                n = "localhost";
+#else
+    thissys = SYSTEM;
+#endif
 
-    strncpy(nodename, n, 80);
+    strncpy(nodename, thissys, 80);
     nodename[79] = 0;
 
     return(nodename);
@@ -3209,9 +3219,9 @@ md_shellescape()
         /*
          * Set back to original user, just in case
          */
-        setuid(getuid());
-        setgid(getgid());
-        execl(sh == NULL ? "/bin/sh" : sh, "shell", "-i", 0);
+        if (setuid(getuid()) == 0)
+            if (setgid(getgid()) == 0)
+                execl(sh == NULL ? "/bin/sh" : sh, "shell", "-i", NULL);
         perror("No shelly");
         _exit(-1);
     }
@@ -3268,12 +3278,13 @@ md_init()
     if (term == NULL)
         setenv("TERM","interix");
 #endif
+
 #if defined(__DJGPP__) || defined(_WIN32)
     _fmode = _O_BINARY;
 #endif
 
 #if defined(__CYGWIN__) || defined(__MSYS__)
-    ESCDELAY = 250;
+    ESCDELAY=250;
 #endif
 
 }
@@ -3338,31 +3349,7 @@ md_getpass(char *prompt)
 #endif
 }
 
-#ifdef SIGTSTP
-
-/*
- * handle stop and start signals
- */
-
-/*UNUSED*/
-void 
-tstp(a)
-int a;
-{
-    mvcur(0, cols - 1, lines - 1, 0);
-    fflush(stdout);
-    kill(0, SIGTSTP);
-    signal(SIGTSTP, tstp);
-    crmode();
-    noecho();
-    clearok(curscr, TRUE);
-    touchwin(cw);
-    draw(cw);
-    flushinp();
-}
-#endif
-
-int
+void
 md_setup()
 {
 #ifdef SIGTSTP

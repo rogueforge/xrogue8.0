@@ -1,9 +1,12 @@
 #include <curses.h>
 #include <signal.h>
-#include <pwd.h>
 #include <string.h>
 #include <stdlib.h>
+#ifndef _WIN32
 #include <unistd.h>
+#else
+#include <process.h>
+#endif
 
 #ifdef BSD
 #include <sys/time.h>
@@ -27,13 +30,12 @@ int
 main(int argc, char **argv, char **envp)
 {
     register char *env;
-#if !MSDOS
-    register struct passwd *pw;
-#endif
     time_t now;
 #ifdef PC7300
     int hardwindow;     /* Do we have a hardware window? */
 #endif
+
+    md_init();
 
 #if !MSDOS
     /*
@@ -41,10 +43,8 @@ main(int argc, char **argv, char **envp)
      */
     if ((env = getenv("HOME")) != NULL)
         strcpy(home, env);
-    else if ((pw = getpwuid(getuid())) != NULL)
-        strcpy(home, pw->pw_dir);
     else
-        home[0] = '\0';
+        strcpy(home, md_gethomedir());
     strcat(home, "/");
 
     /* Get default save file */
@@ -60,17 +60,7 @@ main(int argc, char **argv, char **envp)
     if ((env = getenv("ROGUEOPTS")) != NULL)
         parse_opts(env);
     if (env == NULL || whoami[0] == '\0') {
-#if !MSDOS
-        if ((pw = getpwuid(getuid())) == NULL)
-        {
-            printf("Say, who the hell are you?\n");
-            exit(1);
-        }
-        else
-            strucpy(whoami, pw->pw_name, strlen(pw->pw_name));
-#else
-        strcpy(whoami, "rogue fiend");
-#endif
+        strcpy(whoami, md_getusername());
      }
   /*
      * check for print-score option
@@ -113,7 +103,7 @@ main(int argc, char **argv, char **envp)
      * Check to see if he is a wizard
      */
     if (argc >= 2 && argv[1][0] == '\0')
-        if (strcmp(PASSWD, xcrypt(getpass("Wizard's password: "), "mT")) == 0)
+        if (strcmp(PASSWD, xcrypt(md_getpass("Wizard's password: "), "mT")) == 0)
         {
             wizard = TRUE;
             argv++;
@@ -581,14 +571,13 @@ setup()
 #ifdef SIGTSTP
     signal(SIGTSTP, tstp);
 #endif
-
+#ifdef SIGHUP
     signal(SIGHUP, auto_save);
+#endif
     signal(SIGTERM, auto_save);
     signal(SIGINT, quit);
+#ifdef SIGQUIT
     signal(SIGQUIT, endit);
-
-#ifdef __CYGWIN__
-    ESCDELAY = 250;
 #endif
 
     crmode();                           /* Cbreak mode */
@@ -645,7 +634,7 @@ too_much()
 int
 author()
 {
-        switch (getuid()) {
+        switch (md_getuid()) {
 #if AUTHOR
                 case AUTHOR:
 #endif

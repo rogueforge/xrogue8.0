@@ -3,7 +3,9 @@
  */
 
 #include <curses.h>
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 #include "rogue.h"
 
 #define EMPTY           0
@@ -224,6 +226,6 @@ void
 activity()
 {
         msg("Daemons = %d : Fuses = %d : Memory Items = %d : Memory Used = %d",
-            demoncnt,fusecnt,total,sbrk(0));
+            demoncnt,fusecnt,total,md_memused());
 }
 

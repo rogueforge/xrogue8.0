@@ -14,7 +14,11 @@
 #include <curses.h>
 #include <string.h>
 #include <stdlib.h>
+#ifndef _WIN32
 #include <unistd.h>
+#else
+#include <io.h>
+#endif
 #ifdef BSD
 #include <sys/time.h>
 #else
@@ -23,7 +27,9 @@
 #include <signal.h>
 #include <ctype.h>
 #include <sys/types.h>
+#ifndef _WIN32
 #include <pwd.h>
+#endif
 #include <fcntl.h>
 #include "mach_dep.h"
 #include "network.h"
@@ -256,13 +262,7 @@ score(unsigned long amount, int flags, short monst)
 #endif
     outfd = fd;
 
-#ifndef SYSTEM
-    /* Get this system's name */
-    if (uname(&ourname) < 0) ourname.nodename[0] = '\0'; /* Couldn't get it */
-    thissys = ourname.nodename;
-#else
-    thissys = SYSTEM;
-#endif
+    thissys = md_gethostname();
 
     for (scp = top_ten; scp < &top_ten[NUMSCORE]; scp++)
     {
@@ -352,7 +352,7 @@ score(unsigned long amount, int flags, short monst)
         char *login;
 
         if (flags != UPDATE) {
-#if !MSDOS
+#if !MSDOS && !_WIN32
             struct passwd *pp;
             if ((pp = getpwuid(getuid())) == NULL) login = "";
             else login = pp->pw_name;
