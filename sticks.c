@@ -499,7 +499,7 @@ do_zap(struct thing *zapper, struct object *obj, coord *direction, int which, in
 		    pstats.s_hpt = -1;
                     msg("Your life has been sucked out from you!  --More--");
                     wait_for(' ');
-                    death(zapper);
+                    death(zapper->t_index);
                 }
                 else
                     msg("You feel a great drain on your system.");
