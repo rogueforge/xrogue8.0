@@ -72,3 +72,18 @@ dist.win32:
 	nmake O="obj" CC="CL" CRLIB="..\pdcurses.lib shell32.lib user32.lib Advapi32.lib Ws2_32.lib" CFLAGS="-nologo -I.. -Ox -wd4033 -wd4716" $(PROGRAM)
 	-del $(DISTNAME)-win32.zip
 	zip $(DISTNAME)-win32.zip $(PROGRAM).exe README.md LICENSE
+
+# Must use MSYS2 32-bit build host 
+dist.msys2-i686:
+	$(MAKE) clean
+	$(MAKE) CC=gcc CRLIB="-lcurses -lWs2_32" CFLAGS="-O3 -Wall -pedantic" $(PROGRAM)
+	tar cf $(DISTNAME)-msys2-i686.tar $(PROGRAM).exe README.md LICENSE
+	gzip -f $(DISTNAME)-msys2-i686.tar
+
+# Must use MSYS2 64-bit build host 
+dist.msys2-x86_64:
+	$(MAKE) clean
+	$(MAKE) CC=gcc CRLIB="-lcurses -lWs2_32" CFLAGS="-O3 -Wall -pedantic" $(PROGRAM)
+	tar cf $(DISTNAME)-msys2-x86_x64.tar $(PROGRAM).exe README.md LICENSE
+	gzip -f $(DISTNAME)-msys2-x86_x64.tar
+
