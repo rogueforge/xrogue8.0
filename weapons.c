@@ -271,6 +271,9 @@ missile(int ydelta, int xdelta, register struct linked_list *item, register stru
         if (!hit_monster(unc(obj->o_pos), obj, tp)) {
                 fall(item, TRUE);
         }
+        else
+            o_discard(item);
+
         mvwaddch(cw, hero.y, hero.x, PLAYER);
 }
 
