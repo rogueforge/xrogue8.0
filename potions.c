@@ -484,8 +484,10 @@ quaff(int which, int kind, int flags, bool is_potion)
                     light(&hero);
                 }
                 else
+                {
                     msg("The darkness around you thickens. ");
                     lengthen(sight, SEEDURATION);
+                }
             }
             else {
                 if (off(player, CANSEE)) {
