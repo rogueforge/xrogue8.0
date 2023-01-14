@@ -128,12 +128,14 @@ do_zap(struct thing *zapper, struct object *obj, coord *direction, int which, in
                 msg("You are too weak to use it.");
             }
             else if (cursed)
+            {
                 pstats.s_hpt /= 2;
-		if (pstats.s_hpt <= 0) {
+                if (pstats.s_hpt <= 0) {
 		    pstats.s_hpt = -1;
 		    msg("You drain your own life away.  --More--");
 		    death(D_STRENGTH);
 		}
+            }
             else
                 drain(hero.y-1, hero.y+1, hero.x-1, hero.x+1);
 
