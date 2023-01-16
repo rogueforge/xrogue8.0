@@ -1115,7 +1115,28 @@ rs_write_daemons(FILE *savef, struct delayed_action *d_list,int count)
         }
         else if (d_list[i].d_func == changeclass)
         {
-            rs_write_long(savef, (long)d_list[i].d_arg);
+            int arg = 0;
+            
+            if (d_list[i].d_arg == &cleric)
+                arg = C_CLERIC;
+            else if (d_list[i].d_arg == &monk)
+                arg = C_MONK;
+            else if (d_list[i].d_arg == &magician)
+                arg = C_MAGICIAN;
+            else if (d_list[i].d_arg == &assassin)
+                arg = C_ASSASSIN;
+            else if (d_list[i].d_arg == &druid)
+                arg = C_DRUID;
+            else if (d_list[i].d_arg == &thief)
+                arg = C_THIEF;
+            else if (d_list[i].d_arg == &fighter)
+                arg = C_FIGHTER;
+            else if (d_list[i].d_arg == &ranger)
+                arg = C_RANGER;
+            else if (d_list[i].d_arg == &paladin)
+                arg = C_PALADIN;
+
+            rs_write_int(savef, arg);
         }
         else if (d_list[i].d_func == cloak_charge)
         {
@@ -1123,9 +1144,9 @@ rs_write_daemons(FILE *savef, struct delayed_action *d_list,int count)
 			index = find_list_ptr(player.t_pack,d_list[i].d_arg);
 			rs_write_int(savef,index);
         }
-        else
-            rs_write_long(savef, (long)d_list[i].d_arg);
-
+        else if (d_list[i].d_arg == 0)
+            rs_write_int(savef, 0);
+        
         rs_write_int(savef, d_list[i].d_time);
     }
     
@@ -3294,7 +3315,7 @@ md_init()
 #endif
 
 #if defined(__CYGWIN__) || defined(__MSYS__)
-    ESCDELAY=250;
+    set_escdelay(250);
 #endif
 
 }

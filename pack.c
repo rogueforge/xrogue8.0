@@ -16,6 +16,16 @@
  * use it as the linked_list pointer instead of gettting it off the ground.
  */
 
+long cleric	 = C_CLERIC,
+	monk	 = C_MONK,
+	magician = C_MAGICIAN,
+	assassin = C_ASSASSIN,
+	druid	 = C_DRUID,
+	thief	 = C_THIEF,
+	fighter	 = C_FIGHTER,
+	ranger	 = C_RANGER,
+	paladin	 = C_PALADIN;
+
 bool
 add_pack(register struct linked_list *item, bool silent)
 {
@@ -23,15 +33,6 @@ add_pack(register struct linked_list *item, bool silent)
     register struct object *obj, *op;
     register bool exact, from_floor;
     bool giveflag = 0;
-    static long	cleric	 = C_CLERIC,
-		monk	 = C_MONK,
-		magician = C_MAGICIAN,
-		assassin = C_ASSASSIN,
-		druid	 = C_DRUID,
-		thief	 = C_THIEF,
-		fighter	 = C_FIGHTER,
-		ranger	 = C_RANGER,
-		paladin	 = C_PALADIN;
 
     if (item == NULL)
     {

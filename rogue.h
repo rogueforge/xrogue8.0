@@ -1359,6 +1359,7 @@ extern char *sylls[];
 extern char stones[][15];
 extern char wood[][15];
 extern char metal[][15];
+extern long cleric, monk, magician, assassin, druid, thief, fighter, ranger, paladin;
 
 #if u370 || uts || i386
 #define ENCREAD(b,n,fd) read(fd,b,n)
