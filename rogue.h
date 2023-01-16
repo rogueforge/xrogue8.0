@@ -1084,7 +1084,7 @@ struct mstats {
     unsigned long ms_exp;                /* Experience */
     short ms_lvl;                        /* Level of mastery */
     short ms_arm;                        /* Armor class */
-    char ms_hpt[8];                        /* Hit points */
+    char ms_hpt[9];                        /* Hit points */
     char ms_dmg[30];                      /* String describing damage done */
 };
 
