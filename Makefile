@@ -24,7 +24,7 @@ CFILES=	vers.c actions.c bolt.c chase.c command.c daemon.c daemons.c eat.c \
 	scrolls.c sticks.c things.c trader.c util.c weapons.c wear.c wizard.c \
 	rogue.c state.c xcrypt.c
 
-MISC  = Makefile README.md LICENSE $(PROGRAM).sln $(PROGRAM).vcproj
+MISC  = Makefile README.md LICENSE $(PROGRAM).sln $(PROGRAM).vcxproj $(PROGRAM).vcxproj.filters $(PROGRAM).vcxproj.user
 
 CC    = cc
 CFLAGS= -O3
