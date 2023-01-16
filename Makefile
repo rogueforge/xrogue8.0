@@ -87,3 +87,17 @@ dist.msys2-x86_64:
 	tar cf $(DISTNAME)-msys2-x86_x64.tar $(PROGRAM).exe README.md LICENSE
 	gzip -f $(DISTNAME)-msys2-x86_x64.tar
 
+# Must use MSYS2 mingw32 build environment (https://www.msys2.org)
+dist.mingw-w64-i686:
+	make clean
+	make CC=gcc CRLIB="-lncurses -lws2_32" LDFLAGS="-L/mingw32/lib" CFLAGS="-DNCURSES_STATIC -I/mingw32/include/ncurses -O3 -Wall -pedantic" $(PROGRAM)
+	rm $(DISTNAME)-mingw-w64-i686.zip
+	zip $(DISTNAME)-mingw-w64-i686.zip $(PROGRAM).exe README.md LICENSE
+	
+# Must use MSYS2 mingw64 build environment (https://www.msys2.org)
+dist.mingw-w64-x86_64:
+	make clean
+	make CC=gcc CRLIB="-lncurses -lws2_32" LDFLAGS="-L/mingw64/lib" CFLAGS="-DNCURSES_STATIC -I/mingw64/include/ncurses -O3 -Wall -pedantic" $(PROGRAM)
+	rm -f $(DISTNAME)-mingw-w64-x86_64.zip
+	zip $(DISTNAME)-mingw-w64-x86_64.zip $(PROGRAM).exe README.md LICENSE
+
