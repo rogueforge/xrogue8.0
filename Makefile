@@ -42,3 +42,9 @@ dist.linux:
 	tar cf $(DISTNAME)-linux.tar xrogue README.md LICENSE
 	gzip -f $(DISTNAME)-linux.tar
 
+dist.djgpp:
+	make clean
+	make CC=gcc CFLAGS="-I$(DJDIR)/include -O3 -Wall -pedantic" LDFLAGS="-L$(DJDIR)/lib" CRLIB="-lpdcurses" xrogue
+	rm -f $(DISTNAME)-djgpp.zip
+	zip $(DISTNAME)-djgpp.zip xrogue.exe README.md LICENSE
+ 

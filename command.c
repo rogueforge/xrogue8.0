@@ -8,7 +8,9 @@
 #include <ctype.h>
 #include <signal.h>
 #include <unistd.h>
+#ifndef __DJGPP__
 #include <wait.h>
+#endif
 #include "mach_dep.h"
 #include "rogue.h"
 #ifdef PC7300

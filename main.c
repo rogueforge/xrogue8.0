@@ -820,7 +820,7 @@ holiday()
 #endif
 }
 
-#if MSDOS
+#if MSDOS && !__DJGPP__
 int
 getuid()
 {

@@ -51,7 +51,11 @@
 
 #include <sys/types.h>
 #include <string.h>
+#ifdef __DJGPP__
+#include <netinet/in.h>
+#else
 #include <arpa/inet.h>
+#endif
 
 #define _PASSWORD_EFMT1 '_'
 

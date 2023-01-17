@@ -135,7 +135,7 @@ auto_save(int sig)
 bool
 save_file(register int savefd)
 {
-#ifdef MSDOS
+#if defined(MSDOS) && !defined(__DJGPP__)
     extern unsigned int _asegr, _asegn; /* for MSDOS access to end of prog */
     register unsigned long num_to_write;
 #endif
@@ -147,7 +147,7 @@ save_file(register int savefd)
     draw(cw);
     lseek(savefd, 0L, 0);
     fstat(savefd, &sbuf);
-#ifdef MSDOS
+#if defined(MSDOS) && !defined(__DJGPP__)
     msg ("version: seg %x offs %x", FP_SEG(&version),FP_OFF(&version));
     msg ("asegr = %x",_asegr);
     msg ("asegn = %x",_asegn);
