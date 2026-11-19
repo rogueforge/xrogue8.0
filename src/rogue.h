@@ -126,7 +126,7 @@ extern char toupper();
 #define C_SEARCH        's'
 #define C_SETTRAP       '^'
 #define C_TAKEOFF       'T'
-#define C_USE           CTRL(U)
+#define C_USE           CTRL('U')
 #define C_WEAR          'W'
 #define C_WIELD         'w'
 #define C_ZAP           'z'
@@ -272,10 +272,8 @@ extern char toupper();
 
 /* define the control character */
 
-#ifndef BSD
 #undef CTRL
-#define CTRL(ch) ('ch' & 037)
-#endif
+#define CTRL(ch) ((ch) & 037)
 
 #define ALLOC(x) malloc((unsigned int) x)
 #define FREE(x) free((char *) x)
