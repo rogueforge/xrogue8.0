@@ -21,7 +21,7 @@ other time enter a '?' or a '='.";
 enter a '\\' on any other screen.";
 */
 
-static char *rainbow[] = {
+static char rainbow[][16] = {
 
 "Amber",                "Aquamarine",           "Beige",
 "Black",                "Blue",                 "Brown",
@@ -35,7 +35,7 @@ static char *rainbow[] = {
 "Turquoise",            "Vermilion",            "Violet",
 "White",                "Yellow",
 };
-#define NCOLORS (sizeof rainbow / sizeof (char *))
+#define NCOLORS (sizeof rainbow / sizeof rainbow[0])
 
 static char *sylls[] = {
     "a", "ae", "ak", "an", "ax", "ach", "ano", "ars", "bha", "bar", "bre",
@@ -52,7 +52,7 @@ static char *sylls[] = {
     "yih", "zef", "zen", "zil", "zym", "-", 
 };
 
-static char *stones[] = {
+static char stones[][16] = {
         "Agate",                "Alexandrite",          "Amethyst",
         "Azurite",              "Bloodstone",           "Cairngorm",
         "Carnelian",            "Chalcedony",           "Chrysoberyl",
@@ -70,9 +70,9 @@ static char *stones[] = {
         "Tiger eye",            "Topaz",                "Tourmaline",
         "Turquoise",            "Zircon",
 };
-#define NSTONES (sizeof stones / sizeof (char *))
+#define NSTONES (sizeof stones / sizeof stones[0])
 
-static char *wood[] = {
+static char wood[][16] = {
         "Avocado wood", "Balsa",        "Banyan",       "Birch",
         "Cedar",        "Cherry",       "Cinnabar",     "Dogwood",
         "Driftwood",    "Ebony",        "Eucalyptus",   "Hemlock",
@@ -80,15 +80,15 @@ static char *wood[] = {
         "Oak",          "Pine",         "Redwood",      "Rosewood",
         "Teak",         "Walnut",       "Aloe",         "Sandalwood",
 };
-#define NWOOD (sizeof wood / sizeof (char *))
+#define NWOOD (sizeof wood / sizeof wood[0])
 
-static char *metal[] = {
+static char metal[][16] = {
         "Aluminium",    "Bone",         "Brass",        "Bronze",
         "Copper",       "Chromium",     "Iron",         "Lead",
         "Magnesium",    "Pewter",       "Platinum",     "Silver",
         "Steel",        "Tin",          "Titanium",     "Zinc",
 };
-#define NMETAL (sizeof metal / sizeof (char *))
+#define NMETAL (sizeof metal / sizeof metal[0])
 
 /*
  * make sure all the percentages specified in the tables add up to the
