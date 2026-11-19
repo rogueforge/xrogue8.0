@@ -8,6 +8,10 @@
 
 #define VOIDTYPE long
 
+#ifndef reg
+#define reg register
+#endif
+
 #undef SCROLL   /* UNIX/370 defines SCROLL for some bizarre reason */
 #ifdef BSD
 #undef tolower
