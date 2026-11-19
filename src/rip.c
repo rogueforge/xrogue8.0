@@ -88,9 +88,7 @@ void
 byebye(n)
 int n;
 {
-    extern bool _endwin;
-
-    if (!_endwin) {
+    if (!isendwin()) {
         clear();
         endwin();
     }
