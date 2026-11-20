@@ -5,6 +5,7 @@
 #include <curses.h>
 #include <ctype.h>
 #include <signal.h>
+#include <errno.h>
 #include "mach_dep.h"
 #include "rogue.h"
 #ifdef PC7300
@@ -1086,7 +1087,7 @@ shell()
 
         int_value = (void (*)())signal(SIGINT, SIG_IGN);
         quit_value = (void (*)())signal(SIGQUIT, SIG_IGN);
-        while (wait(&ret_status) != pid)
+        while (wait(&ret_status) != pid && errno != ECHILD)
             continue;
         signal(SIGINT, int_value);
         signal(SIGQUIT, quit_value);
