@@ -372,7 +372,7 @@ command()
                                     touchwin(cw);
                     when CTRL('N') : nameit();
                     when CTRL('O') : after = FALSE; opt_player();
-                    when CTRL('R') : after = FALSE; msg(huh);
+                    when CTRL('R') : after = FALSE; msg("%s", huh);
                     when CTRL('T') :
                         if (player.t_action == A_NIL) {
                             if (get_dir(&player.t_newpos)) {
