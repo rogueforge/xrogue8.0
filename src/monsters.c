@@ -785,6 +785,7 @@ wanderer()
     bool canteleport = FALSE,   /* Can the monster teleport? */
          seehim;        /* Is monster within sight? */
     coord cp;
+    register int cnt = 0;
 
     rmonst = randmonster(TRUE, FALSE);  /* Choose a random wanderer */
     attr = &monsters[rmonst].m_flags[0]; /* Start of attributes */
@@ -796,6 +797,8 @@ wanderer()
 
     /* Find a place for it -- avoid the player's room if can't teleport */
     do {
+        if (cnt++ >= 500)
+            return;
         do {
             i = rnd_room();
         } until (canteleport || hr != &rooms[i] || levtype == MAZELEV ||
