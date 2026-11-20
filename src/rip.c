@@ -20,6 +20,7 @@
 #include <signal.h>
 #include <ctype.h>
 #include <sys/types.h>
+#include <sys/resource.h>
 #include <pwd.h>
 #include <fcntl.h>
 #include "mach_dep.h"
@@ -214,6 +215,7 @@ short monst;
     char upsystem[SYSLEN], uplogin[LOGLEN];
     char *thissys;      /* Holds the name of this system */
     char *compatstr=NULL; /* Holds scores for writing compatible score files */
+    struct rlimit lim;
 #define REASONLEN 3
     static char *reason[] = {
         "killed",
@@ -608,7 +610,9 @@ short monst;
     /*
      * Update the list file
      */
-    if (!waswizard || prflags == EDITSCORE)
+    if ((!waswizard || prflags == EDITSCORE)
+        && !(getrlimit(RLIMIT_FSIZE, &lim) == 0
+             && lim.rlim_cur < NUMSCORE * SCORELEN))
     {
         lseek(outfd, 0L, 0);
         scoreout(top_ten, compatstr); /* Get a compatibile format score string */
