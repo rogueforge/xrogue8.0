@@ -5,6 +5,8 @@
 #include "pcmenu.h"
 #endif
 
+bool giveflag = FALSE;
+
 /*
  * Routines to deal with the pack
  */
@@ -23,7 +25,6 @@ bool silent;
     register struct linked_list *ip, *lp, *ap;
     register struct object *obj, *op;
     register bool exact, from_floor;
-    bool giveflag;
     static long	cleric	 = C_CLERIC,
 		monk	 = C_MONK,
 		magician = C_MAGICIAN,

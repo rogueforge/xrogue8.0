@@ -439,7 +439,7 @@ register struct thing *th;
     register int x,y;
     register struct linked_list *mon;
     bool gotone = FALSE;
-    bool giveflag = TRUE;  /* used in pack.c */
+    extern bool giveflag;  /* used in pack.c */
 
     if (levtype != POSTLEV) {  /* no monsters at trading post  */
         for (x = hero.x-1; x <= hero.x+1; x++) {
@@ -484,7 +484,9 @@ register struct thing *th;
 				msg("%s gives you a strange rectangular card. --More--", prname(monster_name(th), TRUE));
 				wait_for(' ');
 			        del_pack(ll); /* get rid of slime-mold */
+				giveflag = TRUE;
 				create_obj(FALSE, RELIC, ALTERAN_CARD);
+				giveflag = FALSE;
 				msg("%s bids you farewell. ", prname(monster_name(th), TRUE));
 				killed(mon, FALSE, FALSE, FALSE);
 				return;
