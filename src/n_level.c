@@ -304,6 +304,7 @@ LEVTYPE ltype;          /* designates type of level to create */
             }
 
             detach(tlist, item);
+            turn_off(*tp, ISELSEWHERE);
             attach(mlist, item);
         }
     }

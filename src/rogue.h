@@ -642,6 +642,10 @@ extern char toupper();
 #define ISCHARMED       0x50100000      /* is the monster charmed? */
 #define ISFRIENDLY      0x50100000      /* monster friendly for any reason? */
 
+#define NEEDSTOACT      0x60000001
+#define ISDEAD          0x60000002
+#define ISELSEWHERE     0x60000004
+
 /* Masks for choosing the right flag */
 
 #define FLAGMASK     0xf0000000
@@ -1245,11 +1249,11 @@ extern struct room rooms[];             /* One for each room -- A level */
 extern struct room *oldrp;              /* Roomin(&oldpos) */
 extern struct linked_list *mlist;       /* List of monsters on the level */
 extern struct linked_list *tlist;       /* list of monsters fallen down traps */
+extern struct linked_list *rlist;
 extern struct death_type deaths[];      /* all the ways to die */
 extern struct thing player;             /* The rogue */
 extern struct monster monsters[];       /* The initial monster states */
 extern struct linked_list *lvl_obj;     /* List of objects on this level */
-extern struct linked_list *monst_dead;  /* Indicates monster that got killed */
 extern struct object *cur_weapon;       /* Which weapon he is weilding */
 extern struct object *cur_armor;        /* What a well dresssed rogue wears */
 extern struct object *cur_ring[];       /* Which rings are being worn */

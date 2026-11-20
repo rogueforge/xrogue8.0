@@ -1191,7 +1191,8 @@ bool pr, points, treasure;
             o_discard(pitem);
         pitem = nexti;
     }
-    t_discard(item);
+    turn_on(*tp, ISDEAD);
+    attach(rlist, item);
 }
 
 /*

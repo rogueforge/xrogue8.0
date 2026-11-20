@@ -36,7 +36,7 @@ int cur_relic[MAXRELIC];                /* Currently used relics */
 struct linked_list *lvl_obj = NULL; 
 struct linked_list *mlist = NULL;
 struct linked_list *tlist = NULL;       /* list of monsters fallen down traps */
-struct linked_list *monst_dead = NULL;  /* monster killed by monster    */
+struct linked_list *rlist = NULL;
 struct object *cur_weapon = NULL;
 int char_type = -1;                     /* what type of character is player */
 int foodlev = 1;                        /* how fast he eats food */

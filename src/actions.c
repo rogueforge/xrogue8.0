@@ -108,7 +108,6 @@ m_act(tp)
 register struct thing *tp;
 {
     struct object *obj;
-    struct linked_list *mitem;
     bool flee;			/* Are we scared? */
     static int mf_count=0;      /* move_free counter - see below */
     static int mf_jmpcnt=0;     /* move_free counter for # of jumps */
@@ -151,7 +150,6 @@ register struct thing *tp;
              * if the prey moved, do nothing
              */
             obj = tp->t_using ? OBJPTR(tp->t_using) : NULL;
-            mitem = find_mons(tp->t_pos.y, tp->t_pos.x);
             if (ce(tp->t_newpos, hero)) {
                 attack(tp, obj, FALSE);
             }
@@ -159,7 +157,6 @@ register struct thing *tp;
                      step_ok(tp->t_newpos.y, tp->t_newpos.x, FIGHTOK, tp)) {
                 skirmish(tp, &tp->t_newpos, obj, FALSE);
             }
-            if (monst_dead == mitem) return;
 
         when A_SELL:
                 /* Is the quartermaster still next to us? */
@@ -372,7 +369,7 @@ register struct thing *tp;
         breath = "fear gas";
     }
 
-    /* Now breathe -- sets "monst_dead" if it kills someone */
+    /* Now breathe */
     shoot_bolt(tp, tp->t_pos, tp->t_newpos, FALSE, 
                     tp->t_index, breath, damage);
 
@@ -823,7 +820,7 @@ register struct room *rer, *ree;
 runners(segments)
 int segments;    /* Number of segments since last called */
 {
-    register struct linked_list *item, *nitem;
+    register struct linked_list *item;
     register struct thing *tp;
     register min_time = 20;     /* Minimum time until a monster can act */
 
@@ -838,9 +835,20 @@ int segments;    /* Number of segments since last called */
      *       end in case he killed the next one.
      */
 
-    for (item = mlist; item != NULL; item = nitem) {
-        nitem = next(item); /* Get next item now since monster may disappear */
+    for (item = mlist; item != NULL; item = next(item)) {
         tp = THINGPTR(item);
+        turn_on(*tp, NEEDSTOACT);
+    }
+
+    for (;;) {
+        for (item = mlist; item != NULL; item = next(item)) {
+            tp = THINGPTR(item);
+            if (on(*tp, NEEDSTOACT))
+                break;
+        }
+        if (item == NULL)
+            break;
+        turn_off(*tp, NEEDSTOACT);
 
         /* If we are not awake, just skip us */
         if (off(*tp, ISRUN) && off(*tp, ISHELD)) continue;
@@ -876,18 +884,15 @@ int segments;    /* Number of segments since last called */
         /* Heal the creature if it's not in the middle of some action */
         if (tp->t_action == A_NIL) doctor(tp);
 
-        monst_dead = NULL; /* Indicate that this monster is alive */
-
-        while (monst_dead != item &&
+        while (off(*tp, ISDEAD) && off(*tp, ISELSEWHERE) &&
                tp->t_no_move <= 0 && off(*tp, ISHELD) && on(*tp, ISRUN)) {
             /* Let's act (or choose an action if t_action = A_NIL) */
             m_act(tp);
         }
 
-        if (monst_dead != item) {
+        if (off(*tp, ISDEAD) && off(*tp, ISELSEWHERE)) {
             if (tp->t_no_move < min_time) min_time = tp->t_no_move;
             if (tp->t_quiet < 0) tp->t_quiet = 0;
-            nitem = next(item); /* get next monster since this is valid */
         }
     }
     return(min_time);

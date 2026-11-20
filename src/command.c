@@ -616,6 +616,7 @@ command()
 #endif
 
         if (++segment > 10) segment = 1;
+        t_free_list(rlist);
     }
 }
 

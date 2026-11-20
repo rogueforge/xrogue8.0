@@ -256,7 +256,7 @@ int damage;
                                      * spotpos puts the monster back on the
                                      * screen
                                      */
-                                    target = monst_dead = item;
+                                    target = item;
                                 }
                                 else {  /* Not dead, so just scream */
                                      if (!see_monster)
