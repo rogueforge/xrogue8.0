@@ -1010,7 +1010,8 @@ register coord *shoot_dir;
 
     monster->t_no_move = units * movement(monster);
     monster->t_using = pitem;
-    monster->t_newpos = *shoot_dir;
+    if (shoot_dir != NULL)
+        monster->t_newpos = *shoot_dir;
     return(TRUE);
 }
 
