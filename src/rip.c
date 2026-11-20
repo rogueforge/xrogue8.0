@@ -630,6 +630,7 @@ int outfd;
 int changed;
 {
     struct rlimit lim;
+    sigset_t set, oset;
 
     /*
      * Update the list file
@@ -640,7 +641,14 @@ int changed;
     {
         lseek(outfd, 0L, 0);
         scoreout(scores, compatstr); /* Get a compatibile format score string */
+        sigemptyset(&set);
+        sigaddset(&set, SIGINT);
+        sigaddset(&set, SIGHUP);
+        sigaddset(&set, SIGTERM);
+        sigaddset(&set, SIGQUIT);
+        sigprocmask(SIG_BLOCK, &set, &oset);
         encwrite(compatstr, (long)(NUMSCORE * SCORELEN), outfd);
+        sigprocmask(SIG_SETMASK, &oset, (sigset_t *) NULL);
     }
     free(compatstr);
     close(outfd);
