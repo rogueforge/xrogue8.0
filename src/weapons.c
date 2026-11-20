@@ -243,7 +243,7 @@ register struct thing *tp;
                           : "Do you really want to throw %s? (y or n): ",
                                 inv_name(obj, TRUE));
                 mpos = 0;
-                ch = wgetch(cw);
+                ch = readchar(cw);
                 if (ch == 'n' || ch == ESC) {
                     after = FALSE;
                     return;

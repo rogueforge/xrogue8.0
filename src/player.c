@@ -916,7 +916,7 @@ char            *type;          /* type of thing--> spell, prayer, chant */
     /* Prompt for spells */
     msg("Which %s are you %sing? (* for list): ", type, prompt);
 
-    which_spell = (int) (wgetch(cw) - 'a');
+    which_spell = (int) (readchar(cw) - 'a');
     msg("");    /* Get rid of the prompt */
     if (which_spell == (int) ESC - (int) 'a') {
         after = FALSE;
@@ -945,7 +945,7 @@ char            *type;          /* type of thing--> spell, prayer, chant */
                 clearok(msgw, FALSE);
                 draw(msgw);
                 do {
-                    c = wgetch(cw);
+                    c = readchar(cw);
                 } while (c != ' ' && c != ESC);
                 if (c == ESC)
                     break;
@@ -956,7 +956,7 @@ char            *type;          /* type of thing--> spell, prayer, chant */
             clearok(msgw, FALSE);
             draw(msgw);
 
-            which_spell = (int) (wgetch(cw) - 'a');
+            which_spell = (int) (readchar(cw) - 'a');
         } while (which_spell != (int) (ESC - 'a') &&
                  (which_spell < 0 || which_spell >= num_spells));
 
@@ -1058,7 +1058,7 @@ char            *type;          /* type of thing--> spell, prayer, chant */
     }
 
     if (!nohw) {
-        which_spell = (int) (wgetch(cw) - 'a');
+        which_spell = (int) (readchar(cw) - 'a');
         while (which_spell < 0 || which_spell >= num_spells) {
             if (which_spell == (int) ESC - (int) 'a') {
                 after = FALSE;
@@ -1084,7 +1084,7 @@ char            *type;          /* type of thing--> spell, prayer, chant */
             }
             else draw(hw);
 
-            which_spell = (int) (wgetch(cw) - 'a');
+            which_spell = (int) (readchar(cw) - 'a');
         }
     }
 

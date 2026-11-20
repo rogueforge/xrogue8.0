@@ -267,13 +267,13 @@ init_player()
         }
         mvwaddstr(hw, 0, 0, "What character class do you desire? ");
         draw(hw);
-        char_type = (wgetch(hw) - '0');
+        char_type = (readchar(hw) - '0');
         while (char_type < 1 || char_type > NUM_CHARTYPES-1) {
             wmove(hw,0,0);
             wprintw(hw,"Please enter a character type between 1 and %d: ",
                     NUM_CHARTYPES-1);
             draw(hw);
-            char_type = (wgetch(hw) - '0');
+            char_type = (readchar(hw) - '0');
         }
         char_type--;
     }
@@ -663,7 +663,7 @@ init_player()
                     stat_total -= maximum;
                 }
                 else for (;;) {
-                    ch = wgetch(hw);
+                    ch = readchar(hw);
                     if (ch == '\b') {   /* Backspace */
                         if (i == 0) continue;   /* Can't move back */
                         else {
@@ -763,7 +763,7 @@ init_player()
 
             mvwaddstr(hw, 0, 0, "Is this character okay? ");
             draw(hw);
-        } while(wgetch(hw) != 'y');
+        } while(readchar(hw) != 'y');
       }
     }
     pstats.s_arm = 10;

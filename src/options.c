@@ -125,7 +125,7 @@ register int oy, ox;
     {
         wmove(win, oy, ox);
         draw(win);
-        switch (wgetch(win))
+        switch (readchar(win))
         {
             case '\n':
             case '\r':
@@ -165,7 +165,7 @@ WINDOW *win;
     {
         wmove(win, oy, ox);
         draw(win);
-        switch (wgetch(win))
+        switch (readchar(win))
         {
             case 't':
             case 'T':
@@ -215,7 +215,7 @@ WINDOW *win;
      * loop reading in the string, and put it in a temporary buffer
      */
     for (sp = buf;
-        (c = wgetch(win)) != '\n'       && 
+        (c = readchar(win)) != '\n'       && 
         c != '\r'                       && 
         c != '\033'                     && 
         c != '\007'                     &&

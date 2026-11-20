@@ -27,7 +27,7 @@ buy_it()
                 return;
             msg("Do you want to buy it? ");
             do {
-                wh = wgetch(cw);
+                wh = readchar(cw);
                 if (wh == ESC || wh == 'n') {
                     msg("");
                     return;
@@ -414,7 +414,7 @@ sell_it()
         msg("Your %s is worth %d pieces of gold.",typ_name(obj),wo);
         msg("Do you want to sell it? ");
         do {
-            ch = wgetch(cw);
+            ch = readchar(cw);
             if (ch == ESC || ch == 'n') {
                 msg("");
                 return;

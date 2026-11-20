@@ -169,7 +169,7 @@ ident_hero()
     wprintw(hw, "\nEnter a letter: ");
     draw(hw);
     while (doit) {
-	switch (wgetch(cw)) {
+	switch (readchar(cw)) {
 	   when EOF:
 	   case ESC:
 		doit = FALSE;
@@ -334,7 +334,7 @@ help()
     register int cnt;
 
     msg("Character you want help for (* for commands, @ for items): ");
-    helpch = wgetch(cw);
+    helpch = readchar(cw);
     mpos = 0;
     /*
      * If it's not a *, @, or +, then just print help string
@@ -448,7 +448,7 @@ register char ch;
 
     if (ch == NULL) {
         msg("What do you want identified? ");
-        ch = wgetch(cw);
+        ch = readchar(cw);
         mpos = 0;
         if (ch == ESC)
         {

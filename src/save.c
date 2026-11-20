@@ -76,7 +76,7 @@ save_game()
         msg("Save file (%s)? ", file_name);
         do
         {
-            c = wgetch(cw);
+            c = readchar(cw);
             if (c == ESC) return(0);
         } while (c != 'n' && c != 'N' && c != 'y' && c != 'Y');
         mpos = 0;

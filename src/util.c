@@ -416,7 +416,7 @@ get_coordinates()
 #ifdef PC7300
         which = wgetc(0);
 #else
-        which = (wgetch(cw) & 0177);
+        which = (readchar(cw) & 0177);
 #endif
         switch(which) {
 #ifdef PC7300
@@ -551,7 +551,7 @@ coord *direction;
     do
     {
         gotit = TRUE;
-        switch (wgetch(msgw))
+        switch (readchar(msgw))
         {
             when 'h': case'H': direction->y =  0; direction->x = -1;
             when 'j': case'J': direction->y =  1; direction->x =  0;

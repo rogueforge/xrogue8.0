@@ -1626,7 +1626,7 @@ register int y, x;
             msg("Which kind of trap do you wish to set? (* for a list): ");
             num_traps = TRAPTYPES - (wizard ? 0 : WIZARDTRAPS);
             do {
-                selection = wgetch(cw);
+                selection = readchar(cw);
                 switch (selection) {
                     case '*':
                       if (state != 1) {

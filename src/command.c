@@ -103,7 +103,7 @@ command()
                 }
                 else if (count) ch = countch;
                 else {
-                    ch = wgetch(cw);
+                    ch = readchar(cw);
                     if (mpos != 0 && !running)  /* Erase message if its there */
                         msg("");
                 }
@@ -119,7 +119,7 @@ command()
                     {
                         if (count < 1000)
                             count = count * 10 + (ch - '0');
-                        ch = wgetch(cw);
+                        ch = readchar(cw);
                     }
                     countch = ch;
                     /*
@@ -160,7 +160,7 @@ command()
                         if (count && !newcount)
                             ch = direction;
                         else
-                            ch = wgetch(cw);
+                            ch = readchar(cw);
                         switch (ch)
                         {
                             case 'h': case 'j': case 'k': case 'l':
@@ -1110,13 +1110,13 @@ nameit()
     char answer;
 
     msg("Name monster or item (m or i)? ");
-    answer = wgetch(cw);
+    answer = readchar(cw);
     mpos = 0;
 
     while (answer != 'm' && answer != 'i' && answer != ESC) {
         mpos = 0;
         msg("Please specify m or i, for monster or item - ");
-        answer = wgetch(cw);
+        answer = readchar(cw);
     }
 
     switch (answer) {

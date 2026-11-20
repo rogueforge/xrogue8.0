@@ -609,7 +609,7 @@ picky_inven()
     {
         msg(terse ? "Item: " : "Which item do you wish to inventory: ");
         mpos = 0;
-        if ((mch = wgetch(cw)) == ESC)
+        if ((mch = readchar(cw)) == ESC)
         {
             msg("");
             return;
@@ -709,7 +709,7 @@ bool askfirst, showcost;
         while(TRUE)  {
             if (purpose) {      /* Should we prompt the player? */
                 msg("%s what (* for the item)?", cap_purpose);
-                ch = wgetch(cw);
+                ch = readchar(cw);
             }
             else {
                 ch = pack_char(list, obj);
@@ -747,7 +747,7 @@ bool askfirst, showcost;
     while (TRUE) {
         if (!askfirst && purpose) {
             msg("%s what? (* for list): ", cap_purpose);
-            ch = wgetch(cw);
+            ch = readchar(cw);
         }
         else ch = '*';
 
@@ -855,7 +855,7 @@ bool askfirst, showcost;
 
             if (purpose) {
                 do {
-                    ch = wgetch(cw);
+                    ch = readchar(cw);
                 } until (isalpha(ch) || ch == ESC);
             }
             else {
@@ -1525,7 +1525,7 @@ register y, x;
 
         for (;;) {
             do {
-                ch = wgetch(cw);
+                ch = readchar(cw);
             } until (isalpha(ch) || ch == '*' || ch == ESC);
 
             /* Redraw original screen */

@@ -299,7 +299,7 @@ register struct linked_list *item;
     while (doit) {
         msg("What do you want to do? (* for a list): ");
         mpos = 0;
-        switch (wgetch(cw)) {
+        switch (readchar(cw)) {
             case EOF:
             case ESC:
                 msg ("");
@@ -555,7 +555,7 @@ use_emori()
 
     msg("What do you want to do? (* for a list): ");
     do {
-        selection = wgetch(cw);
+        selection = readchar(cw);
         switch (selection) {
             case '*':
               if (state != 1) {
@@ -676,7 +676,7 @@ struct object *obj;
     /* Prompt for scrolls */
     msg("Which scroll are you writing? (* for list): ");
 
-    which_scroll = (int) (wgetch(cw) - 'a');
+    which_scroll = (int) (readchar(cw) - 'a');
     msg("");    /* Get rid of the prompt */
     if (which_scroll == (int) ESC - (int) 'a') {
         after = FALSE;
@@ -699,7 +699,7 @@ struct object *obj;
                 clearok(msgw, FALSE);
                 draw(msgw);
                 do {
-                    c = wgetch(cw);
+                    c = readchar(cw);
                 } while (c != ' ' && c != ESC);
                 if (c == ESC)
                     break;
@@ -709,7 +709,7 @@ struct object *obj;
             clearok(msgw, FALSE);
             draw(msgw);
 
-            which_scroll = (int) (wgetch(cw) - 'a');
+            which_scroll = (int) (readchar(cw) - 'a');
         } while (which_scroll != (int) (ESC - 'a') &&
                  (which_scroll < 0 || which_scroll >= MAXQUILL));
 
@@ -796,7 +796,7 @@ struct object *obj;
     }
 
     if (!nohw) {
-        which_scroll = (int) (wgetch(cw) - 'a');
+        which_scroll = (int) (readchar(cw) - 'a');
         while (which_scroll < 0 || which_scroll >= MAXQUILL) {
             if (which_scroll == (int) ESC - (int) 'a') {
                 after = FALSE;
@@ -822,7 +822,7 @@ struct object *obj;
             }
             else draw(hw);
 
-            which_scroll = (int) (wgetch(cw) - 'a');
+            which_scroll = (int) (readchar(cw) - 'a');
         }
     }
 

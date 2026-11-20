@@ -54,7 +54,7 @@ int which_item, which_type;
         wprintw(hw,"\n\nWhat do you want to create? ");
         draw(hw);
         do {
-            ch = wgetch(hw);
+            ch = readchar(hw);
             if (ch == ESC) {
                 restscr(cw);
                 return;
@@ -170,7 +170,7 @@ int which_item, which_type;
         mvwaddstr(hw,lines - 1, 0, prbuf);
         draw(hw);
         do {
-            ch = wgetch(hw);
+            ch = readchar(hw);
             if (ch == ESC) {
                 restscr(cw);
                 msg("");
@@ -332,7 +332,7 @@ getbless()
         reg char bless;
 
         msg("Blessing? (+,-,n)");
-        bless = wgetch(msgw);
+        bless = readchar(msgw);
         if (bless == '+')
                 return (15);
         else if (bless == '-')
@@ -527,7 +527,7 @@ passwd()
     msg("Wizard's Password:");
     mpos = 0;
     sp = buf;
-    while ((c = wgetch(cw)) != '\n' && c != '\r' && c != '\033') {
+    while ((c = readchar(cw)) != '\n' && c != '\r' && c != '\033') {
 #ifdef BSD
         if (c == _tty.sg_kill)
 #endif
@@ -775,7 +775,7 @@ choose_qst()
     	    draw(hw);
 
         while (doit) {
-	    switch (wgetch(cw)) {
+	    switch (readchar(cw)) {
 	        case EOF:
 	        case ESC:
     		    escp = FALSE;   /* used below */

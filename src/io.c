@@ -5,6 +5,7 @@
 #include <stdarg.h>
 #include <curses.h>
 #include <ctype.h>
+#include <errno.h>
 #include "rogue.h"
 
 /*
@@ -410,6 +411,17 @@ line_two:
     wmove(cw, oy, ox);
 }
 
+readchar(win)
+WINDOW *win;
+{
+    register int ch, cnt = 0;
+
+    for (errno = 0; (ch = wgetch(win)) == ERR; errno = 0)
+        if (errno != EINTR && cnt++ > 100)
+            auto_save();
+    return ch;
+}
+
 /*
  * wait_for
  *      Sit around until the guy types the right key
@@ -422,12 +434,12 @@ register char ch;
 
     clearok(msgw, FALSE);
     if (ch == '\n') {
-        while ((c = wgetch(msgw)) != '\n' && c != '\r') {
+        while ((c = readchar(msgw)) != '\n' && c != '\r') {
             continue;
         }
     }
     else {
-        while (wgetch(msgw) != ch) {
+        while (readchar(msgw) != ch) {
             continue;
         }
     }
