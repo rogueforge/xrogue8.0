@@ -99,11 +99,9 @@ save_game()
         }
         strcpy(file_name, buf);
 gotfile:
-#ifdef BSD
-        if ((savefd = creat(file_name, 0666)) < 0)
-#else
-        if ((savefd = open(file_name, O_WRONLY|O_CREAT|O_TRUNC,0666)) < 0)
-#endif
+        if (stat(file_name, &sbuf) >= 0 && (sbuf.st_mode & S_IFMT) == S_IFREG)
+            unlink(file_name);
+        if ((savefd = open(file_name, O_WRONLY|O_CREAT|O_EXCL, 0400)) < 0)
             msg(strerror(errno));    /* fake perror() */
     } while (savefd < 0);
 
@@ -132,13 +130,14 @@ auto_save()
         signal(i, SIG_IGN);
     if (save_ok()               &&
         file_name[0] != '\0'    && 
-        pstats.s_hpt > 0        &&
-#ifdef BSD
-        (savefd = creat(file_name, 0600)) >= 0)
-#else
-        (savefd = open(file_name, O_WRONLY|O_CREAT|O_TRUNC, 0600)) >= 0)
-#endif
-        save_file(savefd);
+        pstats.s_hpt > 0)
+    {
+        if (stat(file_name, &sbuf) >= 0 && (sbuf.st_mode & S_IFMT) == S_IFREG)
+            unlink(file_name);
+        savefd = open(file_name, O_WRONLY|O_CREAT|O_EXCL, 0400);
+        if (savefd >= 0)
+            save_file(savefd);
+    }
     endwin();
 #ifdef PC7300
     endhardwin();
@@ -201,6 +200,11 @@ char **envp;
     if (sbuf2.st_uid != getuid())
     {
         printf("Sorry, saved game is not yours.\n");
+        return FALSE;
+    }
+    if ((sbuf2.st_mode & 022) != 0)
+    {
+        printf("Sorry, saved game can be written by others.\n");
         return FALSE;
     }
 
