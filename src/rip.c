@@ -215,7 +215,6 @@ short monst;
     char upsystem[SYSLEN], uplogin[LOGLEN];
     char *thissys;      /* Holds the name of this system */
     char *compatstr=NULL; /* Holds scores for writing compatible score files */
-    struct rlimit lim;
 #define REASONLEN 3
     static char *reason[] = {
         "killed",
@@ -536,6 +535,8 @@ short monst;
 /*   if (flags != SCOREIT && flags != UPDATE && prflags != EDITSCORE)
         endwin();       */
 
+    if (prflags != EDITSCORE)
+        put_scores(top_ten, compatstr, outfd, !waswizard);
     if (flags != UPDATE) {
         if (flags != SCOREIT) {
             clear();
@@ -618,15 +619,27 @@ short monst;
         }
 /*      if (prflags == EDITSCORE) endwin();     /* End editing windowing */
     }
+    if (prflags == EDITSCORE)
+        put_scores(top_ten, compatstr, outfd, TRUE);
+}
+
+put_scores(scores, compatstr, outfd, changed)
+struct sc_ent scores[];
+char *compatstr;
+int outfd;
+int changed;
+{
+    struct rlimit lim;
+
     /*
      * Update the list file
      */
-    if ((!waswizard || prflags == EDITSCORE)
+    if (changed
         && !(getrlimit(RLIMIT_FSIZE, &lim) == 0
              && lim.rlim_cur < NUMSCORE * SCORELEN))
     {
         lseek(outfd, 0L, 0);
-        scoreout(top_ten, compatstr); /* Get a compatibile format score string */
+        scoreout(scores, compatstr); /* Get a compatibile format score string */
         encwrite(compatstr, (long)(NUMSCORE * SCORELEN), outfd);
     }
     free(compatstr);
