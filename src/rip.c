@@ -315,6 +315,12 @@ short monst;
         hold_sc(fd);
     num_read = encread(compatstr, (long)(NUMSCORE * SCORELEN), fd); 
     scorein(compatstr, top_ten, num_read);      /* Convert it */
+    for (scp = sc2 = top_ten; scp < &top_ten[NUMSCORE]; scp++)
+        if ((scp - top_ten + 1) * SCORELEN <= num_read && scp->sc_score != 0
+            && scp->sc_flags >= 0 && scp->sc_flags < REASONLEN)
+                *sc2++ = *scp;
+    while (sc2 < &top_ten[NUMSCORE])
+        sc2++->sc_score = 0;
 
 #if NUMNET
     /* Get some values if this is an update */
