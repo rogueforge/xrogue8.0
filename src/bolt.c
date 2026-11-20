@@ -164,7 +164,8 @@ int damage;
                          * Let the defender know that the attacker has
                          * missiles!
                          */
-                        if (ce(*tp->t_dest, shooter->t_pos))
+                        if (tp->t_dest != NULL &&
+                            ce(*tp->t_dest, shooter->t_pos))
                             tp->t_wasshot = TRUE;
 
                         used = TRUE;
