@@ -555,9 +555,10 @@ register struct thing *tp;
 m_spell(tp)
 register struct thing *tp;
 {
+    static char missile_dmg[16];
     static struct object missile =
     {
-        MISSILE, {0, 0}, "", 0, 0, "0d4 " , NULL, 0, WS_MISSILE, 100, 1
+        MISSILE, {0, 0}, "", 0, 0, missile_dmg , NULL, 0, WS_MISSILE, 100, 1
     };
 
     sprintf(missile.o_hurldmg, "%dd4", tp->t_stats.s_lvl);

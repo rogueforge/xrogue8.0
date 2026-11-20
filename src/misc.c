@@ -159,8 +159,9 @@ register struct thing *monster;
     /* Now let's see what we're using */
     if (obj->o_type == RELIC) switch (obj->o_which) {
         when MING_STAFF: {
+            static char missile_dmg[16];
             static struct object missile = {
-              MISSILE, {0,0}, "", 0, 0, "0d4 " , NULL, 0, WS_MISSILE, 100, 1
+              MISSILE, {0,0}, "", 0, 0, missile_dmg , NULL, 0, WS_MISSILE, 100, 1
             };
 
             debug("Firing Ming's staff");

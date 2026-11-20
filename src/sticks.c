@@ -303,9 +303,10 @@ int flags;
         when WS_MISSILE:
         {
             int dice;
+            static char bolt_dmg[16];
             static struct object bolt =
             {
-                MISSILE , {0, 0}, "", 0, 0, "1d4 " , NULL, 0, WS_MISSILE, 50, 1
+                MISSILE , {0, 0}, "", 0, 0, bolt_dmg , NULL, 0, WS_MISSILE, 50, 1
             };
 
             if (!obj)
