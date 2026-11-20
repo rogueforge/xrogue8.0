@@ -131,6 +131,7 @@ bool silent;
                 mvaddch(hero.y,hero.x,(roomin(&hero)==NULL ? PASSAGE : FLOOR));
             else 
                 mvaddch(hero.y,hero.x,(OBJPTR(ap))->o_type);
+            o_discard(item);
             return(TRUE);
         }
 

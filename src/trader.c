@@ -14,6 +14,8 @@ buy_it()
 {
         reg int wh;
         struct linked_list *item;
+        struct object *obj;
+        bool dust;
 
         if (purse <= 0) {
             msg("You have no money.");
@@ -45,7 +47,11 @@ buy_it()
         /*
          * The hero bought the item here
          */
-        item = find_obj(hero.y, hero.x);
+        if ((item = find_obj(hero.y, hero.x)) == NULL)
+            return;
+        obj = OBJPTR(item);
+        dust = (obj->o_type == SCROLL && obj->o_which == S_SCARE &&
+                (obj->o_flags & ISCURSED));
         mpos = 0;
         if (add_pack((struct linked_list *)NULL,TRUE)) {/* try to put it in his pack */
             purse -= curprice;          /* take his money */
@@ -53,6 +59,8 @@ buy_it()
             trans_line();               /* show remaining deals */
             curprice = -1;              /* reset stuff */
             curpurch[0] = NULL;
+            if (dust)
+                return;
             whatis (item);              /* identify it */
             (OBJPTR(item))->o_flags &= ~ISPOST; /* turn off ISPOST */
             (OBJPTR(item))->o_flags |= ISKNOW;  /* he knows the item */
