@@ -28,7 +28,7 @@ char **envp;
     register struct passwd *pw;
     struct passwd *getpwuid();
     char *getpass(), *crypt();
-    long now;
+    time_t now;
 #ifdef PC7300
     int hardwindow;     /* Do we have a hardware window? */
 #endif
@@ -780,7 +780,7 @@ holiday()
 {
 
 #ifdef PLAYTIME
-        long now;
+        time_t now;
         struct tm *localtime();
         reg struct tm *ntime;
         time(&now);                     /* get the current time */
