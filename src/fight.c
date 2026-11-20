@@ -663,7 +663,7 @@ bool back_stab;
 
                     if (mult > 5)
                         mult = 5;
-                    if (weap->o_type == RELIC && weap->o_which == MUSTY_DAGGER)
+                    if (weap && weap->o_type == RELIC && weap->o_which == MUSTY_DAGGER)
                         mult++;
                     damage *= mult;
                 }
