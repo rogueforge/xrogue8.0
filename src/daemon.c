@@ -231,7 +231,7 @@ reg int flag;
 
 activity()
 {
-        msg("Daemons = %d : Fuses = %d : Memory Items = %d : Memory Used = %d",
-            demoncnt,fusecnt,total,sbrk(0));
+        msg("Daemons = %d : Fuses = %d : Memory Items = %d : Memory Used = %ld",
+            demoncnt,fusecnt,total,(long) sbrk(0));
 }
 

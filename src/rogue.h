@@ -1207,6 +1207,8 @@ bool	blue_light(), can_blink(), creat_mons(), add_pack(), invisible(),
 
 long	lseek(), check_level(), encread(), get_worth(), encwrite();
 
+struct delayed_action *find_slot();
+
 void	msg(char *, ...), addmsg(char *, ...);
 void	byebye(), genmonsters(), land(), undance(), cloak_charge(), quit(),
 	auto_save(), endit(), tstp();

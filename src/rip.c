@@ -61,7 +61,7 @@ struct sc_ent {
     short       sc_quest;
 };
 #define SCORELEN \
-    (sizeof(unsigned long) + NAMELEN + SYSLEN + LOGLEN + 5*sizeof(short))
+    (4 + NAMELEN + SYSLEN + LOGLEN + 5*sizeof(short))
 
 static char *rip[] = {
 "                      ___________",
@@ -546,7 +546,7 @@ short monst;
                 /* Make sure we have an in-bound reason */
                 if (scp->sc_flags > REASONLEN) scp->sc_flags = REASONLEN;
 
-                printf("%3d %10lu\t%s (%s)", scp - top_ten + 1,
+                printf("%3d %10lu\t%s (%s)", (int) (scp - top_ten) + 1,
                     scp->sc_score, scp->sc_name, class);
                     
                 if (prflags == REALLIFE) printf(" [in real life %.*s!%.*s]",
@@ -688,7 +688,7 @@ unsigned char *output;
     for (i=0; i<NUMSCORE; i++) {
         /* The long fields are first -- ordered low to high byte in input */
         lptr = &scores[i].sc_score;
-        for (j = 0; j < sizeof(unsigned long); j++)
+        for (j = 0; j < 4; j++)
             *output++ = (unsigned char) ((*lptr >> 8*j) & 0xff);
 
         /* The short fields are next -- ordered low to high byte in input */

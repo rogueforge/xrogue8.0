@@ -200,8 +200,8 @@ int size;
     register char *space = ALLOC(size);
 
     if (space == NULL) {
-        sprintf(prbuf,"Rogue ran out of memory (used = %d, wanted = %d).",
-                sbrk(0), size);
+        sprintf(prbuf,"Rogue ran out of memory (used = %ld, wanted = %d).",
+                (long) sbrk(0), size);
         fatal(prbuf);
     }
     total++;
