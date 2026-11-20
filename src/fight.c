@@ -779,7 +779,7 @@ bool back_stab, thrown, short_msg;
     /* What do we call the defender? */
     strcpy(def_name, see_def ? prname(ee, FALSE) : "something");
 
-    addmsg(att_name);
+    addmsg("%s", att_name);
     if (short_msg) {
         if (back_stab) {
             if (player.t_ctype == C_ASSASSIN)
@@ -843,7 +843,7 @@ bool thrown, short_msg;
     /* What do we call the defender? */
     strcpy(def_name, see_def ? prname(ee, FALSE) : "something");
 
-    addmsg(att_name);
+    addmsg("%s", att_name);
     switch (short_msg ? 0 : rnd(thrown ? 3 : 2))
     {
         when 0: s = (er == 0 ? " miss" : " misses");
