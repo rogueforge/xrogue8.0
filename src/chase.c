@@ -626,6 +626,10 @@ register struct thing *th;
             o_item = NULL;
             n_obj = OBJPTR(n_item);
             detach(lvl_obj, n_item);
+            for (o_item = mlist; o_item != NULL; o_item = next(o_item))
+                if ((THINGPTR(o_item))->t_dest == &n_obj->o_pos)
+                    (THINGPTR(o_item))->t_dest = &hero;
+            o_item = NULL;
 
             /* See if he wants it */
             if (n_obj->o_type == SCROLL && n_obj->o_which == S_SCARE &&
