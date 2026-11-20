@@ -210,8 +210,8 @@ char **envp;
 
     fflush(stdout);
     lseek(inf, 0L, 0);
-    ENCREAD(buf, (long)(strlen(version) + 1), inf); /* check which version */
-    if (strcmp(buf, version) != 0)
+    if (ENCREAD(buf, (long)(strlen(version) + 1), inf) != strlen(version) + 1
+        || strcmp(buf, version) != 0)
     {
         printf("Sorry, saved game is out of date.\n");
         return FALSE;
