@@ -2,6 +2,8 @@
 #include <signal.h>
 #include <pwd.h>
 #include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #ifdef BSD
 #include <sys/time.h>
@@ -459,16 +461,27 @@ char **envp;
 open_score()
 {
     register int i;
+    struct stat sbuf, sbuf2;
 
     while ((i = open("/dev/null", O_RDWR)) >= 0 && i < 3)
         continue;
     if (i >= 3)
         close(i);
+    if (lstat(SCOREFILE, &sbuf) < 0)
 #ifdef BSD
-    score_fd = open(SCOREFILE, O_RDWR, 0666);
+        score_fd = -1;
 #else
-    score_fd = open(SCOREFILE, O_CREAT|O_RDWR, 0666);
+        score_fd = open(SCOREFILE, O_CREAT|O_EXCL|O_RDWR, 0666);
 #endif
+    else if ((sbuf.st_mode & S_IFMT) != S_IFREG || sbuf.st_nlink != 1)
+        score_fd = -1;
+    else if ((score_fd = open(SCOREFILE, O_RDWR)) >= 0
+        && (fstat(score_fd, &sbuf2) < 0 || sbuf2.st_dev != sbuf.st_dev
+        || sbuf2.st_ino != sbuf.st_ino))
+    {
+        close(score_fd);
+        score_fd = -1;
+    }
     if ((setregid(getgid(), getgid()) < 0 || setreuid(getuid(), getuid()) < 0)
         && (getegid() != getgid() || geteuid() != getuid()))
     {
