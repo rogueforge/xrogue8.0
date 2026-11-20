@@ -10,8 +10,8 @@ struct b_cellscells {
         struct cell conn[4];    /* the y,x position of above cell */
 } b_cells;
 
-static char     *frontier, 
-                *bits;
+static char     frontier[((MAXLINES - 3) / 2) * ((MAXCOLS - 1) / 2)],
+                bits[(MAXLINES - 3) * (MAXCOLS - 1)];
 static int      maze_lines, 
                 maze_cols;
 char            *moffset(), 
@@ -138,8 +138,6 @@ draw_maze()
 
         maze_lines = (lines - 3) / 2;
         maze_cols = (cols - 1) / 2;
-        bits = ALLOC((lines - 3) * (cols - 1));
-        frontier = ALLOC(maze_lines * maze_cols);
         ptr = frontier;
         while (ptr < (frontier + (maze_lines * maze_cols)))
                 *ptr++ = TRUE;
@@ -159,8 +157,6 @@ draw_maze()
                 }
         }
         crankout();
-        FREE(frontier);
-        FREE(bits);
 }
 
 /*
