@@ -404,7 +404,7 @@ line_two:
     s_pack = stat_ptr->s_pack;
     s_carry = stat_ptr->s_carry;
     s_exp = stat_ptr->s_exp; 
-    mvwaddstr(cw, lines-1, 0, buf);
+    mvwaddnstr(cw, lines-1, 0, buf, cols-1);
     wclrtoeol(cw);
     newfont(cw);
     wmove(cw, oy, ox);
