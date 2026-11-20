@@ -108,6 +108,7 @@ m_act(tp)
 register struct thing *tp;
 {
     struct object *obj;
+    struct linked_list *mitem;
     bool flee;			/* Are we scared? */
     static int mf_count=0;      /* move_free counter - see below */
     static int mf_jmpcnt=0;     /* move_free counter for # of jumps */
@@ -150,6 +151,7 @@ register struct thing *tp;
              * if the prey moved, do nothing
              */
             obj = tp->t_using ? OBJPTR(tp->t_using) : NULL;
+            mitem = find_mons(tp->t_pos.y, tp->t_pos.x);
             if (ce(tp->t_newpos, hero)) {
                 attack(tp, obj, FALSE);
             }
@@ -157,6 +159,7 @@ register struct thing *tp;
                      step_ok(tp->t_newpos.y, tp->t_newpos.x, FIGHTOK, tp)) {
                 skirmish(tp, &tp->t_newpos, obj, FALSE);
             }
+            if (monst_dead == mitem) return;
 
         when A_SELL:
                 /* Is the quartermaster still next to us? */
