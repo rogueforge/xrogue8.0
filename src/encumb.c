@@ -156,7 +156,7 @@ wghtchk()
         inwhgt = TRUE;
         if (pstats.s_pack > pstats.s_carry) {
             ch = mvwinch(stdscr, hero.y, hero.x);
-            if((ch != FLOOR && ch != PASSAGE)) {
+            if((ch != FLOOR && ch != PASSAGE) || player.t_using != NULL) {
                 extinguish(wghtchk);
                 fuse(wghtchk, (VOIDTYPE *)NULL, 1, AFTER);
                 inwhgt = FALSE;
