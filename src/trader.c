@@ -16,6 +16,7 @@ buy_it()
         struct linked_list *item;
         struct object *obj;
         bool dust;
+        int n;
 
         if (purse <= 0) {
             msg("You have no money.");
@@ -53,13 +54,16 @@ buy_it()
         dust = (obj->o_type == SCROLL && obj->o_which == S_SCARE &&
                 (obj->o_flags & ISCURSED));
         mpos = 0;
+        n = inpack;
         if (add_pack((struct linked_list *)NULL,TRUE)) {/* try to put it in his pack */
             purse -= curprice;          /* take his money */
             ++trader;                   /* another transaction */
             trans_line();               /* show remaining deals */
             curprice = -1;              /* reset stuff */
+            if (inpack == n && !dust)
+                msg("%s", curpurch);
             curpurch[0] = NULL;
-            if (dust)
+            if (inpack == n)
                 return;
             whatis (item);              /* identify it */
             (OBJPTR(item))->o_flags &= ~ISPOST; /* turn off ISPOST */
