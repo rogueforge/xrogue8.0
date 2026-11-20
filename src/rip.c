@@ -316,7 +316,9 @@ short monst;
     scorein(compatstr, top_ten, num_read);      /* Convert it */
     for (scp = sc2 = top_ten; scp < &top_ten[NUMSCORE]; scp++)
         if ((scp - top_ten + 1) * SCORELEN <= num_read && scp->sc_score != 0
-            && scp->sc_flags >= 0 && scp->sc_flags < REASONLEN)
+            && scp->sc_flags >= 0 && scp->sc_flags < REASONLEN
+            && scp->sc_ctype >= 0 && scp->sc_ctype < NUM_CHARTYPES
+            && scp->sc_quest >= 0 && scp->sc_quest < MAXRELIC)
                 *sc2++ = *scp;
     while (sc2 < &top_ten[NUMSCORE])
         sc2++->sc_score = 0;
