@@ -912,6 +912,7 @@ int dy, dx;
     if (on(player, ISHELD) &&
         (!isalpha(ch) || (on(*tp, ISFRIENDLY) && off(*tp, ISHELD)))) {
         msg("You are being held.");
+        running = FALSE;
         player.t_action = A_NIL;
         return;
     }
