@@ -361,7 +361,7 @@ register coord *tc;
                             msg("The dart killed %s.", prname(mname, FALSE));
                         killed(mitem, FALSE, FALSE, TRUE);
                     }
-                    if (!save(VS_POISON, th, 0)) {
+                    else if (!save(VS_POISON, th, 0)) {
                         th->t_stats.s_hpt /= 2 + level;
                         if (th->t_stats.s_hpt < 1) {
                             if (can_see) 
