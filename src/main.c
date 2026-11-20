@@ -132,13 +132,14 @@ char **envp;
     if (argc == 2)
         if (!restore(argv[1], envp)) /* Note: restore will never return */
             exit(1);
-    if (wizard && getenv("SEED") != NULL) {
-        seed = atoi(getenv("SEED")); 
-    }
-    else {
+    if ((env = getenv("SEED")) != NULL)
+        seed = atoi(env);
+    else
+        seed = 0;
+    if (seed <= 0) {
         seed = (int) time(&now) + getpid();
     }
-    if (wizard)
+    if (wizard || env != NULL)
         printf("Hello %s, welcome to dungeon #%d", whoami, seed);
     else
         printf("Hello %s, just a moment while I dig the dungeon...", whoami);
