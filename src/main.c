@@ -577,6 +577,10 @@ setup()
     signal(SIGTERM, auto_save);
     signal(SIGINT, quit);
     signal(SIGQUIT, endit);
+    sprintf(prbuf, "%d", LINES);
+    setenv("LINES", prbuf, 1);
+    sprintf(prbuf, "%d", COLS);
+    setenv("COLUMNS", prbuf, 1);
     crmode();                           /* Cbreak mode */
     noecho();                           /* Echo off */
 }
