@@ -305,7 +305,7 @@ init_player()
      * allow me to describe a super character 
      */
     	/* let's lessen the restrictions on this okay? */
-    if (wizard && strcmp(getenv("SUPER"),"YES") == 0) {
+    if (wizard && getenv("SUPER") != NULL && strcmp(getenv("SUPER"),"YES") == 0) {
         pstats.s_str = MAXATT;
         pstats.s_intel = MAXATT;
         pstats.s_wisdom = MAXATT;

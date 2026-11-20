@@ -409,7 +409,7 @@ char **envp;
     draw(cw);
     /* A super wizard doesn't have to get equipped */
     /* Check if "" option is TRUE and get environment flag */
-    if (wizard && strcmp(getenv("SUPER"),"YES") == 0 ||
+    if (wizard && getenv("SUPER") != NULL && strcmp(getenv("SUPER"),"YES") == 0 ||
     def_attr == TRUE) {
         level = 1;
         new_level(NORMLEV);
