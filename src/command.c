@@ -82,6 +82,8 @@ command()
                     player.t_action = A_NIL;
                     msg("You can move again.");
                 }
+                if (player.t_action == A_NIL)
+                    player.t_using = NULL;
 
                 if (player.t_action != A_NIL) ch = player.t_action;
                 else if (running) {
