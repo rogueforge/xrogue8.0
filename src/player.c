@@ -972,9 +972,7 @@ char            *type;          /* type of thing--> spell, prayer, chant */
         wclear(hw);
         touchwin(hw);
         wmove(hw, 2, 0);
-        *type = _toupper(*type);
-        wprintw(hw, "   Cost    %s", type);
-        *type = _tolower(*type);
+        wprintw(hw, "   Cost    %c%s", _toupper(*type), type + 1);
         mvwaddstr(hw, 3, 0,
                 "-----------------------------------------------");
         maxlen = 47;    /* Maximum width of header */
