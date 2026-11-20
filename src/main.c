@@ -571,6 +571,9 @@ setup()
     signal(SIGPIPE, bugkill);
 #endif
 
+#ifdef SIGXFSZ
+    signal(SIGXFSZ, SIG_IGN);
+#endif
 #ifdef SIGTSTP
     signal(SIGTSTP, tstp);
 #endif

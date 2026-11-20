@@ -1070,6 +1070,9 @@ shell()
          */
         setuid(getuid());
         setgid(getgid());
+#ifdef SIGXFSZ
+        signal(SIGXFSZ, SIG_DFL);
+#endif
         execl(sh == NULL ? "/bin/sh" : sh, "shell", "-i", (char *) 0);
         perror("No shell");
         _exit(-1);

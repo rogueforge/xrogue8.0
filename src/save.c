@@ -135,8 +135,8 @@ auto_save()
         if (stat(file_name, &sbuf) >= 0 && (sbuf.st_mode & S_IFMT) == S_IFREG)
             unlink(file_name);
         savefd = open(file_name, O_WRONLY|O_CREAT|O_EXCL, 0400);
-        if (savefd >= 0)
-            save_file(savefd);
+        if (savefd >= 0 && !save_file(savefd))
+            unlink(file_name);
     }
     endwin();
 #ifdef PC7300
@@ -173,8 +173,7 @@ register int savefd;
     num_written = ENCWRITE(version, rg_edata - version, savefd);
     if (num_written == rg_edata - version)
         num_written += ENCWRITE(rg_bss, rg_ebss - rg_bss, savefd);
-    close(savefd);
-    if (num_to_write == num_written) return(TRUE);
+    if (close(savefd) == 0 && num_to_write == num_written) return(TRUE);
     else return(FALSE);
 }
 
