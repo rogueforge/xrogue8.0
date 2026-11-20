@@ -550,7 +550,8 @@ short monst;
                 class = char_class[scp->sc_ctype].name;
 
                 /* Make sure we have an in-bound reason */
-                if (scp->sc_flags > REASONLEN) scp->sc_flags = REASONLEN;
+                if (scp->sc_flags < 0 || scp->sc_flags > REASONLEN)
+                    scp->sc_flags = REASONLEN;
 
                 printf("%3d %10lu\t%s (%s)", (int) (scp - top_ten) + 1,
                     scp->sc_score, scp->sc_name, class);
