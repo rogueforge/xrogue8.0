@@ -557,7 +557,9 @@ setup()
     signal(SIGILL, bugkill);
     signal(SIGTRAP, bugkill);
     signal(SIGIOT, bugkill);
+#ifdef SIGEMT
     signal(SIGEMT, bugkill);
+#endif
     signal(SIGFPE, bugkill);
     signal(SIGBUS, bugkill);
     signal(SIGSEGV, bugkill);
