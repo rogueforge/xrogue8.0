@@ -216,8 +216,14 @@ LEVTYPE ltype;          /* designates type of level to create */
      */
     t_free_list(mlist);
     o_free_list(lvl_obj);               /* Free up previous objects (if any) */
-    for (rp = rooms; rp < &rooms[MAXROOMS]; rp++)
+    for (rp = rooms; rp < &rooms[MAXROOMS]; rp++) {
         r_free_list(rp->r_exit);        /* Free up the exit lists */
+        while (rp->r_fires != NULL) {
+            item = rp->r_fires;
+            detach(rp->r_fires, item);
+            destroy_item(item);
+        }
+    }
 
     levtype = ltype;
     foods_this_level = 0;               /* food for hero this level */

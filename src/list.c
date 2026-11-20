@@ -142,6 +142,7 @@ register struct linked_list *item;
     total -= 2;
     tp = THINGPTR(item);
     if (tp->t_name != NULL) FREE(tp->t_name);
+    if (tp->t_pack != NULL) o_free_list(tp->t_pack);
     FREE(tp);
     FREE(item);
 }
