@@ -224,6 +224,7 @@ short monst;
     void endit();
     char *packend;
 
+    file_name[0] = '\0';
     signal(SIGINT, byebye);
     if (level == 0 && max_level == 0) 
         amount = 0; /*don't count if quit early */
@@ -765,6 +766,7 @@ total_winner()
     register char c;
     register long oldpurse;
 
+    file_name[0] = '\0';
     clear();
     standout();
     addstr("                                                               \n");
