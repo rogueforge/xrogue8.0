@@ -458,6 +458,12 @@ char **envp;
 
 open_score()
 {
+    register int i;
+
+    while ((i = open("/dev/null", O_RDWR)) >= 0 && i < 3)
+        continue;
+    if (i >= 3)
+        close(i);
 #ifdef BSD
     score_fd = open(SCOREFILE, O_RDWR, 0666);
 #else
