@@ -349,7 +349,7 @@ getdeath()
 {
     register int i;
     int which_death;
-    char label[80];
+    char label[LINELEN];
 
     clear();
     for (i=0; i<DEATHNUM; i++) {
@@ -390,7 +390,7 @@ char *label, *action;
     register short which_monst;
     register int num_monst = NUMMONST, pres_monst=1, num_lines=2*(lines-3);
     int max_monster;
-    char monst_name[40];
+    char monst_name[LINELEN];
 
     /* If we're not showing all, subtract UNIQUES, DINOS, and quartermaster */
     if (!showall) num_monst -= NUMUNIQUE + NUMDINOS + 1;

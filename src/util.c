@@ -1293,14 +1293,17 @@ strucpy(s1, s2, len)
 register char *s1, *s2;
 register int len;
 {
-    register char *sp;
+    register char *sp, *end = s1 + LINELEN - 1;
 #if USG5_0 
     char *unctrl();
 #endif
 
     while (len--)
     {
-        strcpy(s1, (sp = unctrl(*s2++)));
+        sp = unctrl(*s2++);
+        if (s1 + strlen(sp) > end)
+            break;
+        strcpy(s1, sp);
         s1 += strlen(sp);
     }
     *s1 = '\0';
