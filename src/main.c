@@ -1,6 +1,7 @@
 #include <curses.h>
 #include <signal.h>
 #include <pwd.h>
+#include <fcntl.h>
 
 #ifdef BSD
 #include <sys/time.h>
@@ -33,6 +34,7 @@ char **envp;
     int hardwindow;     /* Do we have a hardware window? */
 #endif
 
+    open_score();
     /*
      * get home and options from environment
      */
@@ -452,6 +454,21 @@ char **envp;
          rel_magic[quest_item].mi_name);
     mpos = 0;
     playit();
+}
+
+open_score()
+{
+#ifdef BSD
+    score_fd = open(SCOREFILE, O_RDWR, 0666);
+#else
+    score_fd = open(SCOREFILE, O_CREAT|O_RDWR, 0666);
+#endif
+    if ((setregid(getgid(), getgid()) < 0 || setreuid(getuid(), getuid()) < 0)
+        && (getegid() != getgid() || geteuid() != getuid()))
+    {
+        perror("xrogue");
+        exit(1);
+    }
 }
 
 /*

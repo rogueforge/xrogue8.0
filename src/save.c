@@ -186,7 +186,7 @@ char **envp;
     char buf[LINELEN], name[MAXPATH];
     STAT sbuf2;
     int oldcol, oldline;        /* Old number of columns and lines */
-    int y, x, owiz;
+    int y, x, owiz, ofd;
 
     if (strcmp(file, "-r") == 0)
         file = strcpy(name, file_name);
@@ -225,6 +225,7 @@ char **envp;
 
     lseek(inf, 0L, 0);
     owiz = wizard;
+    ofd = score_fd;
     if (ENCREAD(version, (long) (rg_edata - version), inf)
             != rg_edata - version
         || ENCREAD(rg_bss, (long) (rg_ebss - rg_bss), inf)
@@ -247,6 +248,7 @@ char **envp;
     }
     if ((wizard = owiz) != FALSE)
         waswizard = TRUE;
+    score_fd = ofd;
 
     /*
      * Get the lines and columns from the previous game

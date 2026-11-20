@@ -92,6 +92,7 @@ char *m_guess[MAXMM];                   /* Players guess at what MM is */
 char *ws_type[MAXSTICKS];               /* Is it a wand or a staff */
 char file_name[MAXPATH];                /* Save file name */
 char score_file[MAXPATH];               /* Score file name */
+int score_fd = -1;                      /* Score file descriptor */
 char home[MAXPATH];                     /* User's home directory */
 WINDOW *cw;                             /* Window that the player sees */
 WINDOW *hw;                             /* Used for the help command */

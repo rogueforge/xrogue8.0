@@ -1327,6 +1327,7 @@ extern char *m_guess[];                 /* Players guess at what MM is */
 extern char *ws_type[];                 /* Is it a wand or a staff */
 extern char file_name[];                /* Save file name */
 extern char score_file[];               /* Score file name */
+extern int score_fd;                    /* Score file descriptor */
 extern char home[];                     /* User's home directory */
 extern WINDOW *cw;                      /* Window that the player sees */
 extern WINDOW *hw;                      /* Used for the help command */

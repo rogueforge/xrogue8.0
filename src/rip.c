@@ -247,11 +247,13 @@ short monst;
      * Open file and read list
      */
 
+    if (strcmp(score_file, SCOREFILE) != 0)
 #ifdef BSD
-    if ((fd = open(score_file, O_RDWR, 0666)) < 0) return;
+        score_fd = open(score_file, O_RDWR, 0666);
 #else
-    if ((fd = open(score_file, O_CREAT|O_RDWR, 0666)) < 0) return;
+        score_fd = open(score_file, O_CREAT|O_RDWR, 0666);
 #endif
+    if ((fd = score_fd) < 0) return;
     outfd = fd;
 
 #ifndef SYSTEM
