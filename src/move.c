@@ -848,9 +848,12 @@ int dy, dx;
     if (player.t_action == A_NIL &&
         ((on(player, ISHUH) && rnd(100) < 80)   || 
          (on(player, ISDANCE) && rnd(100) < 90) || 
-         (ISWEARING(R_DELUSION) && rnd(100) < 70)))
+         (ISWEARING(R_DELUSION) && rnd(100) < 70))) {
         /* Get a random move */
         nh = *rndmove(&player);
+        dy = nh.y - hero.y;
+        dx = nh.x - hero.x;
+    }
     else {
         nh.y = hero.y + dy;
         nh.x = hero.x + dx;
