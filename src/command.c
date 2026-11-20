@@ -1062,8 +1062,8 @@ shell()
     /*
      * Fork and do a shell
      */
-    while((pid = exfork()) < 0)
-        sleep(1);
+    if ((pid = exfork()) < 0)
+        perror("No shell");
     if (pid == 0)
     {
         close(score_fd);
@@ -1087,7 +1087,7 @@ shell()
 
         int_value = (void (*)())signal(SIGINT, SIG_IGN);
         quit_value = (void (*)())signal(SIGQUIT, SIG_IGN);
-        while (wait(&ret_status) != pid && errno != ECHILD)
+        while (pid > 0 && wait(&ret_status) != pid && errno != ECHILD)
             continue;
         signal(SIGINT, int_value);
         signal(SIGQUIT, quit_value);
