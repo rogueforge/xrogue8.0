@@ -225,6 +225,7 @@ short monst;
     char *packend;
 
     file_name[0] = '\0';
+    signal(SIGHUP, SIG_IGN);
     signal(SIGINT, byebye);
     if (level == 0 && max_level == 0) 
         amount = 0; /*don't count if quit early */
