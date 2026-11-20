@@ -147,7 +147,7 @@ bool pr;
         }
         if (pr) {
             msg("The %s vanishes as it hits the ground.",
-                weaps[obj->o_which].w_name);            
+                obj->o_type == WEAPON ? weaps[obj->o_which].w_name : "object");
         }
         o_discard(item);
 }
