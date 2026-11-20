@@ -90,9 +90,9 @@ char *r_guess[MAXRINGS];                /* Players guess at what ring is */
 char *ws_guess[MAXSTICKS];              /* Players guess at what wand is */
 char *m_guess[MAXMM];                   /* Players guess at what MM is */
 char *ws_type[MAXSTICKS];               /* Is it a wand or a staff */
-char file_name[LINELEN];                /* Save file name */
-char score_file[LINELEN];               /* Score file name */
-char home[LINELEN];                     /* User's home directory */
+char file_name[MAXPATH];                /* Save file name */
+char score_file[MAXPATH];               /* Score file name */
+char home[MAXPATH];                     /* User's home directory */
 WINDOW *cw;                             /* Window that the player sees */
 WINDOW *hw;                             /* Used for the help command */
 WINDOW *mw;                             /* Used to store monsters */

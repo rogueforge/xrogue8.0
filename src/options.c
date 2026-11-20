@@ -261,7 +261,7 @@ WINDOW *win;
         else if (sp == buf)
             if (c == '-' && win == hw)  /* To move back a line in hw */
                 break;
-            else if (c == '~')
+            else if (c == '~' && strlen(home) < LINELEN - 1)
             {
                 strcpy(buf, home);
                 waddstr(win, home);
@@ -373,14 +373,15 @@ register char *str;
                 else                            /* string option */
                 {
                     register char *start;
-                    char value[LINELEN];
+                    char value[MAXPATH];
 
                     /*
                      * Skip to start of string value
                      */
                     for (str = sp + 1; *str == '='; str++)
                         continue;
-                    if (*str == '~')
+                    if (*str == '~' && (op->o_opt == (int *) file_name ||
+                                        op->o_opt == (int *) score_file))
                     {
                         strcpy((char *) value, home);
                         start = (char *) value + strlen(home);

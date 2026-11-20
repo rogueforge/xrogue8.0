@@ -37,11 +37,12 @@ char **envp;
      * get home and options from environment
      */
     if ((env = getenv("HOME")) != NULL)
-        strcpy(home, env);
+        strncpy(home, env, MAXPATH - LINELEN - 1);
     else if ((pw = getpwuid(getuid())) != NULL)
-        strcpy(home, pw->pw_dir);
+        strncpy(home, pw->pw_dir, MAXPATH - LINELEN - 1);
     else
         home[0] = '\0';
+    home[MAXPATH - LINELEN - 1] = '\0';
     strcat(home, "/");
 
     /* Get default save file */

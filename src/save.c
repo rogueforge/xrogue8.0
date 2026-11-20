@@ -185,7 +185,7 @@ char **envp;
 {
     register int inf;
     extern char **environ;
-    char buf[LINELEN], name[LINELEN];
+    char buf[LINELEN], name[MAXPATH];
     STAT sbuf2;
     int oldcol, oldline;        /* Old number of columns and lines */
     int y, x;
@@ -307,7 +307,8 @@ char **envp;
 
     mpos = 0;
     environ = envp;
-    strcpy(file_name, file);
+    strncpy(file_name, file, MAXPATH - 1);
+    file_name[MAXPATH - 1] = '\0';
     setup();
     clearok(curscr, TRUE);
     touchwin(cw);

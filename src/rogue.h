@@ -8,6 +8,8 @@
 
 #define VOIDTYPE long
 
+#include <limits.h>
+
 #define malloc	rg_alloc
 #define calloc	rg_calloc
 #define free	rg_free
@@ -66,6 +68,7 @@ extern char toupper();
 #define NUMSCORE        20      /* number of entries in score file */
 #define HARDER          40      /* at this level start making things harder */
 #define LINELEN         256     /* characters in a buffer */
+#define MAXPATH         PATH_MAX /* characters in a file name */
 #define JUG_EMPTY       -1      /* signifys that the alchemy jug is empty */
 #define MAXPURCH        (pstats.s_charisma/3) /* num of purchases at t.post */
 #define MAXATT          50      /* charactor's attribute maximum number */
