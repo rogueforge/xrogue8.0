@@ -309,6 +309,8 @@ short monst;
     /* Read the score and convert it to a compatible format */
     compatstr = (char *) malloc(NUMSCORE * SCORELEN);
     if (compatstr == NULL) return;
+    if (!waswizard || prflags == EDITSCORE)
+        hold_sc(fd);
     num_read = encread(compatstr, (long)(NUMSCORE * SCORELEN), fd); 
     scorein(compatstr, top_ten, num_read);      /* Convert it */
 
@@ -603,14 +605,33 @@ short monst;
         }
 /*      if (prflags == EDITSCORE) endwin();     /* End editing windowing */
     }
-    lseek(outfd, 0L, 0);
     /*
      * Update the list file
      */
-    scoreout(top_ten, compatstr); /* Get a compatibile format score string */
-    encwrite(compatstr, (long)(NUMSCORE * SCORELEN), outfd);
+    if (!waswizard || prflags == EDITSCORE)
+    {
+        lseek(outfd, 0L, 0);
+        scoreout(top_ten, compatstr); /* Get a compatibile format score string */
+        encwrite(compatstr, (long)(NUMSCORE * SCORELEN), outfd);
+    }
     free(compatstr);
     close(outfd);
+}
+
+hold_sc(fd)
+int fd;
+{
+    register int cnt;
+    static struct flock fl;
+
+    fl.l_type = F_WRLCK;
+    for (cnt = 0; fcntl(fd, F_SETLK, &fl) < 0; cnt++)
+    {
+        if (cnt == 5)
+            return FALSE;
+        sleep(1);
+    }
+    return TRUE;
 }
 
 /*
