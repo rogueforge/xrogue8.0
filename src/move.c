@@ -294,6 +294,7 @@ register coord *tc;
                                     old_room->r_flags &= ~HASFIRE;
                                     if (can_see) light(&hero);
                                 }
+                                break;
                             }
                         }
                     }
