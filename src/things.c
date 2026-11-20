@@ -399,6 +399,7 @@ struct linked_list *item;
     }
     else {
         obj = item;
+        ch = mvwinch(stdscr, hero.y, hero.x);
     }
     op = OBJPTR(obj);
     if (!dropcheck(op))
