@@ -252,7 +252,8 @@ int flags;
             }
 
             /* Now move the monster */
-            if (isalpha(mvwinch(cw, y, x)))
+            if (isalpha(mvwinch(cw, y, x)) ||
+                mvwinch(cw, y, x) == tp->t_disguise)
                 mvwaddch(cw, y, x, tp->t_oldch);
             mvwaddch(mw, y, x, ' ');
             mvwaddch(mw, tp->t_pos.y, tp->t_pos.x, tp->t_type);
