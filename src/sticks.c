@@ -246,7 +246,8 @@ int flags;
                 do {    /* Move monster to another room */
                     rm = rnd_room();
                     rnd_pos(&rooms[rm], &tp->t_pos);
-                }until(winat(tp->t_pos.y,tp->t_pos.x)==FLOOR ||i++>500);
+                }until((winat(tp->t_pos.y,tp->t_pos.x)==FLOOR &&
+                        !ce(tp->t_pos, hero)) || i++>500);
                 rp = &rooms[rm];
             }
 
