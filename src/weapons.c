@@ -280,6 +280,8 @@ register struct thing *tp;
         if (!hit_monster(unc(obj->o_pos), obj, tp)) {
                 fall(item, TRUE);
         }
+        else
+                o_discard(item);
         mvwaddch(cw, hero.y, hero.x, PLAYER);
 }
 
