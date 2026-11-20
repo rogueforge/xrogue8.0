@@ -190,7 +190,7 @@ char **envp;
 
     if (strcmp(file, "-r") == 0)
         file = strcpy(name, file_name);
-    if ((inf = open(file, O_RDONLY)) < 0
+    if ((inf = open(file, O_RDONLY|O_NONBLOCK)) < 0
         || fstat(inf, &sbuf2) < 0)
     {
         perror(file);
