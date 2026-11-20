@@ -1209,7 +1209,8 @@ bool mark;
         else if (prbuf[0] != '\0') {
             if (guess[obj->o_which] != NULL)
                 free(guess[obj->o_which]);
-            guess[obj->o_which] = new((unsigned int) strlen(prbuf) + 1);
+            guess[obj->o_which] = new((unsigned int) (strlen(prbuf)
+                < sizeof (struct thing) ? sizeof (struct thing) : strlen(prbuf) + 1));
             strcpy(guess[obj->o_which], prbuf);
         }
     }
@@ -1251,7 +1252,8 @@ namemonst()
                 if (prbuf[0] != '\0') {
                     if (tp->t_name != NULL)
                         free(tp->t_name);
-                    tp->t_name = new((unsigned int) strlen(prbuf) + 1);
+                    tp->t_name = new((unsigned int) (strlen(prbuf) < sizeof
+                        (struct thing) ? sizeof (struct thing) : strlen(prbuf) + 1));
                     strcpy(tp->t_name, prbuf);
                 }
             }
