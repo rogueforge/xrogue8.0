@@ -198,6 +198,7 @@ int which_item, which_type;
     obj->o_count = 1;
     obj->o_flags = 0;
     obj->o_dplus = obj->o_hplus = 0;
+    obj->o_damage = obj->o_hurldmg = "0d0";
     obj->o_weight = 0;
     wh = obj->o_which;
     mpos = 0;
