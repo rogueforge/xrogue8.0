@@ -529,7 +529,7 @@ int a;
     mvcur(0, cols - 1, lines - 1, 0);
     endwin();
     fflush(stdout);
-    kill(0, SIGTSTP);
+    kill(0, SIGSTOP);
     signal(SIGTSTP, tstp);
     crmode();
     noecho();
