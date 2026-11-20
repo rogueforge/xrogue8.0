@@ -28,12 +28,32 @@ extern struct uwdata wdata;
 typedef struct stat STAT;
 
 extern char version[], *strerror();
-extern unsigned char encstr[];
+extern const unsigned char encstr[];
 /* extern bool _endwin; */
 
-char *sbrk();
+extern char __executable_start[], _end[];
+extern char rg_bss[], *const rg_edata, *const rg_ebss;
+extern int playit(), rg_restored();
+
+long save_stamp[2];
+chtype save_std[MAXLINES][MAXCOLS];
+chtype save_cw[MAXLINES][MAXCOLS];
+chtype save_mw[MAXLINES][MAXCOLS];
+
+#ifdef __SANITIZE_ADDRESS__
+#define NOCHECK	__attribute__((no_sanitize_address))
+#define read	rg_read
+#else
+#define NOCHECK
+#endif
 
 static STAT sbuf;
+
+save_ok()
+{
+    return ((char *) &food_left >= version && (char *) &food_left < rg_edata
+	&& (char *) &sbuf >= rg_bss && (char *) (&sbuf + 1) <= rg_ebss);
+}
 
 bool
 save_game()
@@ -42,6 +62,11 @@ save_game()
     register int c;
     char buf[LINELEN];
 
+    if (!save_ok())
+    {
+        msg("this xrogue cannot save a game");
+        return FALSE;
+    }
     /*
      * get file name
      */
@@ -105,7 +130,8 @@ auto_save()
 
     for (i = 0; i < NSIG; i++)
         signal(i, SIG_IGN);
-    if (file_name[0] != '\0'    && 
+    if (save_ok()               &&
+        file_name[0] != '\0'    && 
         pstats.s_hpt > 0        &&
 #ifdef BSD
         (savefd = creat(file_name, 0600)) >= 0)
@@ -129,13 +155,25 @@ save_file(savefd)
 register int savefd;
 {
     register unsigned long num_to_write, num_written;
+    register int y, x;
 
+    for (y = 0; y < lines && y < MAXLINES; y++)
+        for (x = 0; x < cols && x < MAXCOLS; x++)
+        {
+            save_std[y][x] = mvwinch(stdscr, y, x);
+            save_cw[y][x] = mvwinch(cw, y, x);
+            save_mw[y][x] = mvwinch(mw, y, x);
+        }
     wmove(cw, lines-1, 0);
     draw(cw);
     lseek(savefd, 0L, 0);
     fstat(savefd, &sbuf);
-    num_to_write = sbrk(0L) - version;
-    num_written = ENCWRITE((char *)((long)version), num_to_write, savefd);
+    save_stamp[0] = (long) playit - (long) version;
+    save_stamp[1] = (long) rg_restored - (long) __executable_start;
+    num_to_write = (rg_edata - version) + (rg_ebss - rg_bss);
+    num_written = ENCWRITE(version, rg_edata - version, savefd);
+    if (num_written == rg_edata - version)
+        num_written += ENCWRITE(rg_bss, rg_ebss - rg_bss, savefd);
     close(savefd);
     if (num_to_write == num_written) return(TRUE);
     else return(FALSE);
@@ -147,14 +185,13 @@ char **envp;
 {
     register int inf;
     extern char **environ;
-    char buf[LINELEN];
-    char *newterm;                   /* For new terminal type */
+    char buf[LINELEN], name[LINELEN];
     STAT sbuf2;
     int oldcol, oldline;        /* Old number of columns and lines */
-    char *brk();
+    int y, x;
 
     if (strcmp(file, "-r") == 0)
-        file = file_name;
+        file = strcpy(name, file_name);
     if ((inf = open(file, O_RDONLY)) < 0)
     {
         perror(file);
@@ -172,18 +209,33 @@ char **envp;
 
     fstat(inf, &sbuf2);
     fflush(stdout);
-    brk(version + sbuf2.st_size);
-    /*
-     * Added the following #ifdef to re-initialize the screen
-     * on i386 system for playing saved games 10/30/90.
-     */
-#ifdef i386
-    initscr();
-    typeahead(-1);
-#endif
+    if (sbuf2.st_size != (rg_edata - version) + (rg_ebss - rg_bss))
+    {
+        printf("Sorry, saved game is out of date.\n");
+        return FALSE;
+    }
 
     lseek(inf, 0L, 0);
-    ENCREAD((char *)((long)version), (long)sbuf2.st_size, inf);
+    if (ENCREAD(version, (long) (rg_edata - version), inf)
+            != rg_edata - version
+        || ENCREAD(rg_bss, (long) (rg_ebss - rg_bss), inf)
+            != rg_ebss - rg_bss)
+    {
+        printf("Sorry, saved game is damaged.\n");
+        return FALSE;
+    }
+    if (save_stamp[0] != (long) playit - (long) version
+        || save_stamp[1] != (long) rg_restored - (long) __executable_start)
+    {
+        printf("Sorry, saved game is out of date.\n");
+        return FALSE;
+    }
+    rg_rebase(__executable_start, _end, version, rg_edata, rg_bss, rg_ebss);
+    if (!rg_restored())
+    {
+        printf("Sorry, saved game is damaged.\n");
+        return FALSE;
+    }
 
     /*
      * Get the lines and columns from the previous game
@@ -192,59 +244,17 @@ char **envp;
     oldline = lines;
 
     /*
-     * Set the new terminal and make sure we aren't going to a smaller screen.
-     */
-#if !USG5_2
-    /* Set columns and lines to 0 so that setterm() will reset the values */
-    COLS = 0;
-    LINES = 0;
-
-    if ((newterm = getenv("TERM")) == NULL ||
-        setterm(newterm) == ERR) {
-        printf("Bad or missing terminal type.\n");
-        return FALSE;
-    }
-#endif
-/* 
- * this code should work but does not because of curses bug 
- * curses fails to turn echo off
- */
-#if 0  /* this is effectively commented out. */
-    if ((newterm = getenv("TERM")) == NULL) {
-        printf("Bad or missing terminal type.\n");
-        return FALSE;
-    }
-    restartterm(newterm, 1, 0);
-#endif
-    if (COLS < oldcol || LINES < oldline) {
-        printf("Cannot restart the game on a smaller screen.\n");
-        return FALSE;
-    }
-/*
-    cols = COLS;
-    lines = LINES;
-    if (cols > 85) cols = 85;
-    if (lines > 24) lines = 24;
-*/
-
-    /*
      * we do not close the file so that we will have a hold of the
      * inode for as long as possible
      */
     if (!wizard) {
         if (sbuf2.st_ino != sbuf.st_ino) {
             printf("Sorry, saved game is not in the same file.\n");
-#ifdef i386
-	endwin();  /* added because of initscr() above */
-#endif
             return FALSE;
         }
 #ifndef NOCHECKACCESS
         else if (sbuf2.st_ctime - sbuf.st_ctime > FUDGE_TIME) {
             printf("Sorry, file has been touched.\n");
-#ifdef i386
-	endwin();  /* added because of initscr() above */
-#endif
             return FALSE;
         }
 #endif
@@ -256,19 +266,44 @@ char **envp;
     if (!wizard) {
         if (sbuf2.st_nlink != 1) {
             printf("Cannot restore from a linked file\n");
-#ifdef i386
-	endwin();  /* added because of initscr() above */
-#endif
-            return FALSE;
-        }
-        else if (unlink(file) < 0) {
-            printf("Cannot unlink file\n");
-#ifdef i386
-	endwin();  /* added because of initscr() above */
-#endif
             return FALSE;
         }
     }
+
+    /*
+     * Set the new terminal and make sure we aren't going to a smaller screen.
+     */
+    initscr();
+    if (COLS < oldcol || LINES < oldline) {
+        endwin();
+        printf("Cannot restart the game on a smaller screen.\n");
+        return FALSE;
+    }
+
+    if (!wizard && unlink(file) < 0) {
+        endwin();
+        printf("Cannot unlink file\n");
+        return FALSE;
+    }
+
+    cw = newwin(lines, cols, 0, 0);
+    mw = newwin(lines, cols, 0, 0);
+    hw = newwin(lines, cols, 0, 0);
+    msgw = newwin(4, cols, 0, 0);
+    if (cw == NULL || hw == NULL || mw == NULL || msgw == NULL) {
+        endwin();
+        fprintf(stderr, "Can't get enough memory\n");
+        return FALSE;
+    }
+    keypad(cw, TRUE);
+    keypad(hw, TRUE);
+    for (y = 0; y < lines && y < MAXLINES; y++)
+        for (x = 0; x < cols && x < MAXCOLS; x++)
+        {
+            mvwaddch(stdscr, y, x, save_std[y][x]);
+            mvwaddch(cw, y, x, save_cw[y][x]);
+            mvwaddch(mw, y, x, save_mw[y][x]);
+        }
 
     mpos = 0;
     environ = envp;
@@ -288,13 +323,13 @@ char **envp;
  * perform an encrypted write
  */
 
-long
+NOCHECK long
 encwrite(start, size, outf)
 register char *start;
 register unsigned long size;
 register int outf;
 {
-    register unsigned char *ep;
+    register const unsigned char *ep;
     register int i = 0;
     unsigned long num_written = 0;
     char buf[ENCWBSIZ];
@@ -325,13 +360,13 @@ register int outf;
  * perform an encrypted read
  */
 
-long
+NOCHECK long
 encread(start, size, inf)
 register char *start;
 register unsigned long size;
 int inf;
 {
-    register unsigned char *ep;
+    register const unsigned char *ep;
     register int rd_siz;
     register long total_read;
 

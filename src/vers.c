@@ -5,7 +5,8 @@
  * not to be written in saved games.
  */
 
-unsigned char encstr[] = "\0\0\0";
+const unsigned char encstr[] = "\0\0\0";
 char version[] = "@(#)vers.c    8.0 - 06/08/91";
 char *release = "8.0";
+char rg_bss[1];
 

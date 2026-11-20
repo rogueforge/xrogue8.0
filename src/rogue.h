@@ -8,6 +8,10 @@
 
 #define VOIDTYPE long
 
+#define malloc	rg_alloc
+#define calloc	rg_calloc
+#define free	rg_free
+
 #ifndef reg
 #define reg register
 #endif
