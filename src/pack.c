@@ -857,7 +857,7 @@ bool askfirst, showcost;
             if (purpose) {
                 do {
                     ch = readchar(cw);
-                } until (isalpha(ch) || ch == ESC);
+                } until ((isascii(ch) && isalpha(ch)) || ch == ESC);
             }
             else {
                 ch = pack_char(list, OBJPTR(saveitem)); /* Pick a valid item */
@@ -1527,7 +1527,7 @@ register y, x;
         for (;;) {
             do {
                 ch = readchar(cw);
-            } until (isalpha(ch) || ch == '*' || ch == ESC);
+            } until ((isascii(ch) && isalpha(ch)) || ch == '*' || ch == ESC);
 
             /* Redraw original screen */
             if (pagecnt < 0) {

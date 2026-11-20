@@ -176,7 +176,7 @@ int which_item, which_type;
                 msg("");
                 return;
             }
-        } until (isalpha(ch));
+        } until (isascii(ch) && isalpha(ch));
         if (thiswin == hw)                      /* restore screen if need be */
             restscr(cw);
         newtype = ch - 'a';
