@@ -378,12 +378,11 @@ register char *str;
                     /*
                      * Skip to start of string value
                      */
-                    for (str = *sp ? sp + 1 : sp; *str == '='; str++)
+                    for (str = sp; *str == '='; str++)
                         continue;
                     if (*str == '~' && (op->o_opt == (int *) file_name ||
                                         op->o_opt == (int *) score_file))
                     {
-                        strcpy((char *) value, home);
                         start = (char *) value + strlen(home);
                         while (*++str == '/')
                             continue;
@@ -393,9 +392,13 @@ register char *str;
                     /*
                      * Skip to end of string value
                      */
-                    for (sp = *str ? str + 1 : str; *sp && *sp != ','; sp++)
+                    for (sp = str; *sp && *sp != ','; sp++)
                         continue;
                     strucpy(start, str, sp - str);
+                    if (*start == '\0')
+                        break;
+                    if (start != (char *) value)
+                        strncpy((char *) value, home, start - (char *) value);
 
                     /* Put the value into the option field */
                     if (op->o_putfunc != put_abil) 
