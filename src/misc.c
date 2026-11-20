@@ -863,6 +863,7 @@ int which;
     register struct object *obj;
     register struct linked_list *item;
     bool cursed, blessed, is_mm;
+    long newclass;
 
     cursed = FALSE;
     is_mm = FALSE;
@@ -1132,7 +1133,8 @@ int which;
         when MM_SKILLS:
             detach (pack, item);
             inpack--;
-            changeclass(&obj->o_ac);
+            newclass = obj->o_ac;
+            changeclass(&newclass);
 	when MM_CRYSTAL:
 	{
 	    register char *str;
