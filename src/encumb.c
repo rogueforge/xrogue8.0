@@ -151,6 +151,8 @@ wghtchk()
 {
         reg int dropchk, err = TRUE;
         reg char ch;
+        reg struct linked_list *item;
+        reg struct object *obj;
         int wghtchk();
 
         inwhgt = TRUE;
@@ -163,6 +165,25 @@ wghtchk()
                 return;
             }
             extinguish(wghtchk);
+            for (item = pack; item != NULL; item = next(item)) {
+                obj = OBJPTR(item);
+                if (obj->o_type == RELIC)
+                    continue;
+                if (levtype == POSTLEV && (obj->o_flags & ISCURSED) &&
+                    (obj->o_flags & ISKNOW))
+                    continue;
+                if (!is_current(obj))
+                    break;
+                if (obj->o_flags & ISCURSED)
+                    continue;
+                if (obj->o_type == RING && cur_misc[WEAR_GAUNTLET] != NULL)
+                    continue;
+                break;
+            }
+            if (item == NULL) {
+                inwhgt = FALSE;
+                return;
+            }
             msg("Your pack is far too heavy for you.. ");
             do {
                 dropchk = drop((struct linked_list *)NULL);
