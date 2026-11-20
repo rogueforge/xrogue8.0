@@ -700,6 +700,8 @@ bool back_stab;
                 vampiric_damage = damage;
                 if (def->s_hpt < 0)     /* only want REAL damage inflicted */
                     vampiric_damage += def->s_hpt;
+                if (vampiric_damage < 0)
+                    vampiric_damage = 0;
                 if (att == &pstats && ISWEARING(R_VAMPREGEN) && !hurl) {
                     if ((pstats.s_hpt += vampiric_damage/2) > max_stats.s_hpt)
                         pstats.s_hpt = max_stats.s_hpt;
