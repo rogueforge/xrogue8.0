@@ -490,9 +490,10 @@ bool is_potion;
                     fuse(sight, (VOIDTYPE *)NULL, SEEDURATION, AFTER);
                     light(&hero);
                 }
-                else
+                else {
                     msg("The darkness around you thickens. ");
                     lengthen(sight, SEEDURATION);
+                }
             }
             else {
                 if (off(player, CANSEE)) {
