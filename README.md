@@ -91,7 +91,7 @@ Robert J. Pietkivitch
 1955-2002
 
 Bob passed away on December 3rd, 2002.  
-He will be always loved by friends and family.
+He will be missed.
  
 In May 1996, Bob gave me the latest version of XRogue's source code that he
 had in the hope it could be made to run under Windows. This had been a hope
