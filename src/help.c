@@ -456,7 +456,7 @@ register char ch;
             return;
         }
     }
-    if (isalpha(ch))
+    if (isalpha((unsigned char) ch))
         msg("Use the \"=\" command to identify monsters. ");
     else switch(ch)
     {
@@ -498,7 +498,7 @@ register char ch;
         when RELIC:     str = "Artifact";
         otherwise:      str = "Unknown character";
     }
-    if (!isalpha(ch))
+    if (!isalpha((unsigned char) ch))
         msg("%s     %s", unctrl(ch), str);
 }
 
