@@ -372,6 +372,8 @@ bool back_stab;
 	            cp = "4d8/4d8";
             when ORCUS_WAND:
 		    cp = "4d8/destroy";
+            otherwise:
+		    cp = weap->o_damage;
         }
     }
     else if (hurl) {
