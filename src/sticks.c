@@ -26,6 +26,8 @@ int flags;
     bool cursed, blessed, is_player;
     char *mname;
 
+    is_player = FALSE;
+    mname = "something";
     cursed = flags & ISCURSED;
     blessed = flags & ISBLESSED;
 
