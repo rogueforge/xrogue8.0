@@ -236,7 +236,7 @@ short monst;
             packend = "at your untimely demise";
         mvaddstr(lines - 1, 0, retstr);
         refresh();
-        getstr(prbuf);
+        getnstr(prbuf, LINELEN);
         showpack(packend);
     }
     purse = 0;  /* Steal all the gold */
@@ -286,7 +286,7 @@ short monst;
         mvaddstr(lines - 1, 0, retstr);
         refresh();
         fflush(stdout);
-        getstr(prbuf);
+        getnstr(prbuf, LINELEN);
     }
 
     /* Check for special options */
@@ -568,7 +568,7 @@ short monst;
                 if (prflags == EDITSCORE)
                 {
                     fflush(stdout);
-                    getstr(prbuf);
+                    getnstr(prbuf, LINELEN);
                     printf("\n");
                     if (prbuf[0] == 'd') {
                         for (sc2 = scp; sc2 < &top_ten[NUMSCORE-1]; sc2++)
@@ -583,7 +583,7 @@ short monst;
                     }
                     else if (prbuf[0] == 'e') {
                         printf("Death type: ");
-                        getstr(prbuf);
+                        getnstr(prbuf, LINELEN);
                         if (prbuf[0] == 'M' || prbuf[0] == 'm')
                             do {
                                 scp->sc_monster =
