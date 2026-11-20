@@ -13,7 +13,6 @@
  * where scorefile should live
  */
 
-#define SCOREFILE       "/usr/games/lib/xrogue_roll"
 #ifndef SCOREFILE
 #define SCOREFILE       "/usr/games/lib/xrogue_roll"
 #endif
