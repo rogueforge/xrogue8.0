@@ -553,6 +553,10 @@ short monst;
             char *class;
 
             if (scp->sc_score != NULL) {
+                scp->sc_name[NAMELEN-1] = '\0';
+                for (i = 0; scp->sc_name[i] != '\0'; i++)
+                    if (scp->sc_name[i] < ' ' || scp->sc_name[i] > '~')
+                        scp->sc_name[i] = '?';
                 class = char_class[scp->sc_ctype].name;
 
                 /* Make sure we have an in-bound reason */
