@@ -1065,6 +1065,8 @@ bool pr, points, treasure;
     long temp;
 
     tp = THINGPTR(item);
+    if (on(*tp, ISDEAD))
+        return;
 
     if (pr)
     {
