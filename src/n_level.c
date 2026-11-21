@@ -423,6 +423,20 @@ LEVTYPE ltype;          /* designates type of level to create */
             if (hero.x == 0) hero.x = cols - 1 - TERRASAVE; /* Right to left */
             else hero.x = TERRASAVE;    /* Left to right */
         }
+        if (!step_ok(hero.y, hero.x, NOMONST, &player)) {
+            coord *cp = NULL;
+
+            for (i = 1; i < 4 && cp == NULL; i++)
+                cp = fallpos(&hero, TRUE, i);
+            if (cp != NULL)
+                hero = *cp;
+            else {
+                cnt = 2500;
+                do {
+                    rnd_pos(&rooms[0], &hero);
+                } until (cnt-- == 0 || winat(hero.y, hero.x) == FLOOR);
+            }
+        }
     }
     oldrp = &rooms[rm];         /* Set the current room */
     player.t_oldpos = player.t_pos;     /* Set the current position */
