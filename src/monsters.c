@@ -120,7 +120,7 @@ genmonsters(least, treas)
 register int least;
 bool treas;
 {
-    reg int i;
+    reg int i, cnt;
     reg struct room *rp = &rooms[0];
     reg struct linked_list *item;
     reg struct thing *mp;
@@ -133,11 +133,15 @@ bool treas;
             /*
              * Put the monster in
              */
-            item = new_item(sizeof *mp);
-            mp = THINGPTR(item);
+            cnt = 0;
             do {
                     rnd_pos(rp, &tp);
-            } until(mvwinch(stdscr, tp.y, tp.x) == FLOOR);
+            } until((mvwinch(stdscr, tp.y, tp.x) == FLOOR &&
+                     mvwinch(mw, tp.y, tp.x) == ' ') || ++cnt > 2500);
+            if (cnt > 2500)
+                continue;
+            item = new_item(sizeof *mp);
+            mp = THINGPTR(item);
 
             new_monster(item, randmonster(FALSE, FALSE), &tp, FALSE);
             /*
