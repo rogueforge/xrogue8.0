@@ -138,7 +138,7 @@ register coord *tc;
 		    death(D_FALL);
 		}
                 new_level(OUTSIDE);
-		return;
+		return(ch);
             }
             else {
                 if (can_see) msg("%s fell into the worm hole! ", prname(mname, TRUE));
@@ -1024,7 +1024,7 @@ int dy, dx;
         case DARTTRAP:
         case WORMHOLE:
             ch = be_trapped(&player, &nh);
-            if (ch == TRAPDOOR || ch == TELTRAP || 
+            if (ch == TRAPDOOR || ch == TELTRAP || ch == WORMHOLE ||
                 pool_teleport  || ch == MAZETRAP) {
                 pool_teleport = FALSE;
                 return;
