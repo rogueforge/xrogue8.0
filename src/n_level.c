@@ -440,6 +440,7 @@ LEVTYPE ltype;          /* designates type of level to create */
             aggravate(FALSE, FALSE);
     }
 
+    wclear(cw);
     light(&hero);
     wmove(cw, hero.y, hero.x);
     waddch(cw, PLAYER);
