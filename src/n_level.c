@@ -403,7 +403,7 @@ LEVTYPE ltype;          /* designates type of level to create */
         cnt = 2500;
         do {
             if (ltype != OUTSIDE) rm = rnd_room();
-            else continue;
+            else rm = 0;
 
             if (rooms[rm].r_flags & ISTREAS)
                 continue;
