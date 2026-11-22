@@ -262,6 +262,7 @@ LEVTYPE ltype;          /* designates type of level to create */
     /*
      * Place the staircase down.  Only a small chance for an outside stairway.
      */
+    stairs.y = stairs.x = 0;
     if (ltype != OUTSIDE || roll(1, 5) == 5) {
         cnt = 0;
         do {
