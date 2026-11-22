@@ -74,7 +74,7 @@ WINDOW *win;
 
     getyx(win, oy, ox);
     put_bool(bp, win);
-    get_ro(win, oy, ox);
+    return get_ro(win, oy, ox);
 }
 
 /*
@@ -89,7 +89,7 @@ WINDOW *win;
 
     getyx(win, oy, ox);
     put_abil(abil, win);
-    get_ro(win, oy, ox);
+    return get_ro(win, oy, ox);
 }
 
 /*
@@ -104,7 +104,7 @@ WINDOW *win;
 
     getyx(win, oy, ox);
     waddstr(win, rel_magic[*quest].mi_name);
-    get_ro(win, oy, ox);
+    return get_ro(win, oy, ox);
 }
 
 /*
