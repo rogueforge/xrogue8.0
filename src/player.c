@@ -871,6 +871,7 @@ take_with()
             turn_on(*tp, ISELSEWHERE);
             detach(mlist, item);
             attach(tlist, item);         /* remember him next level */
+            mvwaddch(mw, tp->t_pos.y, tp->t_pos.x, ' ');
             check_residue(tp);
             continue;
         }
